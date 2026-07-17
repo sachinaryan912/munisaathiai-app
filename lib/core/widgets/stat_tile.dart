@@ -33,12 +33,12 @@ class StatTile extends StatelessWidget {
         children: [
           AppIconContainer(icon: icon, color: color),
           const SizedBox(height: 12),
-          Text(value, style: AppTypography.display(s.textPrimary).copyWith(fontSize: 24, height: 1)),
+          Text(value, style: AppTypography.display(s.textPrimary).copyWith(fontSize: 24, height: 1), maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 3),
-          Text(label, style: AppTypography.body(s.textSecondary).copyWith(fontSize: 12.5, fontWeight: FontWeight.w600)),
+          Text(label, style: AppTypography.body(s.textSecondary).copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, height: 1.15), maxLines: 1, overflow: TextOverflow.ellipsis),
           if (sublabel != null) ...[
             const SizedBox(height: 1),
-            Text(sublabel!, style: AppTypography.caption(s.textMuted).copyWith(fontWeight: FontWeight.w400)),
+            Text(sublabel!, style: AppTypography.caption(s.textMuted).copyWith(fontWeight: FontWeight.w400, height: 1.15), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ],
       ),
