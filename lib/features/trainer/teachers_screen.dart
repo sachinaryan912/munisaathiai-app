@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -30,7 +31,10 @@ class TrainerTeachersScreen extends StatelessWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             itemCount: teachers.length,
-            itemBuilder: (context, i) => _TeacherCard(teacher: teachers[i], repo: repo),
+            itemBuilder: (context, i) => _TeacherCard(teacher: teachers[i], repo: repo)
+                .animate(delay: (i * 40).ms)
+                .fadeIn(duration: 280.ms)
+                .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
           );
         },
       ),

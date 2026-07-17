@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -206,7 +207,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                           ],
                                         ),
                                       ),
-                                    );
+                                    ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                                   },
                                 ),
                           _evidence!.isEmpty
@@ -248,7 +249,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                           ],
                                         ),
                                       ),
-                                    );
+                                    ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                                   },
                                 ),
                           const ObservationsTab(),
