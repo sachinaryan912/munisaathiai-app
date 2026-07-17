@@ -222,11 +222,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Divider(color: s.border),
             const SizedBox(height: 16),
 
-            AppTextField(label: 'Full name', controller: _fullName, prefixIcon: Icons.person_outline_rounded, validator: (v) => (v == null || v.trim().length < 2) ? 'Enter your full name' : null),
+            AppTextField(label: 'Full name', controller: _fullName, hint: 'Your full name', prefixIcon: Icons.person_outline_rounded, validator: (v) => (v == null || v.trim().length < 2) ? 'Enter your full name' : null),
             const SizedBox(height: 16),
-            AppTextField(label: 'Email address', controller: _email, keyboardType: TextInputType.emailAddress, prefixIcon: Icons.mail_outline_rounded, validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null),
+            AppTextField(label: 'Email address', controller: _email, hint: 'you@example.com', keyboardType: TextInputType.emailAddress, prefixIcon: Icons.mail_outline_rounded, validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null),
             const SizedBox(height: 16),
-            AppTextField(label: 'Phone number', controller: _phone, keyboardType: TextInputType.phone, prefixIcon: Icons.phone_outlined, validator: (v) => (v == null || v.trim().length < 10) ? 'Enter a valid phone number' : null),
+            AppTextField(label: 'Phone number', controller: _phone, hint: '10-digit mobile number', keyboardType: TextInputType.phone, prefixIcon: Icons.phone_outlined, validator: (v) => (v == null || v.trim().length < 10) ? 'Enter a valid phone number' : null),
 
             if (_needsSchoolField) ...[
               const SizedBox(height: 16),
@@ -275,9 +275,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
 
             const SizedBox(height: 16),
-            AppTextField(label: 'Password', controller: _password, obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null),
+            AppTextField(label: 'Password', controller: _password, hint: 'At least 6 characters', obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null),
             const SizedBox(height: 16),
-            AppTextField(label: 'Confirm password', controller: _confirm, obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.isEmpty) ? 'Re-enter your password' : null),
+            AppTextField(label: 'Confirm password', controller: _confirm, hint: 'Re-enter your password', obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.isEmpty) ? 'Re-enter your password' : null),
 
             const SizedBox(height: 22),
             GradientButton(label: 'Create Account', icon: Icons.arrow_forward_rounded, loading: _loading, onPressed: _submit),

@@ -162,6 +162,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   AppTextField(
                     label: 'Email address',
                     controller: _emailField,
+                    hint: 'you@example.com',
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.mail_outline_rounded,
                     validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
@@ -203,6 +204,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   AppTextField(
                     label: 'New password',
                     controller: _newPassword,
+                    hint: 'At least 6 characters',
                     obscure: true,
                     prefixIcon: Icons.lock_outline_rounded,
                     validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null,
@@ -211,6 +213,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   AppTextField(
                     label: 'Confirm password',
                     controller: _confirmPassword,
+                    hint: 'Re-enter your password',
                     obscure: true,
                     prefixIcon: Icons.lock_outline_rounded,
                     validator: (v) => (v == null || v.isEmpty) ? 'Re-enter your password' : null,

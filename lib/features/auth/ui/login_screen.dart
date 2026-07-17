@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
+  bool _rememberMe = true;
   String? _error;
 
   Future<void> _submit() async {
@@ -29,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      await context.read<AuthProvider>().login(_email.text.trim(), _password.text);
+      await context.read<AuthProvider>().login(_email.text.trim(), _password.text, rememberMe: _rememberMe);
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('ApiException: ', ''));
     } finally {
@@ -52,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
             AppTextField(
               label: 'Email',
               controller: _email,
+              hint: 'you@example.com',
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.mail_outline_rounded,
               validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
@@ -60,16 +62,44 @@ class _LoginScreenState extends State<LoginScreen> {
             AppTextField(
               label: 'Password',
               controller: _password,
+              hint: 'Enter your password',
               obscure: true,
               prefixIcon: Icons.lock_outline_rounded,
               validator: (v) => (v == null || v.isEmpty) ? 'Enter your password' : null,
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => context.push('/forgot-password'),
-                child: const Text('Forgot password?', style: TextStyle(fontSize: 12.5)),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                  onTap: () => setState(() => _rememberMe = !_rememberMe),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            onChanged: (v) => setState(() => _rememberMe = v ?? true),
+                            activeColor: AppColors.saffron500,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('Remember me', style: TextStyle(color: s.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/forgot-password'),
+                  child: const Text('Forgot password?', style: TextStyle(fontSize: 12.5)),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             GradientButton(label: 'Sign In', loading: _loading, onPressed: _submit),

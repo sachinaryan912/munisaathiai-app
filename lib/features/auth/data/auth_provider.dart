@@ -39,6 +39,14 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    if (!await _storage.readRememberMe()) {
+      // User was logged in but didn't check "Remember me" — the session is
+      // good until the app fully restarts, then it's forgotten.
+      await _storage.clear();
+      status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
     try {
       user = AppUser.fromJson(jsonDecode(cached) as Map<String, dynamic>);
       status = AuthStatus.authenticated;
@@ -62,9 +70,10 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, {bool rememberMe = true}) async {
     final session = await _repo.login(email, password);
     await _persistSession(session);
+    await _storage.saveRememberMe(rememberMe);
   }
 
   Future<void> register({

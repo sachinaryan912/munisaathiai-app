@@ -14,12 +14,19 @@ class SecureStorage {
 
   static const _tokenKey = 'muni_token';
   static const _userKey = 'muni_user_json';
+  static const _rememberMeKey = 'muni_remember_me';
 
   Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
   Future<String?> readToken() => _storage.read(key: _tokenKey);
 
   Future<void> saveUserJson(String json) => _storage.write(key: _userKey, value: json);
   Future<String?> readUserJson() => _storage.read(key: _userKey);
+
+  /// Whether the session should survive a full app restart. Absent (e.g. a
+  /// session persisted before this flag existed) is treated as `true` so
+  /// existing logged-in users aren't suddenly signed out.
+  Future<void> saveRememberMe(bool value) => _storage.write(key: _rememberMeKey, value: value.toString());
+  Future<bool> readRememberMe() async => (await _storage.read(key: _rememberMeKey)) != 'false';
 
   Future<void> clear() => _storage.deleteAll();
 }
