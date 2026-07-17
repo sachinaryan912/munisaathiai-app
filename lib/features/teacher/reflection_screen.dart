@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -115,19 +116,19 @@ class _TeacherReflectionScreenState extends State<TeacherReflectionScreen> {
                     if (_history.isEmpty)
                       const EmptyView(title: 'No past reflections yet', icon: LucideIcons.notebookPen)
                     else
-                      ..._history.map((r) => Padding(
+                      ..._history.asMap().entries.map((entry) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: SectionCard(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(_formatWeek(r['weekStartDate'] as String), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: s.textPrimary)),
+                                  Text(_formatWeek(entry.value['weekStartDate'] as String), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: s.textPrimary)),
                                   const SizedBox(height: 6),
-                                  Text(r['content'] as String, style: TextStyle(fontSize: 12, color: s.textSecondary, height: 1.5)),
+                                  Text(entry.value['content'] as String, style: TextStyle(fontSize: 12, color: s.textSecondary, height: 1.5)),
                                 ],
                               ),
                             ),
-                          )),
+                          ).animate(delay: (entry.key * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic)),
                   ],
                 ),
     );
