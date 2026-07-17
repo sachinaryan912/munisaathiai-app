@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/nav/nav_items.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_theme.dart';
 
 /// The floating tab bar every role shell renders — a flat rounded card where
@@ -33,10 +35,8 @@ class AppBottomNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: s.card,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.4 : 0.08), blurRadius: 22, offset: const Offset(0, -4)),
-          ],
+          borderRadius: AppRadius.xlTop,
+          boxShadow: AppShadows.floating(dark),
         ),
         child: Row(
           children: [
@@ -66,11 +66,11 @@ class AppBottomNavBar extends StatelessWidget {
         final s = sheetContext.surface;
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-          decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+          decoration: BoxDecoration(color: s.card, borderRadius: AppRadius.xlTop),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: s.border, borderRadius: AppRadius.pillAll)),
               const SizedBox(height: 18),
               GridView.count(
                 crossAxisCount: 3,

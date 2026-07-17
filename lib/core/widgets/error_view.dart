@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
 
 class ErrorView extends StatelessWidget {
   final String message;
@@ -10,6 +12,7 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.surface;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -17,23 +20,15 @@ class ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(color: AppColors.danger.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: const Icon(LucideIcons.triangleAlert, color: AppColors.danger, size: 28),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Oops! This page could not load',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Theme.of(context).textTheme.bodyLarge?.color),
-              textAlign: TextAlign.center,
-            ),
+            Text('Oops! This page could not load', style: AppTypography.headline(s.textPrimary), textAlign: TextAlign.center),
             const SizedBox(height: 6),
-            Text(
-              message,
-              style: TextStyle(color: Theme.of(context).hintColor, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
+            Text(message, style: AppTypography.body(s.textMuted), textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 20),
               TextButton.icon(

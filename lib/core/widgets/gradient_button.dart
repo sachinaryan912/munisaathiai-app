@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
 
-class GradientButton extends StatelessWidget {
+class GradientButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
@@ -20,58 +22,65 @@ class GradientButton extends StatelessWidget {
   });
 
   @override
+  State<GradientButton> createState() => _GradientButtonState();
+}
+
+class _GradientButtonState extends State<GradientButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final gradientColors = colors ?? [AppColors.saffron500, AppColors.saffron400, AppColors.saffron300];
-    final disabled = onPressed == null || loading;
+    final gradientColors = widget.colors ?? [AppColors.saffron500, AppColors.saffron400, AppColors.saffron300];
+    final disabled = widget.onPressed == null || widget.loading;
 
     return AnimatedOpacity(
-      opacity: disabled && loading ? 0.85 : 1,
+      opacity: disabled && widget.loading ? 0.85 : 1,
       duration: const Duration(milliseconds: 150),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: disabled ? null : onPressed,
-          child: Ink(
-            height: height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: disabled && !loading ? [Colors.grey.shade400, Colors.grey.shade400] : gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: AnimatedScale(
+        scale: _pressed && !disabled ? 0.97 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppRadius.mdAll,
+          child: InkWell(
+            borderRadius: AppRadius.mdAll,
+            onTap: disabled ? null : widget.onPressed,
+            onTapDown: disabled ? null : (_) => setState(() => _pressed = true),
+            onTapCancel: () => setState(() => _pressed = false),
+            onTapUp: (_) => setState(() => _pressed = false),
+            child: Ink(
+              height: widget.height,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: disabled && !widget.loading ? [Colors.grey.shade400, Colors.grey.shade400] : gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: AppRadius.mdAll,
+                boxShadow: disabled ? [] : AppShadows.glow(gradientColors.first),
               ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: disabled
-                  ? []
-                  : [
-                      BoxShadow(
-                        color: gradientColors.first.withValues(alpha: 0.35),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-            ),
-            child: Center(
-              child: loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2.4, valueColor: AlwaysStoppedAnimation(Colors.white)),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (icon != null) ...[
-                          Icon(icon, color: Colors.white, size: 19),
-                          const SizedBox(width: 8),
+              child: Center(
+                child: widget.loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.4, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (widget.icon != null) ...[
+                            Icon(widget.icon, color: Colors.white, size: 19),
+                            const SizedBox(width: 8),
+                          ],
+                          Text(
+                            widget.label,
+                            style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w700),
+                          ),
                         ],
-                        Text(
-                          label,
-                          style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
+                      ),
+              ),
             ),
           ),
         ),

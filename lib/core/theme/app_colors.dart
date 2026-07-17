@@ -38,6 +38,11 @@ class AppColors {
   static const danger = Color(0xFFEF4444);
   static const info = Color(0xFF3B82F6);
 
+  /// Alias for [danger] — matches the "error" naming convention used in
+  /// design-system briefs while keeping the original name intact everywhere
+  /// it's already referenced.
+  static const error = danger;
+
   static const lightBg = Color(0xFFF7F7FA);
   static const lightCard = Color(0xFFFFFFFF);
   static const lightBorder = Color(0xFFEDEDF2);
@@ -45,6 +50,22 @@ class AppColors {
   static const darkBg = Color(0xFF0B0E14);
   static const darkCard = Color(0xFF151922);
   static const darkBorder = Color(0xFF262B36);
+
+  // ── Extended semantic tokens ────────────────────────────────────────────
+  // A neutral graphite "ink" tone for secondary actions/text — deliberately
+  // not a second bright hue, so the brand reads as mono-chromatic (saffron)
+  // rather than diluted by a competing accent color.
+  static const secondary = Color(0xFF44403C);
+  static const secondaryLight = Color(0xFF78716C);
+
+  static const primaryContainerLight = saffron50;
+  static const primaryContainerDark = Color(0xFF3A2410);
+
+  static const surfaceVariantLight = Color(0xFFF1ECE4);
+  static const surfaceVariantDark = Color(0xFF1D222D);
+
+  static const disabledLight = Color(0xFFD1D5DB);
+  static const disabledDark = Color(0xFF3F4552);
 
   static List<Color> roleGradient(String role) {
     switch (role) {

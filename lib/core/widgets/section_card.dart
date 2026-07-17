@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
 import '../theme/app_theme.dart';
 
 /// The one recurring "white rounded card with soft shadow" surface used
@@ -13,14 +15,14 @@ class SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final card = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: s.card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.28 : 0.045), blurRadius: 18, offset: const Offset(0, 6)),
-        ],
+        borderRadius: AppRadius.lgAll,
+        border: dark ? null : Border.all(color: s.border, width: 1),
+        boxShadow: AppShadows.soft(dark),
       ),
       child: child,
     );
@@ -28,8 +30,8 @@ class SectionCard extends StatelessWidget {
     if (onTap == null) return card;
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(borderRadius: BorderRadius.circular(22), onTap: onTap, child: card),
+      borderRadius: AppRadius.lgAll,
+      child: InkWell(borderRadius: AppRadius.lgAll, onTap: onTap, child: card),
     );
   }
 }

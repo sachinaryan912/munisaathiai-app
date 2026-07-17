@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../theme/app_radius.dart';
 import '../theme/app_theme.dart';
 
 /// A single shimmering placeholder block — compose several into a skeleton
@@ -10,7 +11,7 @@ class ShimmerBox extends StatelessWidget {
   final double height;
   final BorderRadius borderRadius;
 
-  const ShimmerBox({super.key, this.width, this.height = 16, this.borderRadius = const BorderRadius.all(Radius.circular(10))});
+  const ShimmerBox({super.key, this.width, this.height = 16, this.borderRadius = AppRadius.smAll});
 
   @override
   Widget build(BuildContext context) {

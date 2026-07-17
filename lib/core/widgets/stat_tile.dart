@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
+import 'icon_container.dart';
 import 'section_card.dart';
 
 class StatTile extends StatelessWidget {
@@ -29,19 +31,14 @@ class StatTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, size: 18, color: color),
-          ),
+          AppIconContainer(icon: icon, color: color),
           const SizedBox(height: 12),
-          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: s.textPrimary, height: 1)),
+          Text(value, style: AppTypography.display(s.textPrimary).copyWith(fontSize: 24, height: 1)),
           const SizedBox(height: 3),
-          Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: s.textSecondary)),
+          Text(label, style: AppTypography.body(s.textSecondary).copyWith(fontSize: 12.5, fontWeight: FontWeight.w600)),
           if (sublabel != null) ...[
             const SizedBox(height: 1),
-            Text(sublabel!, style: TextStyle(fontSize: 11, color: s.textMuted)),
+            Text(sublabel!, style: AppTypography.caption(s.textMuted).copyWith(fontWeight: FontWeight.w400)),
           ],
         ],
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_typography.dart';
 
 class StatusPill extends StatelessWidget {
   final String label;
@@ -12,7 +14,7 @@ class StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: AppRadius.pillAll),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -21,7 +23,7 @@ class StatusPill extends StatelessWidget {
             const SizedBox(width: 6),
           ],
           if (icon != null) ...[Icon(icon, size: 12, color: color), const SizedBox(width: 4)],
-          Text(label, style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800)),
+          Text(label, style: AppTypography.caption(color)),
         ],
       ),
     );

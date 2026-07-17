@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
 
 class LoadingView extends StatelessWidget {
   final String? message;
@@ -7,6 +9,7 @@ class LoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
+    final s = context.surface;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -17,10 +20,7 @@ class LoadingView extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation(color)),
           ),
           const SizedBox(height: 14),
-          Text(
-            message ?? 'Loading...',
-            style: TextStyle(color: Theme.of(context).hintColor, fontWeight: FontWeight.w600, fontSize: 13),
-          ),
+          Text(message ?? 'Loading...', style: AppTypography.body(s.textMuted).copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );

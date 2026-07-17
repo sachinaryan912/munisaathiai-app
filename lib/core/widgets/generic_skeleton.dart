@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_radius.dart';
 import 'shimmer_box.dart';
 
 /// A quick shimmering skeleton built from a list of block heights — use when
@@ -16,7 +17,7 @@ class GenericSkeleton extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         children: [
           for (final h in blockHeights) ...[
-            ShimmerBox(height: h, borderRadius: BorderRadius.circular(22)),
+            ShimmerBox(height: h, borderRadius: AppRadius.lgAll),
             const SizedBox(height: 14),
           ],
         ],

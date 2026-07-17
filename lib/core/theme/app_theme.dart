@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+import 'app_radius.dart';
 
 class AppTheme {
   AppTheme._();
@@ -38,7 +39,7 @@ class AppTheme {
         color: AppColors.lightCard,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       ),
       dividerTheme: const DividerThemeData(color: AppColors.lightBorder, thickness: 1),
       inputDecorationTheme: InputDecorationTheme(
@@ -46,19 +47,19 @@ class AppTheme {
         fillColor: const Color(0xFFF2F2F6),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.saffron400, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.danger, width: 1.4),
         ),
         hintStyle: GoogleFonts.inter(color: const Color(0xFF9CA3AF), fontSize: 14.5),
@@ -70,7 +71,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
           textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
@@ -80,8 +81,46 @@ class AppTheme {
           textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700),
         ),
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.lightCard,
+        selectedColor: AppColors.saffron500,
+        shape: const StadiumBorder(side: BorderSide(color: AppColors.lightBorder)),
+        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF64748B)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.lightCard,
+        modalBackgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xlTop),
+        elevation: 0,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.lightCard,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+        titleTextStyle: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+        contentTextStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF64748B)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF0F172A),
+        contentTextStyle: GoogleFonts.inter(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+        behavior: SnackBarBehavior.floating,
+      ),
       splashFactory: InkSparkle.splashFactory,
-      extensions: const [MuniSurface(bg: AppColors.lightBg, card: AppColors.lightCard, border: AppColors.lightBorder, textPrimary: Color(0xFF0F172A), textSecondary: Color(0xFF64748B), textMuted: Color(0xFF9CA3AF))],
+      extensions: const [
+        MuniSurface(
+          bg: AppColors.lightBg,
+          card: AppColors.lightCard,
+          border: AppColors.lightBorder,
+          textPrimary: Color(0xFF0F172A),
+          textSecondary: Color(0xFF64748B),
+          textMuted: Color(0xFF9CA3AF),
+          primaryContainer: AppColors.primaryContainerLight,
+          surfaceVariant: AppColors.surfaceVariantLight,
+          disabled: AppColors.disabledLight,
+        ),
+      ],
     );
   }
 
@@ -114,21 +153,21 @@ class AppTheme {
         color: AppColors.darkCard,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       ),
       dividerTheme: const DividerThemeData(color: AppColors.darkBorder, thickness: 1),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF1B202B),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        border: OutlineInputBorder(borderRadius: AppRadius.mdAll, borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: AppRadius.mdAll, borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.saffron400, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.danger, width: 1.4),
         ),
         hintStyle: GoogleFonts.inter(color: const Color(0xFF6B7280), fontSize: 14.5),
@@ -140,7 +179,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
           textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
@@ -150,8 +189,46 @@ class AppTheme {
           textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700),
         ),
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.darkCard,
+        selectedColor: AppColors.saffron500,
+        shape: const StadiumBorder(side: BorderSide(color: AppColors.darkBorder)),
+        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF94A3B8)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.darkCard,
+        modalBackgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xlTop),
+        elevation: 0,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.darkCard,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+        titleTextStyle: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFFF1F5F9)),
+        contentTextStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF94A3B8)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFFF1F5F9),
+        contentTextStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF0F172A), fontWeight: FontWeight.w600),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+        behavior: SnackBarBehavior.floating,
+      ),
       splashFactory: InkSparkle.splashFactory,
-      extensions: const [MuniSurface(bg: AppColors.darkBg, card: AppColors.darkCard, border: AppColors.darkBorder, textPrimary: Color(0xFFF1F5F9), textSecondary: Color(0xFF94A3B8), textMuted: Color(0xFF64748B))],
+      extensions: const [
+        MuniSurface(
+          bg: AppColors.darkBg,
+          card: AppColors.darkCard,
+          border: AppColors.darkBorder,
+          textPrimary: Color(0xFFF1F5F9),
+          textSecondary: Color(0xFF94A3B8),
+          textMuted: Color(0xFF64748B),
+          primaryContainer: AppColors.primaryContainerDark,
+          surfaceVariant: AppColors.surfaceVariantDark,
+          disabled: AppColors.disabledDark,
+        ),
+      ],
     );
   }
 }
@@ -166,6 +243,9 @@ class MuniSurface extends ThemeExtension<MuniSurface> {
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
+  final Color primaryContainer;
+  final Color surfaceVariant;
+  final Color disabled;
 
   const MuniSurface({
     required this.bg,
@@ -174,10 +254,23 @@ class MuniSurface extends ThemeExtension<MuniSurface> {
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
+    required this.primaryContainer,
+    required this.surfaceVariant,
+    required this.disabled,
   });
 
   @override
-  MuniSurface copyWith({Color? bg, Color? card, Color? border, Color? textPrimary, Color? textSecondary, Color? textMuted}) {
+  MuniSurface copyWith({
+    Color? bg,
+    Color? card,
+    Color? border,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textMuted,
+    Color? primaryContainer,
+    Color? surfaceVariant,
+    Color? disabled,
+  }) {
     return MuniSurface(
       bg: bg ?? this.bg,
       card: card ?? this.card,
@@ -185,6 +278,9 @@ class MuniSurface extends ThemeExtension<MuniSurface> {
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
+      primaryContainer: primaryContainer ?? this.primaryContainer,
+      surfaceVariant: surfaceVariant ?? this.surfaceVariant,
+      disabled: disabled ?? this.disabled,
     );
   }
 
@@ -198,6 +294,9 @@ class MuniSurface extends ThemeExtension<MuniSurface> {
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
+      primaryContainer: Color.lerp(primaryContainer, other.primaryContainer, t)!,
+      surfaceVariant: Color.lerp(surfaceVariant, other.surfaceVariant, t)!,
+      disabled: Color.lerp(disabled, other.disabled, t)!,
     );
   }
 }
