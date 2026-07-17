@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/icon_map.dart';
 import '../../core/widgets/async_screen.dart';
+import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'student_repository.dart';
@@ -21,7 +22,7 @@ class StudentDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = StudentRepository();
     return AppShell(
-      title: 'My Dashboard',
+      title: '',
       showAiFab: false,
       body: AsyncScreen<Map<String, dynamic>>(
         loader: repo.getDashboard,
@@ -54,6 +55,7 @@ class _DashboardBody extends StatelessWidget {
     final feedback = data['feedbackSummary'] as Map<String, dynamic>? ?? {};
 
     final sections = <Widget>[
+      const GreetingHeader(),
       _HeroCard(overallScore: overallScore),
       _StatsRow(stats: stats, colors: _statColors),
       _QuickAccessGrid(selfStudy: selfStudy, assignments: assignments, peerTeaching: peerTeaching, feedback: feedback),

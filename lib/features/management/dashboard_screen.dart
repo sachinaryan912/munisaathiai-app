@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -20,7 +21,7 @@ class ManagementDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = ManagementRepository();
     return AppShell(
-      title: 'Management Dashboard',
+      title: '',
       body: AsyncScreen<Map<String, dynamic>>(loader: repo.getOverview, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
     );
   }
@@ -65,6 +66,8 @@ class _BodyState extends State<_Body> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
+        const GreetingHeader(subtitle: 'Here\'s how your network is doing today.'),
+        const SizedBox(height: 18),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,

@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/icon_map.dart';
 import '../../core/widgets/error_view.dart';
+import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
 import '../../core/widgets/section_card.dart';
@@ -55,7 +56,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     }
 
     return AppShell(
-      title: 'My Dashboard',
+      title: '',
       body: childProvider.loading || _loading
           ? const LoadingView(message: 'Loading dashboard...')
           : _error != null
@@ -93,6 +94,8 @@ class _Body extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
+        const GreetingHeader(subtitle: 'Here\'s how your child is doing today.'),
+        const SizedBox(height: 18),
         const ChildSwitcher(),
         const SizedBox(height: 16),
         SectionCard(

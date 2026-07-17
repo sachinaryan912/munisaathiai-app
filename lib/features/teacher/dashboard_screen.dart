@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
 import '../../core/widgets/section_card.dart';
@@ -19,7 +20,7 @@ class TeacherDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = TeacherRepository();
     return AppShell(
-      title: 'My Dashboard',
+      title: '',
       body: AsyncScreen<Map<String, dynamic>>(loader: repo.getDashboard, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
     );
   }
@@ -67,6 +68,8 @@ class _BodyState extends State<_Body> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
+        const GreetingHeader(subtitle: 'Here\'s your class today.'),
+        const SizedBox(height: 18),
         SectionCard(
           padding: const EdgeInsets.all(20),
           child: Row(
