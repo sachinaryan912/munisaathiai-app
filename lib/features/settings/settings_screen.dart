@@ -4,7 +4,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/nav/nav_items.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -100,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(children: [const Icon(LucideIcons.user, size: 18, color: AppColors.saffron500), const SizedBox(width: 8), Text('Profile', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary))]),
+                Row(children: [const Icon(LucideIcons.user, size: 18, color: AppColors.saffron500), const SizedBox(width: 8), Text('Profile', style: AppTypography.headline(s.textPrimary))]),
                 const SizedBox(height: 16),
                 AppTextField(label: 'Full Name', controller: _fullName),
                 const SizedBox(height: 14),
@@ -129,7 +131,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(children: [const Icon(LucideIcons.lock, size: 18, color: AppColors.saffron500), const SizedBox(width: 8), Text('Change Password', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary))]),
+                Row(children: [const Icon(LucideIcons.lock, size: 18, color: AppColors.saffron500), const SizedBox(width: 8), Text('Change Password', style: AppTypography.headline(s.textPrimary))]),
                 const SizedBox(height: 16),
                 AppTextField(label: 'Current Password', controller: _currentPassword, obscure: true),
                 const SizedBox(height: 14),
@@ -148,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Account', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+                Text('Account', style: AppTypography.headline(s.textPrimary)),
                 const SizedBox(height: 4),
                 Text('Sign out of Muni Saathi AI on this device.', style: TextStyle(fontSize: 12, color: s.textMuted, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 16),
@@ -158,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     foregroundColor: AppColors.danger,
                     side: const BorderSide(color: Color(0xFFFECACA)),
                     padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
                   ),
                   icon: const Icon(LucideIcons.logOut, size: 17),
                   label: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w800)),

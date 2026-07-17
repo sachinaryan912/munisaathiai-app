@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -73,7 +74,7 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
                               ],
                             ),
                           ),
-                        );
+                        ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                       },
                     ),
               Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_school', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(refresh), child: const Icon(Icons.add, color: Colors.white))),

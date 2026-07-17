@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -67,7 +68,7 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
                                     ],
                                   ),
                                 ),
-                              );
+                              ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                             },
                           ),
                     certs.isEmpty
@@ -97,7 +98,7 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
                                     ],
                                   ),
                                 ),
-                              );
+                              ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                             },
                           ),
                   ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -41,7 +42,10 @@ class ManagementAlertsScreen extends StatelessWidget {
                   Text('$label (${items.length})', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: color, letterSpacing: 0.3)),
                 ]),
                 const SizedBox(height: 8),
-                ...items.map((a) => Padding(
+                ...items.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final a = entry.value;
+                  return Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: SectionCard(
                         child: Row(
@@ -65,7 +69,8 @@ class ManagementAlertsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                    )),
+                  ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
+                }),
                 const SizedBox(height: 12),
               ],
             );
