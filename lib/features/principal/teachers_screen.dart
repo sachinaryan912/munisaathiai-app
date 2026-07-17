@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/async_screen.dart';
+import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/section_card.dart';
+import '../shell/app_shell.dart';
+import 'principal_repository.dart';
+
+const _statusColors = {
+  'Active': Color(0xFF10B981),
+  'Needs Support': Color(0xFFF59E0B),
+  'Inactive': Color(0xFFEF4444),
+};
+
+class PrincipalTeachersScreen extends StatelessWidget {
+  const PrincipalTeachersScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = PrincipalRepository();
+    return AppShell(
+      title: 'Teachers',
+      body: AsyncScreen<List<Map<String, dynamic>>>(
+        loader: repo.getTeachers,
+        builder: (context, teachers, refresh) {
+          final s = context.surface;
+          if (teachers.isEmpty) {
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: LucideIcons.users)]);
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+            itemCount: teachers.length,
+            itemBuilder: (context, i) {
+              final t = teachers[i];
+              final status = t['status'] as String? ?? 'Active';
+              final color = _statusColors[status] ?? s.textMuted;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SectionCard(
+                  child: Row(
+                    children: [
+                      CircleAvatar(radius: 20, backgroundColor: AppColors.roleColor('PRINCIPAL'), child: Text((t['name'] as String).isNotEmpty ? (t['name'] as String)[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(t['name'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
+                            const SizedBox(height: 3),
+                            Text('${t['className'] ?? '—'} ${t['section'] ?? ''} · Score ${t['score']} · ${t['methodsActiveToday']} methods today', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                          ],
+                        ),
+                      ),
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(99)), child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color))),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
