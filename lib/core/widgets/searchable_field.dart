@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 
-/// A text field with a suggestions dropdown sourced from [options], but that
-/// still accepts free text — mirrors the web app's `SearchableSelect`
-/// (schools/classes/sections may not exist yet; typing a new one is valid).
+/// A text field with a suggestions dropdown sourced from [options]. By default it still
+/// accepts free text (mirrors the web app's `SearchableSelect` — schools/classes/sections
+/// may not exist yet, so typing a new one is valid). Set [allowCreate] to false to make it
+/// pick-only: typing still filters the suggestions, but only selecting one commits a value —
+/// used for Class/Section once those come from a Management-curated catalog rather than
+/// whatever anyone has typed before.
 class SearchableField extends StatefulWidget {
   final String label;
   final String value;
@@ -12,6 +15,7 @@ class SearchableField extends StatefulWidget {
   final List<String> options;
   final bool loading;
   final bool enabled;
+  final bool allowCreate;
   final String hint;
   final IconData? prefixIcon;
   final String? error;
@@ -24,6 +28,7 @@ class SearchableField extends StatefulWidget {
     required this.options,
     this.loading = false,
     this.enabled = true,
+    this.allowCreate = true,
     this.hint = 'Search or type',
     this.prefixIcon,
     this.error,
@@ -35,7 +40,16 @@ class SearchableField extends StatefulWidget {
 
 class _SearchableFieldState extends State<SearchableField> {
   late final _controller = TextEditingController(text: widget.value);
-  final _focusNode = FocusNode();
+  late final _focusNode = FocusNode()..addListener(_onFocusChange);
+
+  void _onFocusChange() {
+    // Pick-only mode: unmatched typed text never committed (see onChanged above) — snap the
+    // visible text back to the real value once the user looks away, instead of leaving a
+    // typed string on screen that doesn't match what was actually selected.
+    if (!widget.allowCreate && !_focusNode.hasFocus && _controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
 
   @override
   void didUpdateWidget(covariant SearchableField old) {
@@ -76,7 +90,17 @@ class _SearchableFieldState extends State<SearchableField> {
               controller: controller,
               focusNode: focusNode,
               enabled: widget.enabled,
-              onChanged: widget.onChanged,
+              onChanged: (text) {
+                // Pick-only mode: typing only filters suggestions below — it doesn't commit a
+                // value on its own (that only happens via onSelected). Clearing the field does
+                // still clear the committed value, so downstream cascades (e.g. clearing Section
+                // when Class is erased) keep working.
+                if (!widget.allowCreate) {
+                  if (text.isEmpty) widget.onChanged('');
+                  return;
+                }
+                widget.onChanged(text);
+              },
               decoration: InputDecoration(
                 hintText: widget.enabled ? widget.hint : 'Select the previous field first',
                 prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, size: 20) : null,
@@ -92,7 +116,7 @@ class _SearchableFieldState extends State<SearchableField> {
           },
           optionsViewBuilder: (context, onSelected, opts) {
             final list = opts.toList();
-            if (list.isEmpty) return const SizedBox.shrink();
+            if (list.isEmpty && widget.allowCreate) return const SizedBox.shrink();
             return Align(
               alignment: Alignment.topLeft,
               child: Material(
@@ -101,7 +125,12 @@ class _SearchableFieldState extends State<SearchableField> {
                 color: s.card,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 220, minWidth: 280),
-                  child: ListView.builder(
+                  child: list.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          child: Text('None set up yet — contact your school management.', style: TextStyle(fontSize: 12, color: s.textMuted)),
+                        )
+                      : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     shrinkWrap: true,
                     itemCount: list.length,

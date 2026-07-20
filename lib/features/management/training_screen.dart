@@ -4,8 +4,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
+import '../videos/video_screen.dart';
 import 'management_repository.dart';
 
 class ManagementTrainingScreen extends StatefulWidget {
@@ -16,8 +18,10 @@ class ManagementTrainingScreen extends StatefulWidget {
 }
 
 class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(length: 2, vsync: this);
+  late final TabController _tabController = TabController(length: 3, vsync: this)..addListener(() => setState(() {}));
   final _repo = ManagementRepository();
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +31,23 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
       body: AsyncScreen<List<dynamic>>(
         loader: () => Future.wait([_repo.getNetworkTrainingSessions(), _repo.getCertifications()]),
         builder: (context, results, refresh) {
-          final sessions = (results[0] as List).cast<Map<String, dynamic>>();
-          final certs = (results[1] as List).cast<Map<String, dynamic>>();
+          final allSessions = (results[0] as List).cast<Map<String, dynamic>>();
+          final allCerts = (results[1] as List).cast<Map<String, dynamic>>();
+          final q = _query.trim().toLowerCase();
+          final sessions = q.isEmpty
+              ? allSessions
+              : allSessions.where((sess) {
+                  return (sess['topic'] as String? ?? '').toLowerCase().contains(q) ||
+                      (sess['schoolName'] as String? ?? '').toLowerCase().contains(q) ||
+                      (sess['trainerName'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
+          final certs = q.isEmpty
+              ? allCerts
+              : allCerts.where((c) {
+                  return (c['teacherName'] as String? ?? '').toLowerCase().contains(q) ||
+                      (c['schoolName'] as String? ?? '').toLowerCase().contains(q) ||
+                      (c['topic'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
           return Column(
             children: [
               TabBar(
@@ -37,14 +56,19 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
                 unselectedLabelColor: s.textMuted,
                 indicatorColor: AppColors.saffron500,
                 labelStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
-                tabs: const [Tab(text: 'Sessions'), Tab(text: 'Certifications')],
+                tabs: const [Tab(text: 'Sessions'), Tab(text: 'Certifications'), Tab(text: 'Videos')],
               ),
+              if (_tabController.index < 2 && (allSessions.isNotEmpty || allCerts.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: ListSearchField(controller: _searchCtrl, hint: 'Search by topic, school or trainer', onChanged: (v) => setState(() => _query = v)),
+                ),
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
                   children: [
                     sessions.isEmpty
-                        ? const EmptyView(title: 'No training sessions yet', icon: Icons.book_outlined)
+                        ? EmptyView(title: allSessions.isEmpty ? 'No training sessions yet' : 'No sessions match your search', icon: Icons.book_outlined)
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                             itemCount: sessions.length,
@@ -72,7 +96,7 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
                             },
                           ),
                     certs.isEmpty
-                        ? const EmptyView(title: 'No certifications issued yet', icon: Icons.workspace_premium_outlined)
+                        ? EmptyView(title: allCerts.isEmpty ? 'No certifications issued yet' : 'No certifications match your search', icon: Icons.workspace_premium_outlined)
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                             itemCount: certs.length,
@@ -101,6 +125,7 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
                               ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                             },
                           ),
+                    const VideoResourcesScreen(),
                   ],
                 ),
               ),

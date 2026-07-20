@@ -5,7 +5,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
+import '../action_plans/action_plan_sheet.dart';
 import '../shell/app_shell.dart';
 import 'management_repository.dart';
 
@@ -13,22 +15,51 @@ const _categoryLabels = {
   'MII': 'MII Score', 'EVIDENCE': 'Evidence', 'METHODOLOGY': 'Methodology', 'REPORT': 'Report',
 };
 
-class ManagementAlertsScreen extends StatelessWidget {
+class ManagementAlertsScreen extends StatefulWidget {
   const ManagementAlertsScreen({super.key});
 
   @override
+  State<ManagementAlertsScreen> createState() => _ManagementAlertsScreenState();
+}
+
+class _ManagementAlertsScreenState extends State<ManagementAlertsScreen> {
+  final _repo = ManagementRepository();
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  Future<void> _createActionPlan(BuildContext context, String schoolName) async {
+    List<Map<String, dynamic>> assignees = [];
+    try {
+      final users = await _repo.getUsers();
+      assignees = users
+          .where((u) => u['schoolName'] == schoolName)
+          .map((u) => {'id': u['id'], 'name': '${u['fullName']} (${u['role']})'})
+          .toList();
+    } catch (_) {}
+    if (!context.mounted) return;
+    await showCreateActionPlanSheet(context, schoolName: schoolName, assignees: assignees);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repo = ManagementRepository();
     return AppShell(
       title: 'Alerts',
       body: AsyncScreen<Map<String, dynamic>>(
-        loader: repo.getOverview,
+        loader: _repo.getOverview,
         builder: (context, data, refresh) {
           final s = context.surface;
-          final alerts = (data['alerts'] as List? ?? []).cast<Map<String, dynamic>>();
-          if (alerts.isEmpty) {
+          final allAlerts = (data['alerts'] as List? ?? []).cast<Map<String, dynamic>>();
+          if (allAlerts.isEmpty) {
             return ListView(children: const [SizedBox(height: 140), EmptyView(title: 'All Clear!', subtitle: 'No active alerts across all schools.', icon: LucideIcons.bellOff)]);
           }
+          final q = _query.trim().toLowerCase();
+          final alerts = q.isEmpty
+              ? allAlerts
+              : allAlerts.where((a) {
+                  return (a['schoolName'] as String? ?? '').toLowerCase().contains(q) ||
+                      (a['message'] as String? ?? '').toLowerCase().contains(q) ||
+                      (_categoryLabels[a['category']] ?? a['category'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
           final urgent = alerts.where((a) => a['type'] == 'URGENT').toList();
           final warning = alerts.where((a) => a['type'] != 'URGENT').toList();
 
@@ -63,6 +94,16 @@ class ManagementAlertsScreen extends StatelessWidget {
                                   ]),
                                   const SizedBox(height: 4),
                                   Text(a['message'] as String, style: TextStyle(fontSize: 12, color: s.textSecondary, height: 1.4)),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton.icon(
+                                      onPressed: () => _createActionPlan(context, a['schoolName'] as String),
+                                      icon: const Icon(LucideIcons.clipboardList, size: 13),
+                                      label: const Text('Create Action Plan', style: TextStyle(fontSize: 11)),
+                                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -79,10 +120,16 @@ class ManagementAlertsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             children: [
-              Text('${alerts.length} active alert${alerts.length == 1 ? '' : 's'} across all schools', style: TextStyle(fontSize: 12.5, color: s.textMuted, fontWeight: FontWeight.w600)),
+              Text('${allAlerts.length} active alert${allAlerts.length == 1 ? '' : 's'} across all schools', style: TextStyle(fontSize: 12.5, color: s.textMuted, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              ListSearchField(controller: _searchCtrl, hint: 'Search by school, message or category', onChanged: (v) => setState(() => _query = v)),
               const SizedBox(height: 14),
-              if (urgent.isNotEmpty) section('Urgent', urgent, AppColors.danger),
-              if (warning.isNotEmpty) section('Warning', warning, AppColors.warning),
+              if (alerts.isEmpty)
+                Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text('No alerts match your search.', style: TextStyle(fontSize: 12, color: s.textMuted)))
+              else ...[
+                if (urgent.isNotEmpty) section('Urgent', urgent, AppColors.danger),
+                if (warning.isNotEmpty) section('Warning', warning, AppColors.warning),
+              ],
             ],
           );
         },

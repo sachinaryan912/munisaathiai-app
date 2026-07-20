@@ -11,6 +11,7 @@ import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
+import 'attendance_trends_screen.dart';
 import 'principal_repository.dart';
 
 class PrincipalAttendanceReportScreen extends StatelessWidget {
@@ -21,6 +22,13 @@ class PrincipalAttendanceReportScreen extends StatelessWidget {
     final repo = PrincipalRepository();
     return AppShell(
       title: 'Attendance Report',
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.trendingUp),
+          tooltip: 'Attendance Trends',
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrincipalAttendanceTrendsScreen())),
+        ),
+      ],
       body: AsyncScreen<List<Map<String, dynamic>>>(
         loader: repo.getClasses,
         builder: (context, classes, refresh) {
@@ -58,7 +66,7 @@ class _BodyState extends State<_Body> {
       lastDate: DateTime.now(),
       initialDateRange: _range,
     );
-    if (picked != null) setState(() => _range = picked);
+    if (picked != null) setState(() { _range = picked; _report = null; });
   }
 
   Future<void> _generate() async {

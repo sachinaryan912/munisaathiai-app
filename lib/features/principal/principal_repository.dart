@@ -20,9 +20,29 @@ class PrincipalRepository {
         return (res.data as List).cast<Map<String, dynamic>>();
       });
 
+  Future<List<int>> downloadClassesPdf() => apiCall(() async {
+        final res = await _dio.get('/principal/classes/pdf', options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
+      });
+
   Future<List<Map<String, dynamic>>> getMethodology() => apiCall(() async {
         final res = await _dio.get('/principal/methodology');
         return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<int>> downloadMethodologyPdf() => apiCall(() async {
+        final res = await _dio.get('/principal/methodology/pdf', options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
+      });
+
+  Future<Map<String, dynamic>> getParentInvolvement() => apiCall(() async {
+        final res = await _dio.get('/principal/parent-involvement');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<int>> downloadParentInvolvementPdf() => apiCall(() async {
+        final res = await _dio.get('/principal/parent-involvement/pdf', options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
       });
 
   Future<Map<String, dynamic>> getAttendanceReport({
@@ -57,6 +77,21 @@ class PrincipalRepository {
         return res.data as List<int>;
       });
 
+  Future<Map<String, dynamic>> getAttendanceTrends({int days = 30}) => apiCall(() async {
+        final res = await _dio.get('/principal/attendance-trends', queryParameters: {'days': days});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<Map<String, dynamic>>> getTrainingSessions() => apiCall(() async {
+        final res = await _dio.get('/principal/training-sessions');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<Map<String, dynamic>>> getCertifications() => apiCall(() async {
+        final res = await _dio.get('/principal/certifications');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
   String _fmt(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<Map<String, dynamic>> generateDailyReport() => apiCall(() async {
@@ -72,6 +107,11 @@ class PrincipalRepository {
 
   Future<List<Map<String, dynamic>>> getObservations() => apiCall(() async {
         final res = await _dio.get('/principal/observations');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<Map<String, dynamic>>> getObservationChecklist() => apiCall(() async {
+        final res = await _dio.get('/principal/observations/checklist');
         return (res.data as List).cast<Map<String, dynamic>>();
       });
 

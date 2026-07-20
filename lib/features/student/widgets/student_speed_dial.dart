@@ -91,16 +91,20 @@ class _MainFab extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
+      // Material's own elevation shadow (clipped via PhysicalShape to `shape:`) instead of a
+      // manual BoxShadow — BoxShadow on a BoxShape.circle decoration can render as a square
+      // behind the circle on some renderers, since it isn't clipped to the shape.
+      elevation: 8,
+      shadowColor: AppColors.saffron500.withValues(alpha: 0.6),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Ink(
           width: 58,
           height: 58,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(colors: [AppColors.saffron500, AppColors.saffron400]),
-            boxShadow: [BoxShadow(color: AppColors.saffron500.withValues(alpha: 0.4), blurRadius: 18, offset: const Offset(0, 8))],
+            gradient: LinearGradient(colors: [AppColors.saffron500, AppColors.saffron400]),
           ),
           child: Center(
             child: AnimatedRotation(
@@ -152,6 +156,8 @@ class _SpeedDialItem extends StatelessWidget {
               Material(
                 color: Colors.transparent,
                 shape: const CircleBorder(),
+                elevation: 6,
+                shadowColor: action.color.withValues(alpha: 0.6),
                 child: InkWell(
                   onTap: onTap,
                   customBorder: const CircleBorder(),
@@ -161,7 +167,6 @@ class _SpeedDialItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: action.color,
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: action.color.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
                     ),
                     child: Icon(action.icon, color: Colors.white, size: 20),
                   ),

@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -23,8 +24,13 @@ class PrincipalReportsScreen extends StatelessWidget {
     return AppShell(
       title: 'Reports',
       body: AsyncScreen<List<dynamic>>(
-        loader: () => Future.wait([repo.getTeachers(), repo.getMethodology()]),
-        builder: (context, results, refresh) => _Body(teachers: (results[0] as List).cast<Map<String, dynamic>>(), methodology: (results[1] as List).cast<Map<String, dynamic>>(), repo: repo),
+        loader: () => Future.wait([repo.getTeachers(), repo.getMethodology(), repo.getParentInvolvement()]),
+        builder: (context, results, refresh) => _Body(
+          teachers: (results[0] as List).cast<Map<String, dynamic>>(),
+          methodology: (results[1] as List).cast<Map<String, dynamic>>(),
+          parentInvolvement: results[2] as Map<String, dynamic>,
+          repo: repo,
+        ),
       ),
     );
   }
@@ -33,8 +39,9 @@ class PrincipalReportsScreen extends StatelessWidget {
 class _Body extends StatefulWidget {
   final List<Map<String, dynamic>> teachers;
   final List<Map<String, dynamic>> methodology;
+  final Map<String, dynamic> parentInvolvement;
   final PrincipalRepository repo;
-  const _Body({required this.teachers, required this.methodology, required this.repo});
+  const _Body({required this.teachers, required this.methodology, required this.parentInvolvement, required this.repo});
 
   @override
   State<_Body> createState() => _BodyState();
@@ -45,6 +52,8 @@ class _BodyState extends State<_Body> {
   Map<String, dynamic>? _healthReport;
   bool _healthLoading = false;
   String? _healthError;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   Future<void> _generateHealth() async {
     setState(() {
@@ -71,26 +80,47 @@ class _BodyState extends State<_Body> {
           children: [
             _TabChip(label: 'Teachers', value: 'teachers', active: _tab, onTap: (v) => setState(() => _tab = v)),
             _TabChip(label: 'Methodology', value: 'methodology', active: _tab, onTap: (v) => setState(() => _tab = v)),
+            _TabChip(label: 'Parent Involvement', value: 'parents', active: _tab, onTap: (v) => setState(() => _tab = v)),
             _TabChip(label: 'AI Health Report', value: 'health', active: _tab, onTap: (v) => setState(() => _tab = v)),
           ],
         ),
         const SizedBox(height: 16),
         if (_tab == 'teachers')
-          SectionCard(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              children: widget.teachers.map((t) {
-                final status = t['status'] as String? ?? 'Active';
-                final color = _statusColors[status] ?? s.textMuted;
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  title: Text(t['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
-                  subtitle: Text('Score ${t['score']} · Evidence ${t['evidenceCount']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
-                  trailing: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(99)), child: Text(status, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: color))),
-                );
-              }).toList(),
-            ),
-          )
+          Builder(builder: (context) {
+            final q = _query.trim().toLowerCase();
+            final filtered = q.isEmpty
+                ? widget.teachers
+                : widget.teachers.where((t) {
+                    return (t['name'] as String? ?? '').toLowerCase().contains(q) || (t['status'] as String? ?? '').toLowerCase().contains(q);
+                  }).toList();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.teachers.isNotEmpty) ...[
+                  ListSearchField(controller: _searchCtrl, hint: 'Search by name or status', onChanged: (v) => setState(() => _query = v)),
+                  const SizedBox(height: 12),
+                ],
+                if (filtered.isEmpty)
+                  Text('No teachers match your search.', style: TextStyle(fontSize: 12.5, color: s.textMuted))
+                else
+                  SectionCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: filtered.map((t) {
+                        final status = t['status'] as String? ?? 'Active';
+                        final color = _statusColors[status] ?? s.textMuted;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                          title: Text(t['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                          subtitle: Text('Score ${t['score']} · Evidence ${t['evidenceCount']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                          trailing: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(99)), child: Text(status, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: color))),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
+            );
+          })
         else if (_tab == 'methodology')
           SectionCard(
             child: Column(
@@ -110,6 +140,51 @@ class _BodyState extends State<_Body> {
               }).toList(),
             ),
           )
+        else if (_tab == 'parents')
+          Builder(builder: (context) {
+            final avg = widget.parentInvolvement['schoolAvgCompletion'] as int?;
+            final students = (widget.parentInvolvement['students'] as List? ?? []).cast<Map<String, dynamic>>();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SectionCard(
+                  child: Row(children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('School Avg. Home-Learning Completion', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: s.textSecondary)),
+                          const SizedBox(height: 4),
+                          Text(avg != null ? '$avg%' : '—', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: s.textPrimary)),
+                          Text('Ghar Ek Pathshala · last 4 weeks', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                        ],
+                      ),
+                    ),
+                    PdfDownloadButton(fileName: 'parent_involvement_report.pdf', download: widget.repo.downloadParentInvolvementPdf),
+                  ]),
+                ),
+                const SizedBox(height: 14),
+                if (students.isEmpty)
+                  Text('No students found.', style: TextStyle(fontSize: 12.5, color: s.textMuted))
+                else
+                  SectionCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: students.map((st) {
+                        final completion = st['completionPercent'] as int?;
+                        final color = completion == null ? s.textMuted : completion >= 70 ? AppColors.success : completion >= 40 ? AppColors.warning : AppColors.danger;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                          title: Text(st['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                          subtitle: Text('${st['className'] ?? ''} ${st['section'] ?? ''}', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                          trailing: Text(completion != null ? '$completion%' : 'No data', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
+            );
+          })
         else
           SectionCard(
             child: _healthLoading

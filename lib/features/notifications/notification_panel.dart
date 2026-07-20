@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/time_ago.dart';
 import '../../core/widgets/icon_container.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../models/app_notification.dart';
 import 'notification_icon_map.dart';
 import 'notifications_provider.dart';
@@ -20,13 +21,25 @@ Future<void> showNotificationPanel(BuildContext context) {
   );
 }
 
-class _NotificationSheet extends StatelessWidget {
+class _NotificationSheet extends StatefulWidget {
   const _NotificationSheet();
+
+  @override
+  State<_NotificationSheet> createState() => _NotificationSheetState();
+}
+
+class _NotificationSheetState extends State<_NotificationSheet> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
     final provider = context.watch<NotificationsProvider>();
+    final q = _query.trim().toLowerCase();
+    final items = q.isEmpty
+        ? provider.items
+        : provider.items.where((n) => n.title.toLowerCase().contains(q) || n.body.toLowerCase().contains(q)).toList();
     return DraggableScrollableSheet(
       initialChildSize: 0.65,
       minChildSize: 0.4,
@@ -56,19 +69,24 @@ class _NotificationSheet extends StatelessWidget {
                   ],
                 ),
               ),
+              if (provider.items.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: ListSearchField(controller: _searchCtrl, hint: 'Search notifications', onChanged: (v) => setState(() => _query = v)),
+                ),
               const Divider(height: 1),
               Expanded(
-                child: provider.items.isEmpty
+                child: items.isEmpty
                     ? Center(
-                        child: Text("You're all caught up", style: TextStyle(color: s.textMuted, fontWeight: FontWeight.w600)),
+                        child: Text(provider.items.isEmpty ? "You're all caught up" : 'No notifications match your search', style: TextStyle(color: s.textMuted, fontWeight: FontWeight.w600)),
                       )
                     : ListView.separated(
                         controller: scrollController,
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                        itemCount: provider.items.length,
+                        itemCount: items.length,
                         separatorBuilder: (_, _) => Divider(height: 1, color: s.border),
                         itemBuilder: (context, i) {
-                          final n = provider.items[i];
+                          final n = items[i];
                           return _NotificationTile(n: n, onTap: () => provider.markRead(n))
                               .animate(delay: (i * 40).ms)
                               .fadeIn(duration: 260.ms)

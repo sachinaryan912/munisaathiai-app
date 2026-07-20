@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
+import '../../core/widgets/pdf_export_button.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'principal_repository.dart';
@@ -26,7 +27,18 @@ class PrincipalMethodologyScreen extends StatelessWidget {
         loader: repo.getMethodology,
         builder: (context, list, refresh) {
           final s = context.surface;
-          return ListView.builder(
+          return Column(
+            children: [
+              if (list.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: PdfDownloadButton(fileName: 'methodology_report.pdf', download: repo.downloadMethodologyPdf),
+                  ),
+                ),
+              Expanded(
+                child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             itemCount: list.length,
             itemBuilder: (context, i) {
@@ -59,6 +71,9 @@ class PrincipalMethodologyScreen extends StatelessWidget {
                 ),
               ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
             },
+                ),
+              ),
+            ],
           );
         },
       ),

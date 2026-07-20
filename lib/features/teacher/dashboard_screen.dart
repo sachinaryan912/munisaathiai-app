@@ -1,11 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
-import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
 import '../../core/widgets/section_card.dart';
@@ -21,6 +23,8 @@ class TeacherDashboardScreen extends StatelessWidget {
     final repo = TeacherRepository();
     return AppShell(
       title: '',
+      isDashboard: true,
+      dashboardSubtitle: "Here's your class today.",
       body: AsyncScreen<Map<String, dynamic>>(loader: repo.getDashboard, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
     );
   }
@@ -39,6 +43,22 @@ class _BodyState extends State<_Body> {
   Map<String, dynamic>? _report;
   bool _reportLoading = false;
   String? _reportError;
+  int? _openingEvidenceId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingReport();
+  }
+
+  Future<void> _loadExistingReport() async {
+    try {
+      final existing = await widget.repo.getDailyReport();
+      if (existing['exists'] == true && mounted) setState(() => _report = existing);
+    } catch (_) {
+      // No stored report yet (or a transient error) — leave the "Generate Report" button showing.
+    }
+  }
 
   Future<void> _generateReport() async {
     setState(() {
@@ -51,6 +71,21 @@ class _BodyState extends State<_Body> {
       _reportError = e.toString().replaceFirst('ApiException: ', '');
     } finally {
       if (mounted) setState(() => _reportLoading = false);
+    }
+  }
+
+  Future<void> _viewEvidence(int id, String fileName) async {
+    setState(() => _openingEvidenceId = id);
+    try {
+      final bytes = await widget.repo.getEvidenceFile(id);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _openingEvidenceId = null);
     }
   }
 
@@ -68,8 +103,6 @@ class _BodyState extends State<_Body> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
-        const GreetingHeader(subtitle: 'Here\'s your class today.'),
-        const SizedBox(height: 18),
         SectionCard(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -131,9 +164,18 @@ class _BodyState extends State<_Body> {
                 const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: LoadingView(message: 'Vidya is analyzing your day...'))
               else if (_reportError != null)
                 Text(_reportError!, style: const TextStyle(color: AppColors.danger, fontSize: 12))
-              else if (_report != null)
-                _ReportView(report: _report!)
-              else
+              else if (_report != null) ...[
+                _ReportView(report: _report!),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _generateReport,
+                    icon: const Icon(LucideIcons.refreshCw, size: 14),
+                    label: const Text('Regenerate', style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+              ] else
                 GradientButton(label: 'Generate Report', icon: Icons.auto_awesome, onPressed: _generateReport, height: 46),
             ],
           ),
@@ -145,13 +187,24 @@ class _BodyState extends State<_Body> {
           SectionCard(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
-              children: recentEvidence.map((e) => ListTile(
+              children: recentEvidence.map((e) {
+                final id = e['id'] as int;
+                return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    leading: Container(width: 34, height: 34, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(11)), child: const Icon(LucideIcons.fileCheck, size: 15, color: AppColors.saffron600)),
+                    onTap: _openingEvidenceId == id ? null : () => _viewEvidence(id, e['fileName'] as String),
+                    leading: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(11)),
+                      child: _openingEvidenceId == id
+                          ? const Padding(padding: EdgeInsets.all(9), child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(LucideIcons.fileCheck, size: 15, color: AppColors.saffron600),
+                    ),
                     title: Text(e['methodology'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
                     subtitle: Text(e['fileName'] as String, maxLines: 1, style: TextStyle(fontSize: 10.5, color: s.textMuted), overflow: TextOverflow.ellipsis),
                     trailing: (e['trainerVerified'] as bool? ?? false) ? const Icon(LucideIcons.circleCheck, size: 16, color: AppColors.success) : Icon(LucideIcons.clock, size: 15, color: s.textMuted),
-                  )).toList(),
+                  );
+              }).toList(),
             ),
           ),
         ] else

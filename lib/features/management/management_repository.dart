@@ -51,6 +51,55 @@ class ManagementRepository {
         return (res.data as List).cast<Map<String, dynamic>>();
       });
 
+  Future<List<Map<String, dynamic>>> getSchoolClasses(int schoolId) => apiCall(() async {
+        final res = await _dio.get('/management/schools/$schoolId/classes');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<Map<String, dynamic>>> getSchoolTeachersDrillDown(int schoolId) => apiCall(() async {
+        final res = await _dio.get('/management/schools/$schoolId/teachers');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  // ── Class/Section Catalog ────────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> getClassCatalog(int schoolId) => apiCall(() async {
+        final res = await _dio.get('/management/schools/$schoolId/class-catalog');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<Map<String, dynamic>> addClassCatalogEntry(int schoolId, {required String className, String? section}) => apiCall(() async {
+        final res = await _dio.post('/management/schools/$schoolId/class-catalog', data: {
+          'className': className,
+          'section': ?section,
+        });
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<void> deleteClassCatalogEntry(int schoolId, int entryId) => apiCall(() async {
+        await _dio.delete('/management/schools/$schoolId/class-catalog/$entryId');
+      });
+
+  Future<Map<String, dynamic>> getTrainerDetail(int trainerId) => apiCall(() async {
+        final res = await _dio.get('/management/trainers/$trainerId');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<Map<String, dynamic>>> getAuditLog() => apiCall(() async {
+        final res = await _dio.get('/management/audit-log');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<Map<String, dynamic>> getThresholds() => apiCall(() async {
+        final res = await _dio.get('/management/settings/thresholds');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> updateThresholds(Map<String, dynamic> patch) => apiCall(() async {
+        final res = await _dio.put('/management/settings/thresholds', data: patch);
+        return res.data as Map<String, dynamic>;
+      });
+
   // ── Trainers / training / certifications ────────────────────────────────
   Future<List<Map<String, dynamic>>> getTrainerRoster() => apiCall(() async {
         final res = await _dio.get('/management/trainers');
@@ -87,6 +136,36 @@ class ManagementRepository {
   Future<List<int>> downloadNetworkReportPdf() => apiCall(() async {
         final res = await _dio.post('/management/ai/network-report/pdf',
             options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
+      });
+
+  Future<Map<String, dynamic>> getWeeklyTrainerReport() => apiCall(() async {
+        final res = await _dio.get('/management/reports/weekly-trainer');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<int>> downloadWeeklyTrainerReportPdf() => apiCall(() async {
+        final res = await _dio.get('/management/reports/weekly-trainer/pdf', options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
+      });
+
+  Future<Map<String, dynamic>> getMonthlySchoolReport() => apiCall(() async {
+        final res = await _dio.get('/management/reports/monthly-school');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<int>> downloadMonthlySchoolReportPdf() => apiCall(() async {
+        final res = await _dio.get('/management/reports/monthly-school/pdf', options: Options(responseType: ResponseType.bytes));
+        return res.data as List<int>;
+      });
+
+  Future<Map<String, dynamic>> getStudentProgressReport() => apiCall(() async {
+        final res = await _dio.get('/management/reports/student-progress');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<int>> downloadStudentProgressReportPdf() => apiCall(() async {
+        final res = await _dio.get('/management/reports/student-progress/pdf', options: Options(responseType: ResponseType.bytes));
         return res.data as List<int>;
       });
 

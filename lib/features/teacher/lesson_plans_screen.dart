@@ -8,15 +8,10 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'teacher_repository.dart';
-
-const _methodologies = [
-  'GRS', 'Buddy System', 'UPLC', 'HADS', 'Child Parliament', 'Growth Habits',
-  'Ghar Ek Pathshala', 'Am I Able', 'Situation Creation', 'Bharat Bodh',
-  'Vedic Math', 'English Language (LLT)',
-];
 
 const _statusColors = {
   'Draft': Color(0xFF6B7280),
@@ -33,26 +28,41 @@ class TeacherLessonPlansScreen extends StatelessWidget {
     return AppShell(
       title: 'Lesson Plans',
       showAiFab: false,
-      body: AsyncScreen<List<Map<String, dynamic>>>(loader: repo.getLessonPlans, builder: (context, list, refresh) => _Body(list: list, repo: repo, refresh: refresh)),
+      body: AsyncScreen<List<Object>>(
+        loader: () => Future.wait([repo.getLessonPlans(), repo.getMethodologies()]),
+        builder: (context, results, refresh) => _Body(
+          list: results[0] as List<Map<String, dynamic>>,
+          methodologies: results[1] as List<String>,
+          repo: repo,
+          refresh: refresh,
+        ),
+      ),
     );
   }
 }
 
 class _Body extends StatefulWidget {
   final List<Map<String, dynamic>> list;
+  final List<String> methodologies;
   final TeacherRepository repo;
   final Future<void> Function() refresh;
-  const _Body({required this.list, required this.repo, required this.refresh});
+  const _Body({required this.list, required this.methodologies, required this.repo, required this.refresh});
 
   @override
   State<_Body> createState() => _BodyState();
 }
 
 class _BodyState extends State<_Body> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
   Future<void> _openCreate() async {
     final subjectCtrl = TextEditingController();
     final topicCtrl = TextEditingController();
     final objectivesCtrl = TextEditingController();
+    final sambandhCtrl = TextEditingController();
+    final vyavasthaCtrl = TextEditingController();
+    final sahAstitvaCtrl = TextEditingController();
     var date = DateTime.now();
     var duration = 40;
     final linked = <String>{};
@@ -106,7 +116,7 @@ class _BodyState extends State<_Body> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _methodologies.map((m) {
+                      children: widget.methodologies.map((m) {
                         final active = linked.contains(m);
                         return FilterChip(
                           label: Text(m, style: const TextStyle(fontSize: 11)),
@@ -120,6 +130,14 @@ class _BodyState extends State<_Body> {
                         );
                       }).toList(),
                     ),
+                    const SizedBox(height: 14),
+                    Text('Sambandh, Vyavastha & Sah-Astitva (optional)', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                    const SizedBox(height: 8),
+                    AppTextField(label: 'Sambandh (Relation)', controller: sambandhCtrl, maxLines: 2),
+                    const SizedBox(height: 10),
+                    AppTextField(label: 'Vyavastha (System)', controller: vyavasthaCtrl, maxLines: 2),
+                    const SizedBox(height: 10),
+                    AppTextField(label: 'Sah-Astitva (Co-existence)', controller: sahAstitvaCtrl, maxLines: 2),
                     if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                     const SizedBox(height: 18),
                     GradientButton(
@@ -139,6 +157,9 @@ class _BodyState extends State<_Body> {
                             date: DateFormat('yyyy-MM-dd').format(date),
                             durationMinutes: duration,
                             linkedMethodologies: linked.toList(),
+                            sambandh: sambandhCtrl.text.trim().isEmpty ? null : sambandhCtrl.text.trim(),
+                            vyavastha: vyavasthaCtrl.text.trim().isEmpty ? null : vyavasthaCtrl.text.trim(),
+                            sahAstitva: sahAstitvaCtrl.text.trim().isEmpty ? null : sahAstitvaCtrl.text.trim(),
                           );
                           if (sheetContext.mounted) Navigator.pop(sheetContext);
                           await widget.refresh();
@@ -164,27 +185,61 @@ class _BodyState extends State<_Body> {
     const order = ['Draft', 'Submitted', 'Done'];
     final current = order.indexOf(plan['status'] as String);
     final next = order[(current + 1) % order.length];
-    await widget.repo.setLessonPlanStatus(plan['id'] as int, next);
-    await widget.refresh();
+    try {
+      await widget.repo.setLessonPlanStatus(plan['id'] as int, next);
+      await widget.refresh();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    }
   }
 
   Future<void> _delete(int id) async {
-    await widget.repo.deleteLessonPlan(id);
-    await widget.refresh();
+    try {
+      await widget.repo.deleteLessonPlan(id);
+      await widget.refresh();
+    } catch (e) {
+      // The swipe-to-dismiss gesture already removed the row visually — refresh
+      // to restore it from the server since the delete didn't actually happen.
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      await widget.refresh();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final q = _query.trim().toLowerCase();
+    final list = q.isEmpty
+        ? widget.list
+        : widget.list.where((p) {
+            return (p['subject'] as String? ?? '').toLowerCase().contains(q) ||
+                (p['topic'] as String? ?? '').toLowerCase().contains(q) ||
+                (p['status'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
     return Stack(
       children: [
-        widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No lesson plans yet', subtitle: 'Tap + to create your first lesson plan.', icon: LucideIcons.notebookPen)])
-            : ListView.builder(
+        Column(
+          children: [
+            if (widget.list.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by subject, topic or status', onChanged: (v) => setState(() => _query = v)),
+              ),
+            Expanded(
+              child: list.isEmpty
+                  ? ListView(children: [
+                      const SizedBox(height: 120),
+                      EmptyView(
+                        title: widget.list.isEmpty ? 'No lesson plans yet' : 'No lesson plans match your search',
+                        subtitle: widget.list.isEmpty ? 'Tap + to create your first lesson plan.' : null,
+                        icon: LucideIcons.notebookPen,
+                      ),
+                    ])
+                  : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                itemCount: widget.list.length,
+                itemCount: list.length,
                 itemBuilder: (context, i) {
-                  final p = widget.list[i];
+                  final p = list[i];
                   final status = p['status'] as String;
                   final color = _statusColors[status] ?? s.textMuted;
                   final linkedList = (p['linkedMethodologies'] as List? ?? []).cast<String>();
@@ -222,6 +277,9 @@ class _BodyState extends State<_Body> {
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Wrap(spacing: 6, runSpacing: 6, children: linkedList.map((m) => Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: s.border.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(8)), child: Text(m, style: TextStyle(fontSize: 9.5, color: s.textSecondary, fontWeight: FontWeight.w700)))).toList()),
                               ),
+                            if ((p['sambandh'] as String?)?.isNotEmpty == true) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Sambandh: ${p['sambandh']}', style: TextStyle(fontSize: 11, color: s.textSecondary, fontStyle: FontStyle.italic))),
+                            if ((p['vyavastha'] as String?)?.isNotEmpty == true) Padding(padding: const EdgeInsets.only(top: 3), child: Text('Vyavastha: ${p['vyavastha']}', style: TextStyle(fontSize: 11, color: s.textSecondary, fontStyle: FontStyle.italic))),
+                            if ((p['sahAstitva'] as String?)?.isNotEmpty == true) Padding(padding: const EdgeInsets.only(top: 3), child: Text('Sah-Astitva: ${p['sahAstitva']}', style: TextStyle(fontSize: 11, color: s.textSecondary, fontStyle: FontStyle.italic))),
                           ],
                         ),
                       ),
@@ -229,6 +287,9 @@ class _BodyState extends State<_Body> {
                   ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                 },
               ),
+            ),
+          ],
+        ),
         Positioned(
           right: 16,
           bottom: 16,

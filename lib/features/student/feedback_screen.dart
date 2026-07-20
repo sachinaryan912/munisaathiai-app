@@ -47,15 +47,21 @@ class _BodyState extends State<_Body> {
   String _category = 'general';
   int _rating = 5;
   bool _submitting = false;
+  String? _error;
 
   Future<void> _submit() async {
     if (_contentCtrl.text.trim().isEmpty) return;
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     try {
       await widget.repo.submitFeedback(category: _category, content: _contentCtrl.text.trim(), rating: _rating);
       _contentCtrl.clear();
       setState(() => _rating = 5);
       await widget.refresh();
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString().replaceFirst('ApiException: ', ''));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -99,6 +105,7 @@ class _BodyState extends State<_Body> {
               }),
             ),
             AppTextField(label: 'Your thoughts', controller: _contentCtrl, maxLines: 4, hint: 'Tell us what you think...'),
+            if (_error != null) ...[const SizedBox(height: 10), Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
             const SizedBox(height: 16),
             GradientButton(label: 'Send Feedback', icon: Icons.send_rounded, loading: _submitting, onPressed: _submit),
           ],

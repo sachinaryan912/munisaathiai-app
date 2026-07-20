@@ -10,6 +10,13 @@ import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'student_repository.dart';
 
+const List<Map<String, String>> _kUplcSteps = [
+  {'key': 'understand', 'letter': 'U', 'label': 'Understand', 'hint': 'What did you understand after reading the chapter?'},
+  {'key': 'problem', 'letter': 'P', 'label': 'Problem', 'hint': 'What problem or question came to mind?'},
+  {'key': 'learning', 'letter': 'L', 'label': 'Learning', 'hint': 'What did you learn for life and for your studies?'},
+  {'key': 'communicate', 'letter': 'C', 'label': 'Communicate', 'hint': 'Summarize it in your own words — the complete picture.'},
+];
+
 class StudentSelfStudyScreen extends StatelessWidget {
   const StudentSelfStudyScreen({super.key});
 
@@ -27,6 +34,75 @@ class StudentSelfStudyScreen extends StatelessWidget {
   }
 }
 
+Future<void> _showAddChapterSheet(BuildContext context, StudentRepository repo, Future<void> Function() refresh) async {
+  final subjectController = TextEditingController();
+  final topicController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  bool saving = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (sheetContext, setSheetState) {
+        final s = sheetContext.surface;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Add a chapter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: s.textPrimary)),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: subjectController,
+                  decoration: const InputDecoration(labelText: 'Subject', hintText: 'e.g. Mathematics'),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: topicController,
+                  decoration: const InputDecoration(labelText: 'Chapter title'),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            if (!(formKey.currentState?.validate() ?? false)) return;
+                            setSheetState(() => saving = true);
+                            try {
+                              await repo.addStudyChapter(subject: subjectController.text.trim(), topic: topicController.text.trim());
+                              await refresh();
+                              if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                            } catch (e) {
+                              setSheetState(() => saving = false);
+                              if (sheetContext.mounted) {
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))),
+                                );
+                              }
+                            }
+                          },
+                    child: saving
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Add chapter'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 class _Body extends StatelessWidget {
   final List<Map<String, dynamic>> modules;
   final StudentRepository repo;
@@ -36,56 +112,140 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
-    if (modules.isEmpty) {
-      return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No self-study modules yet', subtitle: 'Your teacher will assign modules here.', icon: LucideIcons.bookOpen)]);
-    }
-    final active = modules.where((m) => m['status'] == 'active').toList();
-    final done = modules.where((m) => m['status'] == 'done').toList();
+    final activeCount = modules.where((m) => m['status'] == 'active').length;
+    final doneCount = modules.where((m) => m['status'] == 'done').length;
 
-    final items = <Widget>[
-      if (active.isNotEmpty) ...[
-        Text('In Progress', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
-        ...active.map((m) => _ModuleCard(module: m, repo: repo, refresh: refresh)),
-      ],
-      if (done.isNotEmpty) ...[
-        Text('Completed', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
-        ...done.map((m) => _ModuleCard(module: m, repo: repo, refresh: refresh)),
-      ],
+    final header = <Widget>[
+      Row(
+        children: [
+          Expanded(
+            child: SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$activeCount', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.saffron600)),
+                  Text('In Progress', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.4)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$doneCount', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF059669))),
+                  Text('Chapters Done', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.4)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      SectionCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(LucideIcons.bookOpen, size: 16, color: AppColors.saffron600),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'UPLC self-study: read the chapter, then write what you took from it — Understand, Problem, Learning and Communicate. '
+                'A chapter is done once all four are filled in.',
+                style: TextStyle(fontSize: 11.5, height: 1.4, fontWeight: FontWeight.w600, color: s.textSecondary),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => _showAddChapterSheet(context, repo, refresh),
+          icon: const Icon(LucideIcons.plus, size: 16),
+          label: const Text('Add a chapter'),
+        ),
+      ),
+      const SizedBox(height: 16),
     ];
+
+    if (modules.isEmpty) {
+      return ListView(
+        children: [
+          ...header,
+          const SizedBox(height: 40),
+          EmptyView(
+            title: 'No chapters yet',
+            subtitle: 'Add a chapter to start your first UPLC self-study.',
+            icon: LucideIcons.bookOpen,
+          ),
+        ],
+      );
+    }
 
     return AnimationLimiter(
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        itemCount: items.length,
+        itemCount: 1 + modules.length,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (context, i) => AnimationConfiguration.staggeredList(
-          position: i,
-          duration: const Duration(milliseconds: 380),
-          child: SlideAnimation(verticalOffset: 22, curve: Curves.easeOutCubic, child: FadeInAnimation(child: items[i])),
-        ),
+        itemBuilder: (context, i) {
+          final widget = i == 0
+              ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: header)
+              : _ChapterCard(module: modules[i - 1], repo: repo, refresh: refresh);
+          return AnimationConfiguration.staggeredList(
+            position: i,
+            duration: const Duration(milliseconds: 380),
+            child: SlideAnimation(verticalOffset: 22, curve: Curves.easeOutCubic, child: FadeInAnimation(child: widget)),
+          );
+        },
       ),
     );
   }
 }
 
-class _ModuleCard extends StatefulWidget {
+class _ChapterCard extends StatefulWidget {
   final Map<String, dynamic> module;
   final StudentRepository repo;
   final Future<void> Function() refresh;
-  const _ModuleCard({required this.module, required this.repo, required this.refresh});
+  const _ChapterCard({required this.module, required this.repo, required this.refresh});
 
   @override
-  State<_ModuleCard> createState() => _ModuleCardState();
+  State<_ChapterCard> createState() => _ChapterCardState();
 }
 
-class _ModuleCardState extends State<_ModuleCard> {
+class _ChapterCardState extends State<_ChapterCard> {
+  late bool _expanded = widget.module['status'] == 'active';
+  late final Map<String, TextEditingController> _controllers = {
+    for (final step in _kUplcSteps) step['key']!: TextEditingController(text: widget.module[step['key']] as String? ?? ''),
+  };
   bool _saving = false;
 
-  Future<void> _setDone(int done) async {
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await widget.repo.updateStudyProgress(moduleId: widget.module['id'] as int, done: done);
+      await widget.repo.updateStudyReflection(
+        moduleId: widget.module['id'] as int,
+        understand: _controllers['understand']!.text,
+        problem: _controllers['problem']!.text,
+        learning: _controllers['learning']!.text,
+        communicate: _controllers['communicate']!.text,
+      );
       await widget.refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -95,60 +255,109 @@ class _ModuleCardState extends State<_ModuleCard> {
   Widget build(BuildContext context) {
     final s = context.surface;
     final m = widget.module;
-    final lessons = m['lessons'] as int? ?? 1;
-    final done = m['done'] as int? ?? 0;
     final isDone = m['status'] == 'done';
-    final pct = lessons == 0 ? 0.0 : (done / lessons).clamp(0, 1).toDouble();
+    final filledCount = _controllers.values.where((c) => c.text.trim().isNotEmpty).length;
 
     return SectionCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(color: isDone ? const Color(0xFFD1FAE5) : AppColors.saffron50, borderRadius: BorderRadius.circular(12)),
-                child: Icon(isDone ? LucideIcons.circleCheck : LucideIcons.bookOpen, size: 17, color: isDone ? const Color(0xFF059669) : AppColors.saffron600),
+          InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(color: isDone ? const Color(0xFFD1FAE5) : AppColors.saffron50, borderRadius: BorderRadius.circular(12)),
+                    child: Icon(isDone ? LucideIcons.circleCheck : LucideIcons.bookOpen, size: 17, color: isDone ? const Color(0xFF059669) : AppColors.saffron600),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(m['subject'] as String, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.4)),
+                        Text(m['topic'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: s.textPrimary)),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDone ? const Color(0xFF059669).withValues(alpha: 0.1) : s.surfaceVariant,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      isDone ? 'Done' : '$filledCount/4',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isDone ? const Color(0xFF059669) : s.textMuted),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(LucideIcons.chevronDown, size: 16, color: s.textMuted),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(m['subject'] as String, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.4)),
-                    Text(m['topic'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: s.textPrimary)),
-                  ],
-                ),
-              ),
-              Text('$done/$lessons', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: s.textPrimary)),
-            ],
+            ),
           ),
-          const SizedBox(height: 12),
-          ClipRRect(borderRadius: BorderRadius.circular(99), child: LinearProgressIndicator(value: pct, minHeight: 7, backgroundColor: s.border, valueColor: AlwaysStoppedAnimation(isDone ? const Color(0xFF10B981) : AppColors.saffron400))),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              IconButton.filledTonal(
-                onPressed: _saving || done <= 0 ? null : () => _setDone(done - 1),
-                icon: const Icon(Icons.remove, size: 16),
-                visualDensity: VisualDensity.compact,
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(color: s.border, height: 1),
+                  const SizedBox(height: 14),
+                  ..._kUplcSteps.map((step) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 20,
+                                height: 20,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(color: const Color(0xFF6366F1).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                                child: Text(step['letter']!, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF6366F1))),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(step['label']!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: s.textSecondary)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: _controllers[step['key']],
+                            maxLines: 2,
+                            style: TextStyle(fontSize: 13, color: s.textPrimary),
+                            decoration: InputDecoration(hintText: step['hint'], isDense: true),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _saving ? null : _save,
+                      icon: _saving
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(LucideIcons.check, size: 15),
+                      label: const Text('Save'),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: _saving || done >= lessons ? null : () => _setDone(done + 1),
-                icon: const Icon(Icons.add, size: 16),
-                visualDensity: VisualDensity.compact,
-              ),
-              const Spacer(),
-              if (!isDone)
-                TextButton(
-                  onPressed: _saving ? null : () => _setDone(lessons),
-                  child: const Text('Mark complete', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
-                ),
-            ],
-          ),
+            ),
         ],
       ),
     );

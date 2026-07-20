@@ -8,6 +8,7 @@ import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'management_repository.dart';
+import 'trainer_detail_screen.dart';
 
 class ManagementTrainersScreen extends StatelessWidget {
   const ManagementTrainersScreen({super.key});
@@ -33,6 +34,7 @@ class ManagementTrainersScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: SectionCard(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => TrainerDetailScreen(trainerId: t['id'] as int))),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

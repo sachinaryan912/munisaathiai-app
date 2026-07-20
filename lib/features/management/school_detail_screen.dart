@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
+import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/section_card.dart';
 import 'management_repository.dart';
 import 'widgets/school_form_sheet.dart';
@@ -21,12 +22,17 @@ class SchoolDetailScreen extends StatefulWidget {
 class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
   final _repo = ManagementRepository();
   bool _recomputing = false;
+  // Bumped after a successful recompute so the MII-trend/timeline sub-cards below (which fetch
+  // their own history via initState, not the outer AsyncScreen's refresh) get a new key and
+  // remount instead of silently keeping the pre-recompute history on screen.
+  int _refreshToken = 0;
 
   Future<void> _recompute(Future<void> Function() refresh) async {
     setState(() => _recomputing = true);
     try {
       await _repo.recomputeMii(widget.schoolId);
       await refresh();
+      if (mounted) setState(() => _refreshToken++);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
     } finally {
@@ -58,8 +64,12 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
       ),
     );
     if (confirmed == true) {
-      await _repo.deleteSchool(widget.schoolId);
-      if (mounted) context.pop();
+      try {
+        await _repo.deleteSchool(widget.schoolId);
+        if (mounted) context.pop();
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      }
     }
   }
 
@@ -91,6 +101,8 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
                           const SizedBox(height: 6),
                           Text('Trainer: ${school['trainer']}', style: TextStyle(fontSize: 12, color: s.textSecondary)),
                           Text('${school['teacherCount']} teachers · ${school['studentCount']} students · ${school['classCount']} classes', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+                          if (school['implementationStart'] != null)
+                            Padding(padding: const EdgeInsets.only(top: 4), child: Text('Muni Model since ${school['implementationStart']}', style: TextStyle(fontSize: 11, color: s.textMuted, fontStyle: FontStyle.italic))),
                         ],
                       ),
                     ),
@@ -126,7 +138,11 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
               const SizedBox(height: 22),
               Text('MII Score Trend', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
               const SizedBox(height: 10),
-              _MiiTrendCard(repo: _repo, schoolId: widget.schoolId),
+              _MiiTrendCard(key: ValueKey('mii_trend_$_refreshToken'), repo: _repo, schoolId: widget.schoolId),
+              const SizedBox(height: 22),
+              Text('Implementation Timeline', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+              const SizedBox(height: 10),
+              _TimelineCard(key: ValueKey('timeline_$_refreshToken'), repo: _repo, schoolId: widget.schoolId, implementationStart: school['implementationStart'] as String?),
               const SizedBox(height: 22),
               Text('Methodology Scores', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
               const SizedBox(height: 10),
@@ -152,6 +168,20 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
               Text('Training Sessions', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
               const SizedBox(height: 10),
               _SessionsCard(repo: _repo, schoolId: widget.schoolId),
+              const SizedBox(height: 22),
+              Text('Class & Section Setup', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+              const SizedBox(height: 4),
+              Text('Controls what students and teachers can pick during registration.', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+              const SizedBox(height: 10),
+              _ClassCatalogCard(repo: _repo, schoolId: widget.schoolId),
+              const SizedBox(height: 22),
+              Text('Classes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+              const SizedBox(height: 10),
+              _ClassesCard(repo: _repo, schoolId: widget.schoolId),
+              const SizedBox(height: 22),
+              Text('Teachers', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+              const SizedBox(height: 10),
+              _TeachersCard(repo: _repo, schoolId: widget.schoolId),
             ],
           ),
         );
@@ -183,17 +213,33 @@ class _ScorePill extends StatelessWidget {
   }
 }
 
-class _MiiTrendCard extends StatelessWidget {
+class _MiiTrendCard extends StatefulWidget {
   final ManagementRepository repo;
   final int schoolId;
-  const _MiiTrendCard({required this.repo, required this.schoolId});
+  const _MiiTrendCard({super.key, required this.repo, required this.schoolId});
+
+  @override
+  State<_MiiTrendCard> createState() => _MiiTrendCardState();
+}
+
+class _MiiTrendCardState extends State<_MiiTrendCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getMiiHistory(widget.schoolId);
+  }
+
+  void _retry() => setState(() => _future = widget.repo.getMiiHistory(widget.schoolId));
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: repo.getMiiHistory(schoolId),
+      future: _future,
       builder: (context, snap) {
         final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _retry);
         if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
         final history = snap.data!;
         if (history.length < 2) {
@@ -244,17 +290,90 @@ class _MiiTrendCard extends StatelessWidget {
   }
 }
 
-class _SessionsCard extends StatelessWidget {
+class _TimelineCard extends StatefulWidget {
+  final ManagementRepository repo;
+  final int schoolId;
+  final String? implementationStart;
+  const _TimelineCard({super.key, required this.repo, required this.schoolId, this.implementationStart});
+
+  @override
+  State<_TimelineCard> createState() => _TimelineCardState();
+}
+
+class _TimelineCardState extends State<_TimelineCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getMiiHistory(widget.schoolId);
+  }
+
+  void _retry() => setState(() => _future = widget.repo.getMiiHistory(widget.schoolId));
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snap) {
+        final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _retry);
+        if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
+        final history = snap.data!;
+        final entries = <Map<String, dynamic>>[
+          if (widget.implementationStart != null) {'date': widget.implementationStart, 'label': 'Muni Model implementation started'},
+          ...history.map((h) => {'date': h['date'], 'score': h['score'], 'status': h['status']}),
+        ];
+        if (entries.isEmpty) {
+          return SectionCard(child: Text('No timeline data yet.', style: TextStyle(fontSize: 12, color: s.textMuted)));
+        }
+        return SectionCard(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: entries.map((e) {
+              final status = e['status'] as String?;
+              final color = status != null ? statusColor(status) : AppColors.saffron500;
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                leading: Container(width: 10, height: 10, margin: const EdgeInsets.only(top: 6), decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                title: Text(e['label'] as String? ?? 'MII recomputed: ${e['score']}/100', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                subtitle: Text('${e['date']}${status != null ? ' · ${statusLabel(status)}' : ''}', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SessionsCard extends StatefulWidget {
   final ManagementRepository repo;
   final int schoolId;
   const _SessionsCard({required this.repo, required this.schoolId});
 
   @override
+  State<_SessionsCard> createState() => _SessionsCardState();
+}
+
+class _SessionsCardState extends State<_SessionsCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getSchoolTrainingSessions(widget.schoolId);
+  }
+
+  void _retry() => setState(() => _future = widget.repo.getSchoolTrainingSessions(widget.schoolId));
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: repo.getSchoolTrainingSessions(schoolId),
+      future: _future,
       builder: (context, snap) {
         final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _retry);
         if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
         final sessions = snap.data!;
         if (sessions.isEmpty) return SectionCard(child: Text('No training sessions recorded yet.', style: TextStyle(fontSize: 12, color: s.textMuted)));
@@ -270,6 +389,308 @@ class _SessionsCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _ClassesCard extends StatefulWidget {
+  final ManagementRepository repo;
+  final int schoolId;
+  const _ClassesCard({required this.repo, required this.schoolId});
+
+  @override
+  State<_ClassesCard> createState() => _ClassesCardState();
+}
+
+class _ClassesCardState extends State<_ClassesCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getSchoolClasses(widget.schoolId);
+  }
+
+  void _retry() => setState(() => _future = widget.repo.getSchoolClasses(widget.schoolId));
+
+  void _openClass(Map<String, dynamic> cls) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final s = sheetContext.surface;
+        final students = (cls['students'] as List? ?? []).cast<Map<String, dynamic>>();
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+          decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.75),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+              Text(cls['displayName'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+              Text('Teacher: ${cls['teacherName']}', style: TextStyle(fontSize: 12, color: s.textMuted)),
+              const SizedBox(height: 14),
+              Flexible(
+                child: students.isEmpty
+                    ? Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text('No students enrolled yet.', style: TextStyle(fontSize: 12, color: s.textMuted)))
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: students.length,
+                        itemBuilder: (context, i) {
+                          final st = students[i];
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(st['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                            subtitle: st['attendancePercent'] != null ? Text('Attendance ${st['attendancePercent']}%', style: TextStyle(fontSize: 11, color: s.textMuted)) : null,
+                            trailing: Text('Score ${st['score']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: s.textPrimary)),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snap) {
+        final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _retry);
+        if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
+        final classes = snap.data!;
+        if (classes.isEmpty) return SectionCard(child: Text('No classes recorded yet.', style: TextStyle(fontSize: 12, color: s.textMuted)));
+        return SectionCard(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: classes.map((cls) => ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                  onTap: () => _openClass(cls),
+                  title: Text(cls['displayName'] as String, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                  subtitle: Text('${cls['teacherName']} · ${cls['studentCount']} students', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                  trailing: Text('Avg ${cls['avgScore']}', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: s.textPrimary)),
+                )).toList(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ClassCatalogCard extends StatefulWidget {
+  final ManagementRepository repo;
+  final int schoolId;
+  const _ClassCatalogCard({required this.repo, required this.schoolId});
+
+  @override
+  State<_ClassCatalogCard> createState() => _ClassCatalogCardState();
+}
+
+class _ClassCatalogCardState extends State<_ClassCatalogCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getClassCatalog(widget.schoolId);
+  }
+
+  void _reload() => setState(() => _future = widget.repo.getClassCatalog(widget.schoolId));
+
+  Future<void> _addEntry() async {
+    final classCtrl = TextEditingController();
+    final sectionCtrl = TextEditingController();
+    var submitting = false;
+    String? error;
+
+    final added = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final s = sheetContext.surface;
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+              decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Add Class / Section', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text('Class: 1-12 or Nursery/LKG/UKG. Section: a single letter, optional.', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                  const SizedBox(height: 16),
+                  TextField(controller: classCtrl, decoration: const InputDecoration(labelText: 'Class', hintText: 'e.g. 5 or LKG')),
+                  const SizedBox(height: 12),
+                  TextField(controller: sectionCtrl, maxLength: 1, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Section (optional)', hintText: 'e.g. A')),
+                  if (error != null) ...[const SizedBox(height: 8), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                  const SizedBox(height: 12),
+                  GradientButton(
+                    label: 'Add',
+                    loading: submitting,
+                    onPressed: () async {
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
+                      try {
+                        await widget.repo.addClassCatalogEntry(
+                          widget.schoolId,
+                          className: classCtrl.text.trim(),
+                          section: sectionCtrl.text.trim().isEmpty ? null : sectionCtrl.text.trim(),
+                        );
+                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
+                      }
+                    },
+                    height: 46,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (added == true) _reload();
+  }
+
+  Future<void> _deleteEntry(Map<String, dynamic> entry) async {
+    final label = entry['section'] != null ? '${entry['className']} ${entry['section']}' : entry['className'] as String;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove class entry?'),
+        content: Text('Remove "$label" from this school\'s registration options?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Remove', style: TextStyle(color: AppColors.danger))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await widget.repo.deleteClassCatalogEntry(widget.schoolId, entry['id'] as int);
+      _reload();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snap) {
+        final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _reload);
+        if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
+        final entries = snap.data!;
+        return SectionCard(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (entries.isEmpty)
+                Padding(padding: const EdgeInsets.all(14), child: Text('No classes set up yet — add one so registration can offer it.', style: TextStyle(fontSize: 12, color: s.textMuted)))
+              else
+                ...entries.map((e) => ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                      title: Text(e['section'] != null ? '${e['className']} · Section ${e['section']}' : e['className'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                      trailing: IconButton(icon: const Icon(LucideIcons.trash2, size: 17, color: AppColors.danger), onPressed: () => _deleteEntry(e)),
+                    )),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: TextButton.icon(onPressed: _addEntry, icon: const Icon(LucideIcons.plus, size: 15), label: const Text('Add Class / Section')),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TeachersCard extends StatefulWidget {
+  final ManagementRepository repo;
+  final int schoolId;
+  const _TeachersCard({required this.repo, required this.schoolId});
+
+  @override
+  State<_TeachersCard> createState() => _TeachersCardState();
+}
+
+class _TeachersCardState extends State<_TeachersCard> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.repo.getSchoolTeachersDrillDown(widget.schoolId);
+  }
+
+  void _retry() => setState(() => _future = widget.repo.getSchoolTeachersDrillDown(widget.schoolId));
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snap) {
+        final s = context.surface;
+        if (snap.hasError) return _InlineErrorCard(message: snap.error.toString().replaceFirst('ApiException: ', ''), onRetry: _retry);
+        if (!snap.hasData) return const SectionCard(child: Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(strokeWidth: 2))));
+        final teachers = snap.data!;
+        if (teachers.isEmpty) return SectionCard(child: Text('No teachers assigned yet.', style: TextStyle(fontSize: 12, color: s.textMuted)));
+        return SectionCard(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: teachers.map((t) {
+              final className = t['className'] as String?;
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                title: Text(t['name'] as String, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                subtitle: Text(className != null ? '$className ${t['section'] ?? ''} · ${t['status']}' : (t['status'] as String? ?? ''), style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                trailing: Text('${t['score']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: s.textPrimary)),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _InlineErrorCard extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _InlineErrorCard({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    return SectionCard(
+      child: Row(
+        children: [
+          Icon(LucideIcons.triangleAlert, size: 16, color: AppColors.danger),
+          const SizedBox(width: 8),
+          Expanded(child: Text(message, style: TextStyle(fontSize: 12, color: s.textMuted))),
+          TextButton(onPressed: onRetry, child: const Text('Try again', style: TextStyle(fontSize: 12))),
+        ],
+      ),
     );
   }
 }

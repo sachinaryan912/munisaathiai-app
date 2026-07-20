@@ -3,7 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/error_view.dart';
+import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
@@ -12,77 +12,56 @@ import 'selected_child_provider.dart';
 import 'widgets/child_switcher.dart';
 import 'widgets/link_child_panel.dart';
 
-class ParentHomeLearningScreen extends StatefulWidget {
+class ParentHomeLearningScreen extends StatelessWidget {
   const ParentHomeLearningScreen({super.key});
 
   @override
-  State<ParentHomeLearningScreen> createState() => _ParentHomeLearningScreenState();
-}
-
-class _ParentHomeLearningScreenState extends State<ParentHomeLearningScreen> {
-  final _repo = ParentRepository();
-  Map<String, dynamic>? _data;
-  bool _loading = true;
-  String? _error;
-  int? _lastChildId;
-  bool _childrenLoaded = false;
-
-  Future<void> _load(int? childId) async {
-    setState(() => _loading = true);
-    try {
-      _data = await _repo.getHomeLearning(childId);
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('ApiException: ', '');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _toggle(int id) async {
-    final thisWeek = (_data!['thisWeek'] as List).cast<Map<String, dynamic>>();
-    setState(() {
-      final idx = thisWeek.indexWhere((a) => a['id'] == id);
-      if (idx != -1) thisWeek[idx] = {...thisWeek[idx], 'done': !(thisWeek[idx]['done'] as bool)};
-      _data!['doneThisWeek'] = thisWeek.where((a) => a['done'] == true).length;
-    });
-    try {
-      await _repo.toggleHomeLearning(id);
-    } catch (_) {
-      if (!mounted) return;
-      _load(context.read<SelectedChildProvider>().selectedChildId);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final repo = ParentRepository();
     final childProvider = context.watch<SelectedChildProvider>();
-    if (!childProvider.loading && !_childrenLoaded) {
-      _childrenLoaded = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
-    if (_childrenLoaded && childProvider.selectedChildId != _lastChildId) {
-      _lastChildId = childProvider.selectedChildId;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
 
     return AppShell(
       title: 'Ghar Ek Pathshala',
-      body: childProvider.loading || _loading
+      body: childProvider.loading
           ? const LoadingView(message: 'Loading Ghar Ek Pathshala...')
-          : _error != null
-              ? ErrorView(message: _error!, onRetry: () => _load(childProvider.selectedChildId))
-              : (_data?['linked'] == false)
+          : AsyncScreen<Map<String, dynamic>>(
+              key: ValueKey(childProvider.selectedChildId),
+              loader: () => repo.getHomeLearning(childProvider.selectedChildId),
+              loadingBuilder: (context) => const LoadingView(message: 'Loading Ghar Ek Pathshala...'),
+              builder: (context, data, refresh) => data['linked'] == false
                   ? const NotLinkedState(message: 'Link your child to start Ghar Ek Pathshala')
-                  : _Body(data: _data!, onToggle: _toggle),
+                  : _Body(data: data, repo: repo, refresh: refresh),
+            ),
     );
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   final Map<String, dynamic> data;
-  final ValueChanged<int> onToggle;
-  const _Body({required this.data, required this.onToggle});
+  final ParentRepository repo;
+  final Future<void> Function() refresh;
+  const _Body({required this.data, required this.repo, required this.refresh});
+
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  late Map<String, dynamic> _data = widget.data;
+
+  Future<void> _toggle(int id) async {
+    final thisWeek = (_data['thisWeek'] as List).cast<Map<String, dynamic>>();
+    setState(() {
+      final idx = thisWeek.indexWhere((a) => a['id'] == id);
+      if (idx != -1) thisWeek[idx] = {...thisWeek[idx], 'done': !(thisWeek[idx]['done'] as bool)};
+      _data = {..._data, 'doneThisWeek': thisWeek.where((a) => a['done'] == true).length};
+    });
+    try {
+      await widget.repo.toggleHomeLearning(id);
+    } catch (_) {
+      await widget.refresh();
+    }
+  }
 
   String _formatWeek(String iso) {
     final d = DateTime.tryParse(iso);
@@ -95,11 +74,11 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
-    final thisWeek = (data['thisWeek'] as List? ?? []).cast<Map<String, dynamic>>();
-    final doneThisWeek = data['doneThisWeek'] as num? ?? 0;
-    final totalThisWeek = data['totalThisWeek'] as num? ?? 0;
-    final history = (data['history'] as List? ?? []).cast<Map<String, dynamic>>();
-    final participationScore = data['participationScore'] as int? ?? 0;
+    final thisWeek = (_data['thisWeek'] as List? ?? []).cast<Map<String, dynamic>>();
+    final doneThisWeek = _data['doneThisWeek'] as num? ?? 0;
+    final totalThisWeek = _data['totalThisWeek'] as num? ?? 0;
+    final history = (_data['history'] as List? ?? []).cast<Map<String, dynamic>>();
+    final participationScore = _data['participationScore'] as int? ?? 0;
     final pct = totalThisWeek == 0 ? 0.0 : (doneThisWeek / totalThisWeek).clamp(0, 1).toDouble();
 
     return ListView(
@@ -142,7 +121,7 @@ class _Body extends StatelessWidget {
               children: thisWeek.map((a) {
                 final done = a['done'] as bool? ?? false;
                 return ListTile(
-                  onTap: () => onToggle(a['id'] as int),
+                  onTap: () => _toggle(a['id'] as int),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 6),
                   leading: Icon(done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: done ? AppColors.success : s.textMuted, size: 22),
                   title: Text(a['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, decoration: done ? TextDecoration.lineThrough : null, color: done ? s.textMuted : s.textPrimary)),

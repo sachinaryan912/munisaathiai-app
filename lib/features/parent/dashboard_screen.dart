@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/icon_map.dart';
-import '../../core/widgets/error_view.dart';
-import '../../core/widgets/greeting_header.dart';
+import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
 import '../../core/widgets/section_card.dart';
@@ -15,59 +14,31 @@ import 'selected_child_provider.dart';
 import 'widgets/child_switcher.dart';
 import 'widgets/link_child_panel.dart';
 
-class ParentDashboardScreen extends StatefulWidget {
+class ParentDashboardScreen extends StatelessWidget {
   const ParentDashboardScreen({super.key});
 
   @override
-  State<ParentDashboardScreen> createState() => _ParentDashboardScreenState();
-}
-
-class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
-  final _repo = ParentRepository();
-  Map<String, dynamic>? _data;
-  bool _loading = true;
-  String? _error;
-  int? _lastChildId;
-  bool _childrenLoaded = false;
-
-  Future<void> _load(int? childId) async {
-    setState(() => _loading = true);
-    try {
-      _data = await _repo.getDashboard(childId);
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('ApiException: ', '');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final repo = ParentRepository();
     final childProvider = context.watch<SelectedChildProvider>();
-
-    if (!childProvider.loading && !_childrenLoaded) {
-      _childrenLoaded = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
-    if (_childrenLoaded && childProvider.selectedChildId != _lastChildId) {
-      _lastChildId = childProvider.selectedChildId;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
 
     return AppShell(
       title: '',
-      body: childProvider.loading || _loading
+      isDashboard: true,
+      dashboardSubtitle: "Here's how your child is doing today.",
+      // Keyed by the selected child so switching children remounts this AsyncScreen instead of
+      // reusing stale state — avoids both a duplicate initial fetch and a race where a slow
+      // response for a previously-selected child overwrites the currently-selected child's data.
+      body: childProvider.loading
           ? const LoadingView(message: 'Loading dashboard...')
-          : _error != null
-              ? ErrorView(message: _error!, onRetry: () => _load(childProvider.selectedChildId))
-              : (_data?['linked'] == false)
+          : AsyncScreen<Map<String, dynamic>>(
+              key: ValueKey(childProvider.selectedChildId),
+              loader: () => repo.getDashboard(childProvider.selectedChildId),
+              loadingBuilder: (context) => const LoadingView(message: 'Loading dashboard...'),
+              builder: (context, data, refresh) => data['linked'] == false
                   ? const NotLinkedState(message: "Link your child to see their dashboard")
-                  : RefreshIndicator(
-                      color: AppColors.saffron500,
-                      onRefresh: () => _load(childProvider.selectedChildId),
-                      child: _Body(data: _data!),
-                    ),
+                  : _Body(data: data),
+            ),
     );
   }
 }
@@ -94,8 +65,6 @@ class _Body extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
-        const GreetingHeader(subtitle: 'Here\'s how your child is doing today.'),
-        const SizedBox(height: 18),
         const ChildSwitcher(),
         const SizedBox(height: 16),
         SectionCard(

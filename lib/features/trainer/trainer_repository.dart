@@ -35,6 +35,11 @@ class TrainerRepository {
         return (res.data as List).cast<Map<String, dynamic>>();
       });
 
+  Future<List<Map<String, dynamic>>> getObservationChecklist() => apiCall(() async {
+        final res = await _dio.get('/trainer/observations/checklist');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
   Future<Map<String, dynamic>> createObservation({
     required int teacherId,
     required int schoolId,
@@ -135,6 +140,11 @@ class TrainerRepository {
         return res.data as Map<String, dynamic>;
       });
 
+  Future<List<Map<String, dynamic>>> getTeacherFeedbackHistory(int teacherId) => apiCall(() async {
+        final res = await _dio.get('/trainer/teachers/$teacherId/feedback');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
   Future<Map<String, dynamic>> generateWhatsappReminder(int sessionId) => apiCall(() async {
         final res = await _dio.post('/trainer/ai/whatsapp-reminder/$sessionId');
         return res.data as Map<String, dynamic>;
@@ -145,9 +155,9 @@ class TrainerRepository {
         return res.data as Map<String, dynamic>;
       });
 
-  Future<List<int>> downloadMonthlyReportPdf() => apiCall(() async {
+  Future<List<int>> downloadMonthlyReportPdf(Map<String, dynamic> report) => apiCall(() async {
         final res = await _dio.post('/trainer/ai/monthly-report/pdf',
-            options: Options(responseType: ResponseType.bytes));
+            data: report, options: Options(responseType: ResponseType.bytes));
         return res.data as List<int>;
       });
 }

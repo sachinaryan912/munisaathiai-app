@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/ai_chat/ai_chat_page.dart';
 import '../../features/auth/data/auth_provider.dart';
@@ -12,8 +13,13 @@ import 'role_routes.dart';
 
 const _authRoutePaths = {'/login', '/register', '/forgot-password'};
 
+/// Exposed so code outside the widget tree (the FCM background/tap handlers)
+/// can obtain a valid [BuildContext] to navigate or open sheets with.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 GoRouter buildRouter(AuthProvider auth) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: auth,
     redirect: (context, state) {

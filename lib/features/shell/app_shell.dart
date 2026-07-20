@@ -7,6 +7,7 @@ import '../auth/data/auth_provider.dart';
 import '../notifications/notifications_provider.dart';
 import '../parent/selected_child_provider.dart';
 import 'custom_app_bar.dart';
+import 'dashboard_app_bar.dart';
 
 /// The per-page chrome (app bar + FAB) every role-scoped page composes
 /// itself into — analogous to the web app's `<DashboardLayout title="...">`
@@ -18,6 +19,8 @@ class AppShell extends StatefulWidget {
   final List<Widget>? actions;
   final Widget? floatingActionButton;
   final bool showAiFab;
+  final bool isDashboard;
+  final String? dashboardSubtitle;
 
   const AppShell({
     super.key,
@@ -26,6 +29,8 @@ class AppShell extends StatefulWidget {
     this.actions,
     this.floatingActionButton,
     this.showAiFab = true,
+    this.isDashboard = false,
+    this.dashboardSubtitle,
   });
 
   @override
@@ -46,7 +51,11 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: widget.title, actions: widget.actions),
+      appBar: widget.title == 'Vidya AI'
+          ? null
+          : (widget.isDashboard
+              ? DashboardAppBar(subtitle: widget.dashboardSubtitle)
+              : CustomAppBar(title: widget.title, actions: widget.actions)),
       body: widget.body,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: widget.floatingActionButton ??
@@ -56,7 +65,7 @@ class _AppShellState extends State<AppShell> {
                   backgroundColor: AppColors.saffron500,
                   elevation: 6,
                   onPressed: () => context.push('/ai-chat'),
-                  child: const Icon(LucideIcons.sparkles, color: Colors.white),
+                  child: const Icon(LucideIcons.bot, color: Colors.white),
                 )
               : null),
     );

@@ -14,6 +14,7 @@ Future<void> showLogBuddySessionSheet(BuildContext context, StudentRepository re
   var helped = true;
   var rating = 5;
   var submitting = false;
+  String? error;
 
   return showModalBottomSheet(
     context: context,
@@ -64,13 +65,17 @@ Future<void> showLogBuddySessionSheet(BuildContext context, StudentRepository re
                     }),
                   ),
                   AppTextField(label: 'Reflection (optional)', controller: reflectionCtrl, maxLines: 3, hint: 'How did it go?'),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 18),
                   GradientButton(
                     label: 'Save Session',
                     loading: submitting,
                     onPressed: () async {
                       if (topicCtrl.text.trim().isEmpty) return;
-                      setSheetState(() => submitting = true);
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
                       try {
                         await repo.logBuddySession(
                           topic: topicCtrl.text.trim(),
@@ -81,8 +86,11 @@ Future<void> showLogBuddySessionSheet(BuildContext context, StudentRepository re
                         );
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
                         await onSuccess();
-                      } catch (_) {
-                        setSheetState(() => submitting = false);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
                       }
                     },
                   ),

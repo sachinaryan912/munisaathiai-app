@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/gradient_button.dart';
@@ -11,6 +12,7 @@ Future<void> showLogPeerTeachingSheet(BuildContext context, StudentRepository re
   final reflectionCtrl = TextEditingController();
   var count = 2;
   var submitting = false;
+  String? error;
 
   return showModalBottomSheet(
     context: context,
@@ -44,19 +46,26 @@ Future<void> showLogPeerTeachingSheet(BuildContext context, StudentRepository re
                   ),
                   const SizedBox(height: 10),
                   AppTextField(label: 'Reflection (optional)', controller: reflectionCtrl, maxLines: 3),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 18),
                   GradientButton(
                     label: 'Save',
                     loading: submitting,
                     onPressed: () async {
                       if (topicCtrl.text.trim().isEmpty) return;
-                      setSheetState(() => submitting = true);
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
                       try {
                         await repo.logPeerTeaching(topic: topicCtrl.text.trim(), studentCount: count, reflection: reflectionCtrl.text.trim().isEmpty ? null : reflectionCtrl.text.trim());
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
                         await onSuccess();
-                      } catch (_) {
-                        setSheetState(() => submitting = false);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
                       }
                     },
                   ),

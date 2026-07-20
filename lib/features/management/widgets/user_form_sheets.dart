@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/widgets/searchable_field.dart';
+import '../../auth/data/auth_repository.dart';
 
 const _roleOptions = ['MANAGEMENT', 'TRAINER', 'PRINCIPAL', 'TEACHER', 'STUDENT', 'PARENT'];
 
@@ -34,6 +35,7 @@ class _UserFormSheet extends StatefulWidget {
 }
 
 class _UserFormSheetState extends State<_UserFormSheet> {
+  final _authRepo = AuthRepository();
   late final _fullName = TextEditingController(text: widget.existing?['fullName'] as String? ?? '');
   late final _email = TextEditingController(text: widget.existing?['email'] as String? ?? '');
   late final _password = TextEditingController();
@@ -44,6 +46,25 @@ class _UserFormSheetState extends State<_UserFormSheet> {
   late final _designation = TextEditingController(text: widget.existing?['designation'] as String? ?? '');
   late String _role = widget.existing?['role'] as String? ?? 'TEACHER';
   String? _error;
+  List<String> _schools = [];
+  bool _schoolsLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchools();
+  }
+
+  Future<void> _loadSchools() async {
+    setState(() => _schoolsLoading = true);
+    try {
+      _schools = await _authRepo.lookupSchools();
+    } catch (_) {
+      _schools = [];
+    } finally {
+      if (mounted) setState(() => _schoolsLoading = false);
+    }
+  }
 
   void _save() {
     final isEdit = widget.existing != null;
@@ -116,7 +137,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                 }).toList(),
               ),
               const SizedBox(height: 14),
-              SearchableField(label: 'School (optional)', value: _schoolName.text, onChanged: (v) => _schoolName.text = v, options: const []),
+              SearchableField(label: 'School (optional)', value: _schoolName.text, onChanged: (v) => _schoolName.text = v, options: _schools, loading: _schoolsLoading),
               const SizedBox(height: 14),
               Row(children: [
                 Expanded(child: AppTextField(label: 'Class (optional)', controller: _className)),

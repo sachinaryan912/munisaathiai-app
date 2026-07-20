@@ -67,6 +67,19 @@ class AppColors {
   static const disabledLight = Color(0xFFD1D5DB);
   static const disabledDark = Color(0xFF3F4552);
 
+  /// Premium AI-inspired gradient used on the Vidya chat screen only (send button,
+  /// bot icon, message accents) — not applied app-wide.
+  static const aiGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFFF7722),
+      Color(0xFFFFB347),
+      Color(0xFF7C4DFF),
+      Color(0xFF4F9DFF),
+    ],
+  );
+
   static List<Color> roleGradient(String role) {
     switch (role) {
       case 'MANAGEMENT':

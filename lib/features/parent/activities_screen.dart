@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/error_view.dart';
+import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/section_card.dart';
@@ -21,63 +21,36 @@ const _categories = [
   {'value': 'general', 'label': 'General'},
 ];
 
-class ParentActivitiesScreen extends StatefulWidget {
+class ParentActivitiesScreen extends StatelessWidget {
   const ParentActivitiesScreen({super.key});
 
   @override
-  State<ParentActivitiesScreen> createState() => _ParentActivitiesScreenState();
-}
-
-class _ParentActivitiesScreenState extends State<ParentActivitiesScreen> {
-  final _repo = ParentRepository();
-  Map<String, dynamic>? _homeLearning;
-  List<Map<String, dynamic>> _feedbacks = [];
-  bool _loading = true;
-  String? _error;
-  int? _lastChildId;
-  bool _childrenLoaded = false;
-
-  Future<void> _load(int? childId) async {
-    setState(() => _loading = true);
-    try {
-      final results = await Future.wait([_repo.getHomeLearning(childId), _repo.getFeedback(childId)]);
-      _homeLearning = results[0] as Map<String, dynamic>;
-      _feedbacks = results[1] as List<Map<String, dynamic>>;
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('ApiException: ', '');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final repo = ParentRepository();
     final childProvider = context.watch<SelectedChildProvider>();
-    if (!childProvider.loading && !_childrenLoaded) {
-      _childrenLoaded = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
-    if (_childrenLoaded && childProvider.selectedChildId != _lastChildId) {
-      _lastChildId = childProvider.selectedChildId;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
 
     return AppShell(
       title: 'Activities',
-      body: childProvider.loading || _loading
+      body: childProvider.loading
           ? const LoadingView(message: 'Loading activities...')
-          : _error != null
-              ? ErrorView(message: _error!, onRetry: () => _load(childProvider.selectedChildId))
-              : (_homeLearning?['linked'] == false)
-                  ? const NotLinkedState(message: 'Link your child to see their activities')
-                  : _Body(
-                      homeLearning: _homeLearning!,
-                      feedbacks: _feedbacks,
-                      childId: childProvider.selectedChildId,
-                      repo: _repo,
-                      onFeedbackSent: () => _load(childProvider.selectedChildId),
-                    ),
+          : AsyncScreen<List<Object>>(
+              key: ValueKey(childProvider.selectedChildId),
+              loader: () => Future.wait([repo.getHomeLearning(childProvider.selectedChildId), repo.getFeedback(childProvider.selectedChildId)]),
+              loadingBuilder: (context) => const LoadingView(message: 'Loading activities...'),
+              builder: (context, results, refresh) {
+                final homeLearning = results[0] as Map<String, dynamic>;
+                final feedbacks = (results[1] as List).cast<Map<String, dynamic>>();
+                return homeLearning['linked'] == false
+                    ? const NotLinkedState(message: 'Link your child to see their activities')
+                    : _Body(
+                        homeLearning: homeLearning,
+                        feedbacks: feedbacks,
+                        childId: childProvider.selectedChildId,
+                        repo: repo,
+                        onFeedbackSent: refresh,
+                      );
+              },
+            ),
     );
   }
 }
@@ -87,7 +60,7 @@ class _Body extends StatefulWidget {
   final List<Map<String, dynamic>> feedbacks;
   final int? childId;
   final ParentRepository repo;
-  final VoidCallback onFeedbackSent;
+  final Future<void> Function() onFeedbackSent;
 
   const _Body({required this.homeLearning, required this.feedbacks, required this.childId, required this.repo, required this.onFeedbackSent});
 

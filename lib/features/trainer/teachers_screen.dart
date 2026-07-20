@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
@@ -14,27 +15,55 @@ const _statusColors = {
   'Active': Color(0xFF10B981), 'Needs Support': Color(0xFFF59E0B), 'Inactive': Color(0xFFEF4444),
 };
 
-class TrainerTeachersScreen extends StatelessWidget {
+class TrainerTeachersScreen extends StatefulWidget {
   const TrainerTeachersScreen({super.key});
 
   @override
+  State<TrainerTeachersScreen> createState() => _TrainerTeachersScreenState();
+}
+
+class _TrainerTeachersScreenState extends State<TrainerTeachersScreen> {
+  final _repo = TrainerRepository();
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
   Widget build(BuildContext context) {
-    final repo = TrainerRepository();
     return AppShell(
       title: 'Teachers',
       body: AsyncScreen<List<Map<String, dynamic>>>(
-        loader: () => repo.getTeachers(),
-        builder: (context, teachers, refresh) {
-          if (teachers.isEmpty) {
+        loader: () => _repo.getTeachers(),
+        builder: (context, allTeachers, refresh) {
+          if (allTeachers.isEmpty) {
             return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: LucideIcons.users)]);
           }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-            itemCount: teachers.length,
-            itemBuilder: (context, i) => _TeacherCard(teacher: teachers[i], repo: repo)
-                .animate(delay: (i * 40).ms)
-                .fadeIn(duration: 280.ms)
-                .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+          final q = _query.trim().toLowerCase();
+          final teachers = q.isEmpty
+              ? allTeachers
+              : allTeachers.where((t) {
+                  return (t['name'] as String? ?? '').toLowerCase().contains(q) ||
+                      (t['schoolName'] as String? ?? '').toLowerCase().contains(q) ||
+                      (t['status'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by name, school or status', onChanged: (v) => setState(() => _query = v)),
+              ),
+              Expanded(
+                child: teachers.isEmpty
+                    ? const EmptyView(title: 'No teachers match your search', icon: LucideIcons.users)
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+                        itemCount: teachers.length,
+                        itemBuilder: (context, i) => _TeacherCard(teacher: teachers[i], repo: _repo)
+                            .animate(delay: (i * 40).ms)
+                            .fadeIn(duration: 280.ms)
+                            .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -55,6 +84,16 @@ class _TeacherCardState extends State<_TeacherCard> {
   bool _loadingFeedback = false;
   Map<String, dynamic>? _feedback;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show the trainer's own most recent feedback for this teacher, if any — feedback is now
+    // persisted server-side, so it should still be here after navigating away and back.
+    widget.repo.getTeacherFeedbackHistory(widget.teacher['id'] as int).then((history) {
+      if (mounted && history.isNotEmpty) setState(() => _feedback = history.first);
+    }).catchError((_) {});
+  }
 
   Future<void> _generateFeedback() async {
     setState(() {

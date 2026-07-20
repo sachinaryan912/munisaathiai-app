@@ -16,4 +16,12 @@ class NotificationRepository {
   Future<void> markAllRead() => apiCall(() async {
         await _dio.post('/notifications/read-all');
       });
+
+  Future<void> registerDeviceToken(String token, {String platform = 'android'}) => apiCall(() async {
+        await _dio.post('/device-tokens', data: {'token': token, 'platform': platform});
+      });
+
+  Future<void> unregisterDeviceToken(String token) => apiCall(() async {
+        await _dio.delete('/device-tokens', data: {'token': token});
+      });
 }

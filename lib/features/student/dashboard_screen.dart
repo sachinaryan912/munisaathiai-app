@@ -3,13 +3,21 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/icon_map.dart';
 import '../../core/widgets/async_screen.dart';
-import '../../core/widgets/greeting_header.dart';
+import '../../core/widgets/badge_detail_sheet.dart';
 import '../../core/widgets/section_card.dart';
+import '../action_plans/action_plan_sheet.dart';
+import '../auth/data/auth_provider.dart';
+import '../shared/community_hub_screen.dart';
+import '../shared/ptm_file_screen.dart';
+import '../shared/timetable_screen.dart';
 import '../shell/app_shell.dart';
+import 'progress_chart_screen.dart';
+import 'self_growth_hub_screen.dart';
 import 'student_repository.dart';
 import 'widgets/dashboard_skeleton.dart';
 import 'widgets/quick_access_card.dart';
@@ -24,6 +32,7 @@ class StudentDashboardScreen extends StatelessWidget {
     return AppShell(
       title: '',
       showAiFab: false,
+      isDashboard: true,
       body: AsyncScreen<Map<String, dynamic>>(
         loader: repo.getDashboard,
         loadingBuilder: (context) => const DashboardSkeleton(),
@@ -55,7 +64,6 @@ class _DashboardBody extends StatelessWidget {
     final feedback = data['feedbackSummary'] as Map<String, dynamic>? ?? {};
 
     final sections = <Widget>[
-      const GreetingHeader(),
       _HeroCard(overallScore: overallScore),
       _StatsRow(stats: stats, colors: _statColors),
       _QuickAccessGrid(selfStudy: selfStudy, assignments: assignments, peerTeaching: peerTeaching, feedback: feedback),
@@ -214,8 +222,11 @@ class _QuickAccessGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
-    final lessonsTotal = selfStudy['lessonsTotal'] as int? ?? 0;
-    final selfStudySubtitle = lessonsTotal > 0 ? '${selfStudy['lessonsDone']}/$lessonsTotal lessons · ${selfStudy['activeCount']} active' : 'Start your first self-study topic!';
+    final myId = context.watch<AuthProvider>().user?.id;
+    final totalCount = selfStudy['totalCount'] as int? ?? 0;
+    final selfStudySubtitle = totalCount > 0
+        ? '${selfStudy['doneCount']}/$totalCount chapters (UPLC) · ${selfStudy['activeCount']} in progress'
+        : 'Start your first UPLC self-study chapter!';
 
     final assignCount = assignments['count'] as int? ?? 0;
     final assignSubtitle = assignCount > 0 ? 'Last: ${assignments['latestSubject']} — ${assignments['latestMarks']}/100 (${assignments['latestGrade']})' : 'No assignments checked yet — try one!';
@@ -243,6 +254,68 @@ class _QuickAccessGrid extends StatelessWidget {
             QuickAccessCard(route: '/student/assignments', icon: LucideIcons.fileCheck, color: const Color(0xFF10B981), title: 'Assignments', subtitle: assignSubtitle, cta: 'Check My Work'),
             QuickAccessCard(route: '/student/peer-teaching', icon: LucideIcons.graduationCap, color: const Color(0xFFF43F5E), title: 'Peer Teaching', subtitle: peerSubtitle, cta: 'Teach a Friend'),
             QuickAccessCard(route: '/student/feedback', icon: LucideIcons.heart, color: const Color(0xFFEC4899), title: 'Feedback', subtitle: fbSubtitle, cta: 'Share Feedback'),
+            QuickAccessCard(
+              onTap: () => showMyActionPlansSheet(context),
+              icon: LucideIcons.clipboardList,
+              color: const Color(0xFF0EA5E9),
+              title: 'Action Plan',
+              subtitle: 'Tasks and follow-ups assigned to you',
+              cta: 'View Tasks',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+              icon: LucideIcons.globe,
+              color: const Color(0xFF14B8A6),
+              title: 'Community Hub',
+              subtitle: 'Wakeup Call Board, events, workshops & clubs',
+              cta: 'Explore',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimetableScreen(title: 'My Timetable'))),
+              icon: LucideIcons.calendarClock,
+              color: const Color(0xFFF59E0B),
+              title: 'Timetable',
+              subtitle: 'Your weekly class timetable',
+              cta: 'View Timetable',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProgressChartScreen())),
+              icon: LucideIcons.trendingUp,
+              color: const Color(0xFF8B5CF6),
+              title: 'Progress Chart',
+              subtitle: 'Track your self-competition over time',
+              cta: 'View Chart',
+            ),
+            if (myId != null)
+              QuickAccessCard(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PtmFileScreen(studentId: myId))),
+                icon: LucideIcons.fileText,
+                color: const Color(0xFFEF4444),
+                title: 'PTM File',
+                subtitle: 'Your consolidated parent-teacher meeting report',
+                cta: 'Open File',
+              ),
+            SectionCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SelfGrowthHubScreen())),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)), child: const Icon(LucideIcons.sparkles, size: 18, color: Color(0xFF8B5CF6))),
+                  const SizedBox(height: 10),
+                  Text('Self-Growth Journal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
+                  const SizedBox(height: 3),
+                  Text('Reflection tools from the Muni Model', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: s.textSecondary, height: 1.3, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Text('Explore', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF8B5CF6))),
+                    const SizedBox(width: 3),
+                    const Icon(LucideIcons.chevronRight, size: 12, color: Color(0xFF8B5CF6)),
+                  ]),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -274,7 +347,7 @@ class _BuddyCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text('My Buddy', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary)),
+                    Text('My Group', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary)),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -378,7 +451,9 @@ class _BadgesRow extends StatelessWidget {
             itemBuilder: (context, i) {
               final b = badges[i];
               final earned = b['earned'] as bool? ?? false;
-              return Container(
+              return GestureDetector(
+                onTap: () => showBadgeDetail(context, b),
+                child: Container(
                 width: 88,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -401,6 +476,7 @@ class _BadgesRow extends StatelessWidget {
                       style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: earned ? AppColors.saffron700 : s.textMuted),
                     ),
                   ],
+                ),
                 ),
               );
             },
@@ -466,8 +542,14 @@ class _AiPromoCard extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(16)),
-            child: const Icon(LucideIcons.sparkles, color: Colors.white, size: 22),
+            child: Image.asset(
+              'assets/images/divya.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              cacheWidth: 96,
+            ),
           ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1, end: 1.08, duration: 1200.ms, curve: Curves.easeInOut),
           const SizedBox(width: 14),
           Expanded(

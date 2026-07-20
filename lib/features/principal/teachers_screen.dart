@@ -5,9 +5,11 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'principal_repository.dart';
+import 'training_screen.dart';
 
 const _statusColors = {
   'Active': Color(0xFF10B981),
@@ -15,23 +17,55 @@ const _statusColors = {
   'Inactive': Color(0xFFEF4444),
 };
 
-class PrincipalTeachersScreen extends StatelessWidget {
+class PrincipalTeachersScreen extends StatefulWidget {
   const PrincipalTeachersScreen({super.key});
 
   @override
+  State<PrincipalTeachersScreen> createState() => _PrincipalTeachersScreenState();
+}
+
+class _PrincipalTeachersScreenState extends State<PrincipalTeachersScreen> {
+  final _repo = PrincipalRepository();
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
   Widget build(BuildContext context) {
-    final repo = PrincipalRepository();
     return AppShell(
       title: 'Teachers',
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.bookOpen),
+          tooltip: 'Training',
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrincipalTrainingScreen())),
+        ),
+      ],
       body: AsyncScreen<List<Map<String, dynamic>>>(
-        loader: repo.getTeachers,
-        builder: (context, teachers, refresh) {
+        loader: _repo.getTeachers,
+        builder: (context, allTeachers, refresh) {
           final s = context.surface;
-          if (teachers.isEmpty) {
+          if (allTeachers.isEmpty) {
             return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: LucideIcons.users)]);
           }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+          final q = _query.trim().toLowerCase();
+          final teachers = q.isEmpty
+              ? allTeachers
+              : allTeachers.where((t) {
+                  return (t['name'] as String? ?? '').toLowerCase().contains(q) ||
+                      (t['className'] as String? ?? '').toLowerCase().contains(q) ||
+                      (t['status'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by name, class or status', onChanged: (v) => setState(() => _query = v)),
+              ),
+              Expanded(
+                child: teachers.isEmpty
+                    ? const EmptyView(title: 'No teachers match your search', icon: LucideIcons.users)
+                    : ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
             itemCount: teachers.length,
             itemBuilder: (context, i) {
               final t = teachers[i];
@@ -60,6 +94,9 @@ class PrincipalTeachersScreen extends StatelessWidget {
                 ),
               ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
             },
+          ),
+              ),
+            ],
           );
         },
       ),

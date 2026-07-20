@@ -4,20 +4,21 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'teacher_repository.dart';
 
-const _methodologies = [
-  'GRS', 'Buddy System', 'UPLC', 'HADS', 'Child Parliament', 'Growth Habits',
-  'Ghar Ek Pathshala', 'Am I Able', 'Situation Creation', 'Bharat Bodh',
-  'Vedic Math', 'English Language (LLT)',
-];
+const _maxEvidenceBytes = 10 * 1024 * 1024; // matches backend's 10 MB limit
+
+const _evidenceExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'pdf', 'mp4', 'mov', 'webm', '3gp'];
 
 class TeacherEvidenceScreen extends StatelessWidget {
   const TeacherEvidenceScreen({super.key});
@@ -28,16 +29,25 @@ class TeacherEvidenceScreen extends StatelessWidget {
     return AppShell(
       title: 'Evidence',
       showAiFab: false,
-      body: AsyncScreen<List<Map<String, dynamic>>>(loader: repo.getEvidence, builder: (context, list, refresh) => _Body(list: list, repo: repo, refresh: refresh)),
+      body: AsyncScreen<List<Object>>(
+        loader: () => Future.wait([repo.getEvidence(), repo.getMethodologies()]),
+        builder: (context, results, refresh) => _Body(
+          list: results[0] as List<Map<String, dynamic>>,
+          methodologies: results[1] as List<String>,
+          repo: repo,
+          refresh: refresh,
+        ),
+      ),
     );
   }
 }
 
 class _Body extends StatefulWidget {
   final List<Map<String, dynamic>> list;
+  final List<String> methodologies;
   final TeacherRepository repo;
   final Future<void> Function() refresh;
-  const _Body({required this.list, required this.repo, required this.refresh});
+  const _Body({required this.list, required this.methodologies, required this.repo, required this.refresh});
 
   @override
   State<_Body> createState() => _BodyState();
@@ -45,9 +55,27 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   int? _analyzingId;
+  int? _openingId;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  Future<void> _viewEvidence(int id, String fileName) async {
+    setState(() => _openingId = id);
+    try {
+      final bytes = await widget.repo.getEvidenceFile(id);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _openingId = null);
+    }
+  }
 
   Future<void> _openUpload() async {
-    String methodology = _methodologies.first;
+    String methodology = widget.methodologies.first;
     File? file;
     var submitting = false;
     String? error;
@@ -77,7 +105,7 @@ class _BodyState extends State<_Body> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _methodologies.map((m) {
+                      children: widget.methodologies.map((m) {
                         final active = m == methodology;
                         return ChoiceChip(
                           label: Text(m, style: const TextStyle(fontSize: 11)),
@@ -94,8 +122,18 @@ class _BodyState extends State<_Body> {
                     InkWell(
                       borderRadius: BorderRadius.circular(16),
                       onTap: () async {
-                        final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
-                        if (result?.files.single.path != null) setSheetState(() => file = File(result!.files.single.path!));
+                        final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: _evidenceExtensions);
+                        final path = result?.files.single.path;
+                        if (path == null) return;
+                        final picked = File(path);
+                        if (await picked.length() > _maxEvidenceBytes) {
+                          setSheetState(() => error = 'File is too large. Maximum size is 10 MB.');
+                          return;
+                        }
+                        setSheetState(() {
+                          file = picked;
+                          error = null;
+                        });
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16),
@@ -104,7 +142,7 @@ class _BodyState extends State<_Body> {
                           children: [
                             Icon(file != null ? LucideIcons.fileCheck : LucideIcons.upload, color: AppColors.saffron600, size: 20),
                             const SizedBox(width: 10),
-                            Expanded(child: Text(file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo or PDF', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary), overflow: TextOverflow.ellipsis)),
+                            Expanded(child: Text(file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo, video or PDF', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary), overflow: TextOverflow.ellipsis)),
                           ],
                         ),
                       ),
@@ -150,6 +188,8 @@ class _BodyState extends State<_Body> {
     try {
       await widget.repo.analyzeEvidence(id);
       await widget.refresh();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
     } finally {
       if (mounted) setState(() => _analyzingId = null);
     }
@@ -158,19 +198,41 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final q = _query.trim().toLowerCase();
+    final list = q.isEmpty
+        ? widget.list
+        : widget.list.where((e) {
+            return (e['methodology'] as String? ?? '').toLowerCase().contains(q) || (e['fileName'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
     return Stack(
       children: [
-        widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No evidence uploaded yet', subtitle: 'Tap + to upload your first piece of evidence.', icon: LucideIcons.bookOpen)])
-            : ListView.builder(
+        Column(
+          children: [
+            if (widget.list.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by methodology or file name', onChanged: (v) => setState(() => _query = v)),
+              ),
+            Expanded(
+              child: list.isEmpty
+                  ? ListView(children: [
+                      const SizedBox(height: 120),
+                      EmptyView(
+                        title: widget.list.isEmpty ? 'No evidence uploaded yet' : 'No evidence matches your search',
+                        subtitle: widget.list.isEmpty ? 'Tap + to upload your first piece of evidence.' : null,
+                        icon: LucideIcons.bookOpen,
+                      ),
+                    ])
+                  : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                itemCount: widget.list.length,
+                itemCount: list.length,
                 itemBuilder: (context, i) {
-                  final e = widget.list[i];
+                  final e = list[i];
                   final id = e['id'] as int;
                   final aiScore = e['aiScore'] as int?;
                   final aiVerdict = e['aiVerdict'] as String?;
                   final trainerVerified = e['trainerVerified'] as bool? ?? false;
+                  final isVideo = (e['mimeType'] as String? ?? '').startsWith('video/');
                   List<dynamic> detections = [];
                   try {
                     if (e['aiDetections'] != null) detections = jsonDecode(e['aiDetections'] as String) as List<dynamic>;
@@ -179,12 +241,20 @@ class _BodyState extends State<_Body> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: SectionCard(
+                      onTap: _openingId == id ? null : () => _viewEvidence(id, e['fileName'] as String),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Icon(LucideIcons.fileCheck, size: 18, color: AppColors.saffron600)),
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)),
+                                child: _openingId == id
+                                    ? const Padding(padding: EdgeInsets.all(11), child: CircularProgressIndicator(strokeWidth: 2))
+                                    : Icon(isVideo ? LucideIcons.video : LucideIcons.fileCheck, size: 18, color: AppColors.saffron600),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -241,6 +311,9 @@ class _BodyState extends State<_Body> {
                   ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                 },
               ),
+            ),
+          ],
+        ),
         Positioned(
           right: 16,
           bottom: 16,

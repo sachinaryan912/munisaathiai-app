@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -29,8 +30,17 @@ class SessionDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(session['topic'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: Text(session['topic'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary))),
+                        IconButton(
+                          icon: const Icon(LucideIcons.messageCircle, color: AppColors.success),
+                          tooltip: 'WhatsApp Reminder',
+                          onPressed: () => _showWhatsappReminder(context, repo, sessionId),
+                        ),
+                      ],
+                    ),
                     Text('${session['schoolName']} · ${session['date']} · ${session['mode']}', style: TextStyle(fontSize: 12, color: s.textMuted)),
                     if (session['venue'] != null) Text('${session['venue']}', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
                     if ((session['notes'] as String?)?.isNotEmpty == true) Padding(padding: const EdgeInsets.only(top: 8), child: Text(session['notes'] as String, style: TextStyle(fontSize: 12, color: s.textSecondary))),
@@ -49,6 +59,41 @@ class SessionDetailScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _showWhatsappReminder(BuildContext context, TrainerRepository repo, int sessionId) async {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => const AlertDialog(
+        content: SizedBox(height: 60, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+      ),
+    );
+    try {
+      final result = await repo.generateWhatsappReminder(sessionId);
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('WhatsApp Reminder'),
+          content: SelectableText(result['message'] as String? ?? ''),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+            TextButton(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: result['message'] as String? ?? ''));
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Copy'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    }
   }
 }
 

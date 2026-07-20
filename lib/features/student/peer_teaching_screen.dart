@@ -76,9 +76,26 @@ class _BodyState extends State<_Body> {
                                 Text(t['topic'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
                                 const SizedBox(height: 2),
                                 Text('${t['studentCount']} friends · ${t['date']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
-                                if ((t['teacherFeedback'] as String?)?.isNotEmpty ?? false) ...[
+                                if ((t['reflection'] as String?)?.isNotEmpty ?? false) ...[
                                   const SizedBox(height: 6),
+                                  Text('"${t['reflection']}"', style: TextStyle(fontSize: 11.5, color: s.textSecondary, fontStyle: FontStyle.italic)),
+                                ],
+                                if ((t['teacherFeedback'] as String?)?.isNotEmpty ?? false) ...[
+                                  const SizedBox(height: 8),
+                                  Row(children: [
+                                    Icon(LucideIcons.userCheck, size: 10, color: s.textMuted),
+                                    const SizedBox(width: 4),
+                                    Text('Teacher feedback', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.3)),
+                                  ]),
+                                  const SizedBox(height: 3),
                                   Text(t['teacherFeedback'] as String, style: TextStyle(fontSize: 11.5, color: s.textSecondary, fontStyle: FontStyle.italic)),
+                                ] else ...[
+                                  const SizedBox(height: 8),
+                                  Row(children: [
+                                    Icon(LucideIcons.clock, size: 10, color: AppColors.warning),
+                                    const SizedBox(width: 4),
+                                    Text('Pending teacher review', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.warning, letterSpacing: 0.3)),
+                                  ]),
                                 ],
                               ],
                             ),

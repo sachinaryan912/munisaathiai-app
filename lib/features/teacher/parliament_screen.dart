@@ -51,43 +51,60 @@ class _BodyState extends State<_Body> {
   Future<void> _logMeeting() async {
     final agendaCtrl = TextEditingController();
     final minutesCtrl = TextEditingController();
+    var submitting = false;
+    String? error;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        final s = sheetContext.surface;
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-            decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Log a Parliament Meeting', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                const SizedBox(height: 14),
-                AppTextField(label: 'Agenda', controller: agendaCtrl, maxLines: 2),
-                const SizedBox(height: 12),
-                AppTextField(label: 'Minutes (optional)', controller: minutesCtrl, maxLines: 3),
-                const SizedBox(height: 16),
-                GradientButton(
-                  label: 'Save Meeting',
-                  onPressed: () async {
-                    if (agendaCtrl.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Please enter an agenda.')));
-                      return;
-                    }
-                    await widget.repo.logParliamentMeeting(agenda: agendaCtrl.text.trim(), minutes: minutesCtrl.text.trim().isEmpty ? null : minutesCtrl.text.trim());
-                    if (sheetContext.mounted) Navigator.pop(sheetContext, true);
-                  },
-                  height: 46,
-                ),
-              ],
+        return StatefulBuilder(builder: (sheetContext, setSheetState) {
+          final s = sheetContext.surface;
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+              decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Log a Parliament Meeting', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                  const SizedBox(height: 14),
+                  AppTextField(label: 'Agenda', controller: agendaCtrl, maxLines: 2),
+                  const SizedBox(height: 12),
+                  AppTextField(label: 'Minutes (optional)', controller: minutesCtrl, maxLines: 3),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                  const SizedBox(height: 16),
+                  GradientButton(
+                    label: 'Save Meeting',
+                    loading: submitting,
+                    onPressed: () async {
+                      if (agendaCtrl.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Please enter an agenda.')));
+                        return;
+                      }
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
+                      try {
+                        await widget.repo.logParliamentMeeting(agenda: agendaCtrl.text.trim(), minutes: minutesCtrl.text.trim().isEmpty ? null : minutesCtrl.text.trim());
+                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
+                      }
+                    },
+                    height: 46,
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        });
       },
     );
     if (saved == true) await widget.refresh();
@@ -96,6 +113,8 @@ class _BodyState extends State<_Body> {
   Future<void> _logActivity() async {
     Map<String, dynamic>? selectedStudent;
     final descCtrl = TextEditingController();
+    var submitting = false;
+    String? error;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -126,16 +145,29 @@ class _BodyState extends State<_Body> {
                   ),
                   const SizedBox(height: 12),
                   AppTextField(label: 'Description', controller: descCtrl, maxLines: 2),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 16),
                   GradientButton(
                     label: 'Save Activity',
+                    loading: submitting,
                     onPressed: () async {
                       if (descCtrl.text.trim().isEmpty) {
                         ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Please enter a description.')));
                         return;
                       }
-                      await widget.repo.logParliamentActivity(studentId: selectedStudent?['id'] as int?, description: descCtrl.text.trim());
-                      if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
+                      try {
+                        await widget.repo.logParliamentActivity(studentId: selectedStudent?['id'] as int?, description: descCtrl.text.trim());
+                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
+                      }
                     },
                     height: 46,
                   ),

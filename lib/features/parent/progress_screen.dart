@@ -4,65 +4,63 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
+import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
-import '../../core/widgets/error_view.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
+import '../shared/evaluation_sheet_screen.dart';
+import '../shared/ptm_file_screen.dart';
+import '../shared/timetable_screen.dart';
 import '../shell/app_shell.dart';
 import 'parent_repository.dart';
 import 'selected_child_provider.dart';
 import 'widgets/child_switcher.dart';
 import 'widgets/link_child_panel.dart';
 
-class ParentProgressScreen extends StatefulWidget {
+class ParentProgressScreen extends StatelessWidget {
   const ParentProgressScreen({super.key});
 
   @override
-  State<ParentProgressScreen> createState() => _ParentProgressScreenState();
-}
-
-class _ParentProgressScreenState extends State<ParentProgressScreen> {
-  final _repo = ParentRepository();
-  Map<String, dynamic>? _data;
-  bool _loading = true;
-  String? _error;
-  int? _lastChildId;
-  bool _childrenLoaded = false;
-
-  Future<void> _load(int? childId) async {
-    setState(() => _loading = true);
-    try {
-      _data = await _repo.getProgress(childId);
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('ApiException: ', '');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final repo = ParentRepository();
     final childProvider = context.watch<SelectedChildProvider>();
-    if (!childProvider.loading && !_childrenLoaded) {
-      _childrenLoaded = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
-    if (_childrenLoaded && childProvider.selectedChildId != _lastChildId) {
-      _lastChildId = childProvider.selectedChildId;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _load(childProvider.selectedChildId));
-    }
+    final selectedChild = childProvider.selectedChild;
 
     return AppShell(
       title: "Child's Progress",
-      body: childProvider.loading || _loading
+      actions: [
+        if (selectedChild != null) ...[
+          IconButton(
+            icon: const Icon(LucideIcons.calendarClock),
+            tooltip: 'Timetable',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimetableScreen(title: "Child's Timetable"))),
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.clipboardCheck),
+            tooltip: 'Evaluation Sheet',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EvaluationSheetScreen(
+                  studentId: selectedChild['id'] as int,
+                  studentLabel: '${selectedChild['fullName']}\'s Evaluation Sheet',
+                  editableRoles: const ['PARENT'],
+                ))),
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.fileText),
+            tooltip: 'PTM File',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PtmFileScreen(studentId: selectedChild['id'] as int))),
+          ),
+        ],
+      ],
+      body: childProvider.loading
           ? const LoadingView()
-          : _error != null
-              ? ErrorView(message: _error!, onRetry: () => _load(childProvider.selectedChildId))
-              : (_data?['linked'] == false)
+          : AsyncScreen<Map<String, dynamic>>(
+              key: ValueKey(childProvider.selectedChildId),
+              loader: () => repo.getProgress(childProvider.selectedChildId),
+              builder: (context, data, refresh) => data['linked'] == false
                   ? const NotLinkedState(message: "Link your child to see their progress")
-                  : _Body(data: _data!),
+                  : _Body(data: data),
+            ),
     );
   }
 }

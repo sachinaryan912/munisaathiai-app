@@ -5,8 +5,8 @@ import '../../core/network/api_client.dart';
 class TeacherRepository {
   final _dio = ApiClient.instance.dio;
 
-  Future<List<Map<String, dynamic>>> getClass() => apiCall(() async {
-        final res = await _dio.get('/teacher/class');
+  Future<List<Map<String, dynamic>>> getClass({String? date}) => apiCall(() async {
+        final res = await _dio.get('/teacher/class', queryParameters: {'date': ?date});
         return (res.data as List).cast<Map<String, dynamic>>();
       });
 
@@ -24,12 +24,33 @@ class TeacherRepository {
         return res.data as Map<String, dynamic>;
       });
 
-  Future<void> assignBuddy({required int studentAId, required int studentBId}) => apiCall(() async {
-        await _dio.post('/teacher/buddy/assign', data: {'studentAId': studentAId, 'studentBId': studentBId});
+  Future<List<Map<String, dynamic>>> getBuddyGroups() => apiCall(() async {
+        final res = await _dio.get('/teacher/buddy-groups');
+        return (res.data as List).cast<Map<String, dynamic>>();
       });
 
-  Future<void> unassignBuddy(int studentId) => apiCall(() async {
-        await _dio.post('/teacher/buddy/unassign/$studentId');
+  Future<Map<String, dynamic>> createBuddyGroup(List<int> studentIds) => apiCall(() async {
+        final res = await _dio.post('/teacher/buddy-groups', data: {'studentIds': studentIds});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> addToBuddyGroup({required int groupId, required int studentId}) => apiCall(() async {
+        final res = await _dio.post('/teacher/buddy-groups/$groupId/members', data: {'studentId': studentId});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<void> removeFromBuddyGroup({required int groupId, required int studentId}) => apiCall(() async {
+        await _dio.delete('/teacher/buddy-groups/$groupId/members/$studentId');
+      });
+
+  Future<List<Map<String, dynamic>>> getPeerTeachingForReview() => apiCall(() async {
+        final res = await _dio.get('/teacher/peer-teaching');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<Map<String, dynamic>> reviewPeerTeaching({required int id, required String feedback, required int stars}) => apiCall(() async {
+        final res = await _dio.post('/teacher/peer-teaching/$id/review', data: {'feedback': feedback, 'stars': stars});
+        return res.data as Map<String, dynamic>;
       });
 
   Future<Map<String, dynamic>> getDashboard() => apiCall(() async {
@@ -40,6 +61,21 @@ class TeacherRepository {
   Future<Map<String, dynamic>> generateDailyReport() => apiCall(() async {
         final res = await _dio.post('/teacher/daily-report');
         return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> getDailyReport({String? date}) => apiCall(() async {
+        final res = await _dio.get('/teacher/daily-report', queryParameters: {'date': ?date});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<List<Map<String, dynamic>>> getDailyReportHistory() => apiCall(() async {
+        final res = await _dio.get('/teacher/daily-reports');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<String>> getMethodologies() => apiCall(() async {
+        final res = await _dio.get('/teacher/methodologies');
+        return (res.data as List).cast<String>();
       });
 
   Future<List<Map<String, dynamic>>> getMethodology({String? date}) => apiCall(() async {
@@ -60,6 +96,71 @@ class TeacherRepository {
   Future<List<Map<String, dynamic>>> getEvidence() => apiCall(() async {
         final res = await _dio.get('/teacher/evidence');
         return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<List<Map<String, dynamic>>> getCommunityAssessmentVisits() => apiCall(() async {
+        final res = await _dio.get('/teacher/community-assessment');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<void> logCommunityAssessmentVisit({required int studentId, String? habitsNotes, String? understandingNotes, String? otherNotes}) => apiCall(() async {
+        await _dio.post('/teacher/community-assessment', data: {
+          'studentId': studentId,
+          'habitsNotes': ?habitsNotes,
+          'understandingNotes': ?understandingNotes,
+          'otherNotes': ?otherNotes,
+        });
+      });
+
+  Future<List<Map<String, dynamic>>> getCenterWorkEntries() => apiCall(() async {
+        final res = await _dio.get('/teacher/center-work');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<void> logCenterWork({
+    required String topic,
+    String? researchCreativityNotes,
+    String? constructionNotes,
+    String? mathScienceNotes,
+    String? rolePlayNotes,
+    String? abcLanguageNotes,
+  }) =>
+      apiCall(() async {
+        await _dio.post('/teacher/center-work', data: {
+          'topic': topic,
+          'researchCreativityNotes': ?researchCreativityNotes,
+          'constructionNotes': ?constructionNotes,
+          'mathScienceNotes': ?mathScienceNotes,
+          'rolePlayNotes': ?rolePlayNotes,
+          'abcLanguageNotes': ?abcLanguageNotes,
+        });
+      });
+
+  Future<List<Map<String, dynamic>>> getValuesDiscussionLogs() => apiCall(() async {
+        final res = await _dio.get('/teacher/values-discussion');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<void> logValuesDiscussion({required String valueTopic, String? notes}) => apiCall(() async {
+        await _dio.post('/teacher/values-discussion', data: {'valueTopic': valueTopic, 'notes': ?notes});
+      });
+
+  Future<List<Map<String, dynamic>>> getOathRecords() => apiCall(() async {
+        final res = await _dio.get('/teacher/oath');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<void> markOathRecited() => apiCall(() async {
+        await _dio.post('/teacher/oath/recite');
+      });
+
+  Future<List<Map<String, dynamic>>> getPeerExamEvaluations() => apiCall(() async {
+        final res = await _dio.get('/teacher/peer-exam-evaluations');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<void> logPeerExamEvaluation({required int studentId, required String examName, required String pattern, required double avgScore}) => apiCall(() async {
+        await _dio.post('/teacher/peer-exam-evaluations', data: {'studentId': studentId, 'examName': examName, 'pattern': pattern, 'avgScore': avgScore});
       });
 
   Future<Map<String, dynamic>> uploadEvidence({required String methodology, required File file}) => apiCall(() async {
@@ -93,6 +194,9 @@ class TeacherRepository {
     required String date,
     int durationMinutes = 40,
     List<String> linkedMethodologies = const [],
+    String? sambandh,
+    String? vyavastha,
+    String? sahAstitva,
   }) =>
       apiCall(() async {
         final res = await _dio.post('/teacher/lesson-plans', data: {
@@ -102,6 +206,9 @@ class TeacherRepository {
           'date': date,
           'durationMinutes': durationMinutes,
           'linkedMethodologies': linkedMethodologies,
+          'sambandh': ?sambandh,
+          'vyavastha': ?vyavastha,
+          'sahAstitva': ?sahAstitva,
         });
         return res.data as Map<String, dynamic>;
       });

@@ -23,7 +23,9 @@ class _AsyncScreenState<T> extends State<AsyncScreen<T>> {
 
   Future<void> _refresh() async {
     final next = widget.loader();
-    setState(() => _future = next);
+    setState(() {
+      _future = next;
+    });
     await next;
   }
 

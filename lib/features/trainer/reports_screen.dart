@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -36,6 +37,8 @@ class _BodyState extends State<_Body> {
   Map<String, dynamic>? _monthly;
   bool _monthlyLoading = false;
   String? _monthlyError;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   Future<void> _generateMonthly() async {
     setState(() {
@@ -81,17 +84,37 @@ class _BodyState extends State<_Body> {
                   ),
                 )
         else if (_tab == 'teachers')
-          SectionCard(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              children: teacherPerformance.map((t) => ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    title: Text(t['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
-                    subtitle: Text(t['status'] as String, style: TextStyle(fontSize: 11, color: s.textMuted)),
-                    trailing: Text('${t['score']}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: s.textPrimary)),
-                  )).toList(),
-            ),
-          )
+          Builder(builder: (context) {
+            final q = _query.trim().toLowerCase();
+            final filtered = q.isEmpty
+                ? teacherPerformance
+                : teacherPerformance.where((t) {
+                    return (t['name'] as String? ?? '').toLowerCase().contains(q) || (t['status'] as String? ?? '').toLowerCase().contains(q);
+                  }).toList();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (teacherPerformance.isNotEmpty) ...[
+                  ListSearchField(controller: _searchCtrl, hint: 'Search by name or status', onChanged: (v) => setState(() => _query = v)),
+                  const SizedBox(height: 12),
+                ],
+                if (filtered.isEmpty)
+                  Text('No teachers match your search.', style: TextStyle(fontSize: 12.5, color: s.textMuted))
+                else
+                  SectionCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: filtered.map((t) => ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                            title: Text(t['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                            subtitle: Text(t['status'] as String, style: TextStyle(fontSize: 11, color: s.textMuted)),
+                            trailing: Text('${t['score']}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: s.textPrimary)),
+                          )).toList(),
+                    ),
+                  ),
+              ],
+            );
+          })
         else
           SectionCard(
             child: _monthlyLoading
@@ -106,7 +129,7 @@ class _BodyState extends State<_Body> {
                               const SizedBox(height: 14),
                               PdfDownloadButton(
                                 fileName: 'monthly_impact_report.pdf',
-                                download: widget.repo.downloadMonthlyReportPdf,
+                                download: () => widget.repo.downloadMonthlyReportPdf(_monthly!),
                               ),
                             ],
                           )

@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
-import '../../core/widgets/greeting_header.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
 import '../../core/widgets/section_card.dart';
@@ -21,6 +20,8 @@ class PrincipalDashboardScreen extends StatelessWidget {
     final repo = PrincipalRepository();
     return AppShell(
       title: '',
+      isDashboard: true,
+      dashboardSubtitle: "Here's how your school is doing today.",
       body: AsyncScreen<Map<String, dynamic>>(loader: repo.getDashboard, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
     );
   }
@@ -64,12 +65,11 @@ class _BodyState extends State<_Body> {
     final studentCount = data['studentCount'] as int? ?? 0;
     final pendingAlerts = data['pendingAlerts'] as num? ?? 0;
     final methodologyScores = (data['methodologyScores'] as List? ?? []).cast<Map<String, dynamic>>();
+    final weakMethodologies = (data['weakMethodologies'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
-        const GreetingHeader(subtitle: 'Here\'s how your school is doing today.'),
-        const SizedBox(height: 18),
         SectionCard(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -102,6 +102,29 @@ class _BodyState extends State<_Body> {
             StatTile(label: 'Pending Alerts', value: '$pendingAlerts', icon: LucideIcons.triangleAlert, color: AppColors.warning, animateIndex: 1),
           ],
         ),
+        if (weakMethodologies.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(children: [
+                  const Icon(LucideIcons.triangleAlert, size: 16, color: AppColors.warning),
+                  const SizedBox(width: 8),
+                  Text('Methodologies Needing Attention', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary)),
+                ]),
+                const SizedBox(height: 10),
+                ...weakMethodologies.map((m) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(children: [
+                        Expanded(child: Text(m['name'] as String, style: TextStyle(fontSize: 12.5, color: s.textSecondary, fontWeight: FontWeight.w600))),
+                        Text('${m['score']}/100', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.warning)),
+                      ]),
+                    )),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 22),
         SectionCard(
           child: Column(

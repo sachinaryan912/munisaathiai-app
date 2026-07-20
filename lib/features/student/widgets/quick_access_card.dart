@@ -5,7 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/section_card.dart';
 
 class QuickAccessCard extends StatelessWidget {
-  final String route;
+  final String? route;
+  final VoidCallback? onTap;
   final IconData icon;
   final Color color;
   final String title;
@@ -14,20 +15,21 @@ class QuickAccessCard extends StatelessWidget {
 
   const QuickAccessCard({
     super.key,
-    required this.route,
+    this.route,
+    this.onTap,
     required this.icon,
     required this.color,
     required this.title,
     required this.subtitle,
     required this.cta,
-  });
+  }) : assert(route != null || onTap != null, 'Provide either route or onTap');
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
     return SectionCard(
       padding: const EdgeInsets.all(16),
-      onTap: () => context.go(route),
+      onTap: onTap ?? () => context.go(route!),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

@@ -52,8 +52,13 @@ class _Body extends StatelessWidget {
   const _Body({required this.terms, required this.classes, required this.summary, required this.repo, required this.refresh});
 
   Future<void> _newTerm(BuildContext context) async {
-    if (classes.isEmpty) return;
+    if (classes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No classes found yet — add students to a class first.')));
+      return;
+    }
     Map<String, dynamic> selectedClass = classes.first;
+    var submitting = false;
+    String? error;
     final created = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -81,12 +86,25 @@ class _Body extends StatelessWidget {
                       if (v != null) setSheetState(() => selectedClass = v);
                     },
                   ),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 16),
                   GradientButton(
                     label: 'Create Term',
+                    loading: submitting,
                     onPressed: () async {
-                      await repo.createParliamentTerm(className: selectedClass['className'] as String, section: selectedClass['section'] as String?);
-                      if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
+                      try {
+                        await repo.createParliamentTerm(className: selectedClass['className'] as String, section: selectedClass['section'] as String?);
+                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
+                      }
                     },
                     height: 46,
                   ),
@@ -232,10 +250,15 @@ class _TermDetailSheetState extends State<_TermDetailSheet> {
   }
 
   Future<void> _assignRole() async {
-    if (_roster.isEmpty) return;
+    if (_roster.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No students found in this class yet.')));
+      return;
+    }
     Map<String, dynamic> selectedStudent = _roster.first;
     String selectedRole = _roleLabels.keys.first;
     final ministryCtrl = TextEditingController();
+    var submitting = false;
+    String? error;
 
     final assigned = await showModalBottomSheet<bool>(
       context: context,
@@ -276,17 +299,30 @@ class _TermDetailSheetState extends State<_TermDetailSheet> {
                   ),
                   const SizedBox(height: 12),
                   AppTextField(label: 'Ministry (optional)', controller: ministryCtrl),
+                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 16),
                   GradientButton(
                     label: 'Assign',
+                    loading: submitting,
                     onPressed: () async {
-                      await widget.repo.assignParliamentRole(
-                        termId: widget.term['id'] as int,
-                        studentId: selectedStudent['id'] as int,
-                        roleType: selectedRole,
-                        ministry: ministryCtrl.text.trim().isEmpty ? null : ministryCtrl.text.trim(),
-                      );
-                      if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      setSheetState(() {
+                        submitting = true;
+                        error = null;
+                      });
+                      try {
+                        await widget.repo.assignParliamentRole(
+                          termId: widget.term['id'] as int,
+                          studentId: selectedStudent['id'] as int,
+                          roleType: selectedRole,
+                          ministry: ministryCtrl.text.trim().isEmpty ? null : ministryCtrl.text.trim(),
+                        );
+                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                      } catch (e) {
+                        setSheetState(() {
+                          submitting = false;
+                          error = e.toString().replaceFirst('ApiException: ', '');
+                        });
+                      }
                     },
                     height: 46,
                   ),
@@ -307,6 +343,8 @@ class _TermDetailSheetState extends State<_TermDetailSheet> {
   Widget build(BuildContext context) {
     final s = context.surface;
     final roles = (_detail?['roles'] as List? ?? []).cast<Map<String, dynamic>>();
+    final meetings = (_detail?['meetings'] as List? ?? []).cast<Map<String, dynamic>>();
+    final activities = (_detail?['activities'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -347,6 +385,49 @@ class _TermDetailSheetState extends State<_TermDetailSheet> {
                       )),
                 const SizedBox(height: 16),
                 GradientButton(label: 'Assign Role', icon: Icons.person_add_alt_1, onPressed: _assignRole, height: 46),
+                const SizedBox(height: 22),
+                Text('Meetings (${meetings.length})', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary)),
+                const SizedBox(height: 8),
+                if (meetings.isEmpty)
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text('No meetings logged yet.', style: TextStyle(fontSize: 12, color: s.textMuted)))
+                else
+                  ...meetings.map((m) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              Expanded(child: Text(m['agenda'] as String, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: s.textPrimary))),
+                              Text(m['date'] as String, style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                            ]),
+                            if ((m['minutes'] as String?)?.isNotEmpty == true)
+                              Padding(padding: const EdgeInsets.only(top: 2), child: Text(m['minutes'] as String, style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          ],
+                        ),
+                      )),
+                const SizedBox(height: 18),
+                Text('Activities (${activities.length})', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary)),
+                const SizedBox(height: 8),
+                if (activities.isEmpty)
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text('No activities logged yet.', style: TextStyle(fontSize: 12, color: s.textMuted)))
+                else
+                  ...activities.map((a) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(a['description'] as String, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: s.textPrimary)),
+                                  Text(a['studentName'] != null ? a['studentName'] as String : 'Whole class', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                                ],
+                              ),
+                            ),
+                            Text(a['date'] as String, style: TextStyle(fontSize: 10.5, color: s.textMuted)),
+                          ],
+                        ),
+                      )),
               ],
             ],
           ),

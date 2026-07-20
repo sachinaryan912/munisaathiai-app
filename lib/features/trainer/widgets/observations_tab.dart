@@ -6,21 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/empty_view.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../core/widgets/list_search_field.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/section_card.dart';
 import '../trainer_repository.dart';
-
-const _checklistLabels = {
-  'buddySystem': 'Buddy System implementation',
-  'studentCollaboration': 'Student collaboration',
-  'teacherFacilitator': 'Teacher acting as facilitator, not lecturing',
-  'activeGroupLearning': 'Active group learning',
-  'studentQuestioning': 'Student questioning encouraged',
-  'selfStudyActivities': 'Self-study activities visible',
-  'uplcImplementation': 'UPLC implementation',
-  'supportWeakStudents': 'Support for weak students',
-  'democraticPractices': 'Democratic classroom practices',
-};
 
 class ObservationsTab extends StatefulWidget {
   const ObservationsTab({super.key});
@@ -33,8 +22,11 @@ class _ObservationsTabState extends State<ObservationsTab> {
   final _repo = TrainerRepository();
   List<Map<String, dynamic>> _observations = [];
   List<Map<String, dynamic>> _schools = [];
+  List<Map<String, dynamic>> _checklistDef = [];
   bool _loading = true;
   String? _error;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
@@ -45,9 +37,10 @@ class _ObservationsTabState extends State<ObservationsTab> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final results = await Future.wait([_repo.getObservations(), _repo.getSchools()]);
+      final results = await Future.wait([_repo.getObservations(), _repo.getSchools(), _repo.getObservationChecklist()]);
       _observations = results[0];
       _schools = results[1];
+      _checklistDef = results[2];
       _error = null;
     } catch (e) {
       _error = e.toString().replaceFirst('ApiException: ', '');
@@ -69,7 +62,7 @@ class _ObservationsTabState extends State<ObservationsTab> {
     final sectionCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     var date = DateTime.now();
-    final checklist = {for (final k in _checklistLabels.keys) k: false};
+    final checklist = {for (final item in _checklistDef) item['key'] as String: false};
     var submitting = false;
     String? error;
 
@@ -158,14 +151,14 @@ class _ObservationsTabState extends State<ObservationsTab> {
                     AppTextField(label: 'Notes', controller: notesCtrl, maxLines: 2),
                     const SizedBox(height: 14),
                     Text('Observation Checklist', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    ..._checklistLabels.entries.map((e) => CheckboxListTile(
-                          value: checklist[e.key],
-                          onChanged: (v) => setSheetState(() => checklist[e.key] = v ?? false),
+                    ..._checklistDef.map((item) => CheckboxListTile(
+                          value: checklist[item['key']],
+                          onChanged: (v) => setSheetState(() => checklist[item['key'] as String] = v ?? false),
                           activeColor: AppColors.saffron500,
                           controlAffinity: ListTileControlAffinity.leading,
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: Text(e.value, style: const TextStyle(fontSize: 12.5)),
+                          title: Text(item['label'] as String, style: const TextStyle(fontSize: 12.5)),
                         )),
                     if (error != null) ...[const SizedBox(height: 8), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                     const SizedBox(height: 16),
@@ -211,15 +204,35 @@ class _ObservationsTabState extends State<ObservationsTab> {
     if (_loading) return const LoadingView();
     if (_error != null) return Center(child: Text(_error!, style: const TextStyle(color: AppColors.danger)));
 
+    final q = _query.trim().toLowerCase();
+    final observations = q.isEmpty
+        ? _observations
+        : _observations.where((o) {
+            return (o['teacherName'] as String? ?? '').toLowerCase().contains(q) ||
+                (o['className'] as String? ?? '').toLowerCase().contains(q) ||
+                (o['section'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
+
     return Stack(
       children: [
-        _observations.isEmpty
-            ? ListView(children: const [SizedBox(height: 80), EmptyView(title: 'No observations recorded yet', icon: LucideIcons.fileCheck)])
-            : ListView.builder(
+        Column(
+          children: [
+            if (_observations.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by teacher, class or section', onChanged: (v) => setState(() => _query = v)),
+              ),
+            Expanded(
+              child: observations.isEmpty
+                  ? ListView(children: [
+                      const SizedBox(height: 80),
+                      EmptyView(title: _observations.isEmpty ? 'No observations recorded yet' : 'No observations match your search', icon: LucideIcons.fileCheck),
+                    ])
+                  : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                itemCount: _observations.length,
+                itemCount: observations.length,
                 itemBuilder: (context, i) {
-                  final o = _observations[i];
+                  final o = observations[i];
                   final aiScore = o['aiScore'] as int?;
                   final strengths = (o['aiStrengths'] as List? ?? []).cast<String>();
                   return Padding(
@@ -249,6 +262,9 @@ class _ObservationsTabState extends State<ObservationsTab> {
                   );
                 },
               ),
+            ),
+          ],
+        ),
         Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'create_trainer_observation', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const Icon(Icons.add, color: Colors.white))),
       ],
     );

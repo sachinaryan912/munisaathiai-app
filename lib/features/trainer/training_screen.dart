@@ -7,11 +7,13 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'session_detail_screen.dart';
 import 'trainer_repository.dart';
 import 'widgets/observations_tab.dart';
+import '../videos/video_screen.dart';
 
 class TrainerTrainingScreen extends StatefulWidget {
   const TrainerTrainingScreen({super.key});
@@ -22,12 +24,14 @@ class TrainerTrainingScreen extends StatefulWidget {
 
 class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with SingleTickerProviderStateMixin {
   final _repo = TrainerRepository();
-  late final TabController _tabController = TabController(length: 3, vsync: this)..addListener(() => setState(() {}));
+  late final TabController _tabController = TabController(length: 4, vsync: this)..addListener(() => setState(() {}));
   List<Map<String, dynamic>>? _sessions;
   List<Map<String, dynamic>>? _evidence;
   List<Map<String, dynamic>> _schools = [];
   bool _loading = true;
   String? _error;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
@@ -169,8 +173,17 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
             indicatorColor: AppColors.saffron500,
             labelStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
             isScrollable: true,
-            tabs: const [Tab(text: 'Sessions'), Tab(text: 'Evidence Review'), Tab(text: 'Observations')],
+            tabs: const [Tab(text: 'Sessions'), Tab(text: 'Evidence Review'), Tab(text: 'Observations'), Tab(text: 'Videos')],
           ),
+          if (!_loading && _error == null && _tabController.index < 2 && ((_sessions?.isNotEmpty ?? false) || (_evidence?.isNotEmpty ?? false)))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: ListSearchField(
+                controller: _searchCtrl,
+                hint: _tabController.index == 0 ? 'Search by topic or school' : 'Search by methodology, teacher or school',
+                onChanged: (v) => setState(() => _query = v),
+              ),
+            ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -179,13 +192,40 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                     : TabBarView(
                         controller: _tabController,
                         children: [
-                          _sessions!.isEmpty
-                              ? ListView(children: const [SizedBox(height: 80), EmptyView(title: 'No training sessions yet', icon: LucideIcons.bookOpen)])
-                              : ListView.builder(
+                          _buildSessionsTab(s),
+                          _buildEvidenceTab(s),
+                          const ObservationsTab(),
+                          const VideoResourcesScreen(),
+                        ],
+                      ),
+          ),
+        ],
+      ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(heroTag: 'create_session', backgroundColor: AppColors.saffron500, onPressed: _openCreateSession, child: const Icon(Icons.add, color: Colors.white))
+          : null,
+    );
+  }
+
+  Widget _buildSessionsTab(MuniSurface s) {
+    final q = _query.trim().toLowerCase();
+    final sessions = q.isEmpty
+        ? _sessions!
+        : _sessions!.where((sess) {
+            return (sess['topic'] as String? ?? '').toLowerCase().contains(q) ||
+                (sess['schoolName'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
+    if (sessions.isEmpty) {
+      return ListView(children: [
+        const SizedBox(height: 80),
+        EmptyView(title: _sessions!.isEmpty ? 'No training sessions yet' : 'No sessions match your search', icon: LucideIcons.bookOpen),
+      ]);
+    }
+    return ListView.builder(
                                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                                  itemCount: _sessions!.length,
+                                  itemCount: sessions.length,
                                   itemBuilder: (context, i) {
-                                    final sess = _sessions![i];
+                                    final sess = sessions[i];
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 10),
                                       child: SectionCard(
@@ -209,14 +249,29 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                       ),
                                     ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                                   },
-                                ),
-                          _evidence!.isEmpty
-                              ? ListView(children: const [SizedBox(height: 80), EmptyView(title: 'No evidence pending review', icon: LucideIcons.circleCheck)])
-                              : ListView.builder(
+                                );
+  }
+
+  Widget _buildEvidenceTab(MuniSurface s) {
+    final q = _query.trim().toLowerCase();
+    final evidence = q.isEmpty
+        ? _evidence!
+        : _evidence!.where((e) {
+            return (e['methodology'] as String? ?? '').toLowerCase().contains(q) ||
+                (e['teacherName'] as String? ?? '').toLowerCase().contains(q) ||
+                (e['schoolName'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
+    if (evidence.isEmpty) {
+      return ListView(children: [
+        const SizedBox(height: 80),
+        EmptyView(title: _evidence!.isEmpty ? 'No evidence pending review' : 'No evidence matches your search', icon: LucideIcons.circleCheck),
+      ]);
+    }
+    return ListView.builder(
                                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
-                                  itemCount: _evidence!.length,
+                                  itemCount: evidence.length,
                                   itemBuilder: (context, i) {
-                                    final e = _evidence![i];
+                                    final e = evidence[i];
                                     final verified = e['trainerVerified'] as bool? ?? false;
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 10),
@@ -251,16 +306,6 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                       ),
                                     ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                                   },
-                                ),
-                          const ObservationsTab(),
-                        ],
-                      ),
-          ),
-        ],
-      ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(heroTag: 'create_session', backgroundColor: AppColors.saffron500, onPressed: _openCreateSession, child: const Icon(Icons.add, color: Colors.white))
-          : null,
-    );
+                                );
   }
 }

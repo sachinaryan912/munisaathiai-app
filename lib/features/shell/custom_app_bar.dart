@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/theme_provider.dart';
+import '../action_plans/action_plan_sheet.dart';
 import '../auth/data/auth_provider.dart';
 import '../notifications/notification_panel.dart';
 import '../notifications/notifications_provider.dart';
@@ -67,6 +68,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   _ChromeButton(
                     icon: themeProvider.isDark ? LucideIcons.sun : LucideIcons.moon,
                     onTap: themeProvider.toggle,
+                  ),
+                  const SizedBox(width: 8),
+                  _ChromeButton(
+                    icon: LucideIcons.clipboardList,
+                    onTap: () => showMyActionPlansSheet(context),
                   ),
                   const SizedBox(width: 8),
                   _ChromeButton(

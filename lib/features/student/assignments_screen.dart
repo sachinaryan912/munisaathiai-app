@@ -1,11 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/generic_skeleton.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'student_repository.dart';
@@ -49,28 +53,74 @@ class _Body extends StatefulWidget {
 }
 
 class _BodyState extends State<_Body> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+  int? _openingId;
+
   void _openUpload() => showUploadAssignmentSheet(context, widget.repo, widget.refresh);
+
+  Future<void> _viewAssignment(int id, String fileName) async {
+    setState(() => _openingId = id);
+    try {
+      final bytes = await widget.repo.getAssignmentFile(id);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _openingId = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final q = _query.trim().toLowerCase();
+    final list = q.isEmpty
+        ? widget.list
+        : widget.list.where((a) {
+            return (a['title'] as String? ?? '').toLowerCase().contains(q) ||
+                (a['subject'] as String? ?? '').toLowerCase().contains(q) ||
+                (a['grade'] as String? ?? '').toLowerCase().contains(q);
+          }).toList();
     return Stack(
       children: [
-        widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No assignments submitted yet', subtitle: 'Tap the + button to submit your first one.', icon: LucideIcons.fileCheck)])
-            : AnimationLimiter(
+        Column(
+          children: [
+            if (widget.list.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ListSearchField(controller: _searchCtrl, hint: 'Search by title, subject or grade', onChanged: (v) => setState(() => _query = v)),
+              ),
+            Expanded(
+              child: list.isEmpty
+                  ? ListView(children: [
+                      const SizedBox(height: 120),
+                      EmptyView(
+                        title: widget.list.isEmpty ? 'No assignments submitted yet' : 'No assignments match your search',
+                        subtitle: widget.list.isEmpty ? 'Tap the + button to submit your first one.' : null,
+                        icon: LucideIcons.fileCheck,
+                      ),
+                    ])
+                  : AnimationLimiter(
                 child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                itemCount: widget.list.length,
+                itemCount: list.length,
                 itemBuilder: (context, i) {
-                  final a = widget.list[i];
+                  final a = list[i];
                   final grade = a['grade'] as String? ?? '';
                   final color = _gradeColors[grade] ?? s.textMuted;
                   final strengths = (a['strengths'] as String? ?? '').split('\n').where((l) => l.trim().isNotEmpty).toList();
                   final improvements = (a['improvements'] as String? ?? '').split('\n').where((l) => l.trim().isNotEmpty).toList();
+                  final id = a['id'] as int;
+                  final opening = _openingId == id;
+                  final hasFile = a['storagePath'] != null;
                   final card = Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: SectionCard(
+                      onTap: !hasFile || opening ? null : () => _viewAssignment(id, a['fileName'] as String? ?? 'assignment'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -81,7 +131,9 @@ class _BodyState extends State<_Body> {
                                 height: 44,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
-                                child: Text(grade, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: color)),
+                                child: opening
+                                    ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: color))
+                                    : Text(grade, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: color)),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -93,6 +145,7 @@ class _BodyState extends State<_Body> {
                                   ],
                                 ),
                               ),
+                              if (hasFile) Icon(LucideIcons.fileText, size: 15, color: s.textMuted),
                             ],
                           ),
                           if ((a['feedback'] as String? ?? '').isNotEmpty) ...[
@@ -125,6 +178,9 @@ class _BodyState extends State<_Body> {
                 },
               ),
             ),
+            ),
+          ],
+        ),
         Positioned(
           right: 16,
           bottom: 16,

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/csv_export.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
+import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import 'management_repository.dart';
@@ -21,6 +23,8 @@ class ManagementSchoolsScreen extends StatefulWidget {
 
 class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
   final _repo = ManagementRepository();
+  final _searchCtrl = TextEditingController();
+  String _query = '';
 
   Future<void> _openAdd(Future<void> Function() refresh) async {
     final payload = await showSchoolFormSheet(context);
@@ -33,6 +37,13 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
     }
   }
 
+  Future<void> _export(List<Map<String, dynamic>> schools) => exportCsv(
+        context,
+        'schools.csv',
+        ['Name', 'District', 'Trainer', 'MII Score', 'Status', 'Teachers', 'Students', 'Classes'],
+        schools.map((sc) => [sc['name'], sc['district'], sc['trainer'], sc['miiScore'], sc['status'], sc['teacherCount'], sc['studentCount'], sc['classCount']]).toList(),
+      );
+
   @override
   Widget build(BuildContext context) {
     return AppShell(
@@ -42,12 +53,41 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
         loader: _repo.getOverview,
         builder: (context, data, refresh) {
           final s = context.surface;
-          final schools = (data['schools'] as List? ?? []).cast<Map<String, dynamic>>();
+          final allSchools = (data['schools'] as List? ?? []).cast<Map<String, dynamic>>();
+          final q = _query.trim().toLowerCase();
+          final schools = q.isEmpty
+              ? allSchools
+              : allSchools.where((sc) {
+                  return (sc['name'] as String? ?? '').toLowerCase().contains(q) ||
+                      (sc['district'] as String? ?? '').toLowerCase().contains(q) ||
+                      (sc['trainer'] as String? ?? '').toLowerCase().contains(q);
+                }).toList();
           return Stack(
             children: [
-              schools.isEmpty
-                  ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No schools yet', subtitle: 'Tap + to add your first school.', icon: LucideIcons.school)])
-                  : ListView.builder(
+              Column(
+                children: [
+                  if (allSchools.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Row(
+                        children: [
+                          Expanded(child: ListSearchField(controller: _searchCtrl, hint: 'Search by name, district or trainer', onChanged: (v) => setState(() => _query = v))),
+                          const SizedBox(width: 8),
+                          IconButton(icon: const Icon(LucideIcons.download), tooltip: 'Export CSV', onPressed: () => _export(schools)),
+                        ],
+                      ),
+                    ),
+                  Expanded(
+                    child: schools.isEmpty
+                        ? ListView(children: [
+                            const SizedBox(height: 120),
+                            EmptyView(
+                              title: allSchools.isEmpty ? 'No schools yet' : 'No schools match your search',
+                              subtitle: allSchools.isEmpty ? 'Tap + to add your first school.' : null,
+                              icon: LucideIcons.school,
+                            ),
+                          ])
+                        : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                       itemCount: schools.length,
                       itemBuilder: (context, i) {
@@ -77,6 +117,9 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
                         ).animate(delay: (i * 40).ms).fadeIn(duration: 280.ms).slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic);
                       },
                     ),
+                  ),
+                ],
+              ),
               Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_school', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(refresh), child: const Icon(Icons.add, color: Colors.white))),
             ],
           );

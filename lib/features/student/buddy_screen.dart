@@ -19,7 +19,7 @@ class StudentBuddyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = StudentRepository();
     return AppShell(
-      title: 'My Buddy',
+      title: 'My Group',
       body: AsyncScreen<Map<String, dynamic>>(
         loader: repo.getBuddy,
         loadingBuilder: (context) => const GenericSkeleton(blockHeights: [110, 54, 140, 220]),
@@ -40,19 +40,28 @@ class _Body extends StatefulWidget {
 }
 
 class _BodyState extends State<_Body> {
+  final Set<int> _togglingIds = {};
+
   void _openLogSession() => showLogBuddySessionSheet(context, widget.repo, widget.refresh);
 
   Future<void> _toggleActivity(int id) async {
-    await widget.repo.toggleActivity(id);
-    await widget.refresh();
+    if (_togglingIds.contains(id)) return;
+    setState(() => _togglingIds.add(id));
+    try {
+      await widget.repo.toggleActivity(id);
+      await widget.refresh();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _togglingIds.remove(id));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
     final data = widget.data;
-    final buddyName = data['buddyName'] as String?;
-    final buddyClass = data['buddyClass'] as String?;
+    final groupmates = (data['groupmates'] as List? ?? []).cast<Map<String, dynamic>>();
     final rating = (data['rating'] as num?)?.toDouble() ?? 0;
     final ratedCount = data['ratedCount'] as num? ?? 0;
     final sessionsCount = data['sessionsCount'] as int? ?? 0;
@@ -62,32 +71,37 @@ class _BodyState extends State<_Body> {
     final sections = <Widget>[
       SectionCard(
         padding: const EdgeInsets.all(20),
-        child: buddyName == null
-            ? const EmptyView(title: 'No buddy assigned yet', subtitle: 'Ask your teacher to pair you with a study buddy.', icon: LucideIcons.userPlus)
-            : Row(
+        child: groupmates.isEmpty
+            ? const EmptyView(title: 'No group assigned yet', subtitle: 'Ask your teacher to add you to a buddy/GRS group.', icon: LucideIcons.userPlus)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.roleColor('STUDENT'),
-                    child: Text(buddyName.isNotEmpty ? buddyName[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20)),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: groupmates.map((g) {
+                      final name = g['name'] as String;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.roleColor('STUDENT'),
+                            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(name, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary)),
+                        ],
+                      );
+                    }).toList(),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(buddyName, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                        if (buddyClass != null) Text(buddyClass, style: TextStyle(fontSize: 12, color: s.textMuted)),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.star_rounded, color: AppColors.saffron500, size: 15),
-                            const SizedBox(width: 2),
-                            Text('${rating.toStringAsFixed(1)} ($ratedCount ratings) · $sessionsCount sessions', style: TextStyle(fontSize: 11, color: s.textSecondary, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded, color: AppColors.saffron500, size: 15),
+                      const SizedBox(width: 2),
+                      Text('${rating.toStringAsFixed(1)} ($ratedCount ratings) · $sessionsCount sessions', style: TextStyle(fontSize: 11, color: s.textSecondary, fontWeight: FontWeight.w600)),
+                    ],
                   ),
                 ],
               ),
@@ -104,12 +118,15 @@ class _BodyState extends State<_Body> {
               child: Column(
                 children: activities.map((a) {
                   final done = a['done'] as bool? ?? false;
+                  final id = a['id'] as int;
+                  final toggling = _togglingIds.contains(id);
                   return CheckboxListTile(
                     value: done,
-                    onChanged: (_) => _toggleActivity(a['id'] as int),
+                    onChanged: toggling ? null : (_) => _toggleActivity(id),
                     activeColor: AppColors.saffron500,
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                    secondary: toggling ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : null,
                     title: Text(a['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, decoration: done ? TextDecoration.lineThrough : null, color: done ? s.textMuted : s.textPrimary)),
                   );
                 }).toList(),

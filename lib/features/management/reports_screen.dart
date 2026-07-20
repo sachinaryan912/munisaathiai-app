@@ -59,12 +59,42 @@ class _BodyState extends State<_Body> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
-        Wrap(spacing: 8, children: [
+        Wrap(spacing: 8, runSpacing: 8, children: [
           _TabChip(label: 'Methodology', value: 'methodology', active: _tab, onTap: (v) => setState(() => _tab = v)),
           _TabChip(label: 'AI Impact Report', value: 'ai', active: _tab, onTap: (v) => setState(() => _tab = v)),
+          _TabChip(label: 'Weekly Trainer', value: 'weekly_trainer', active: _tab, onTap: (v) => setState(() => _tab = v)),
+          _TabChip(label: 'Monthly School', value: 'monthly_school', active: _tab, onTap: (v) => setState(() => _tab = v)),
+          _TabChip(label: 'Student Progress', value: 'student_progress', active: _tab, onTap: (v) => setState(() => _tab = v)),
         ]),
         const SizedBox(height: 16),
-        if (_tab == 'methodology')
+        if (_tab == 'weekly_trainer')
+          _SimpleReportTab(
+            key: const ValueKey('weekly_trainer'),
+            loader: widget.repo.getWeeklyTrainerReport,
+            download: widget.repo.downloadWeeklyTrainerReportPdf,
+            fileName: 'weekly_trainer_report.pdf',
+            generateLabel: 'Load Weekly Trainer Report',
+            tableBuilder: (data) => _TrainerReportTable(data: data),
+          )
+        else if (_tab == 'monthly_school')
+          _SimpleReportTab(
+            key: const ValueKey('monthly_school'),
+            loader: widget.repo.getMonthlySchoolReport,
+            download: widget.repo.downloadMonthlySchoolReportPdf,
+            fileName: 'monthly_school_report.pdf',
+            generateLabel: 'Load Monthly School Report',
+            tableBuilder: (data) => _SchoolMonthlyReportTable(data: data),
+          )
+        else if (_tab == 'student_progress')
+          _SimpleReportTab(
+            key: const ValueKey('student_progress'),
+            loader: widget.repo.getStudentProgressReport,
+            download: widget.repo.downloadStudentProgressReportPdf,
+            fileName: 'student_progress_report.pdf',
+            generateLabel: 'Load Student Progress Report',
+            tableBuilder: (data) => _StudentProgressReportTable(data: data),
+          )
+        else if (_tab == 'methodology')
           SectionCard(
             child: Column(
               children: methodologies.map((m) {
@@ -104,6 +134,141 @@ class _BodyState extends State<_Body> {
                         : GradientButton(label: 'Generate Network Impact Report', icon: Icons.auto_awesome, onPressed: _generate, height: 46),
           ),
       ],
+    );
+  }
+}
+
+class _SimpleReportTab extends StatefulWidget {
+  final Future<Map<String, dynamic>> Function() loader;
+  final Future<List<int>> Function() download;
+  final String fileName;
+  final String generateLabel;
+  final Widget Function(Map<String, dynamic> data) tableBuilder;
+  const _SimpleReportTab({super.key, required this.loader, required this.download, required this.fileName, required this.generateLabel, required this.tableBuilder});
+
+  @override
+  State<_SimpleReportTab> createState() => _SimpleReportTabState();
+}
+
+class _SimpleReportTabState extends State<_SimpleReportTab> {
+  Map<String, dynamic>? _data;
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      _data = await widget.loader();
+    } catch (e) {
+      _error = e.toString().replaceFirst('ApiException: ', '');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: _loading
+          ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: LoadingView())
+          : _error != null
+              ? Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))
+              : _data != null
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        widget.tableBuilder(_data!),
+                        const SizedBox(height: 14),
+                        PdfDownloadButton(fileName: widget.fileName, download: widget.download),
+                      ],
+                    )
+                  : GradientButton(label: widget.generateLabel, icon: Icons.description_outlined, onPressed: _load, height: 46),
+    );
+  }
+}
+
+class _TrainerReportTable extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _TrainerReportTable({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    final rows = (data['trainers'] as List? ?? []).cast<Map<String, dynamic>>();
+    if (rows.isEmpty) return Text('No trainers yet.', style: TextStyle(fontSize: 12, color: s.textMuted));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Week starting ${data['weekStarting']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
+        const SizedBox(height: 10),
+        ...rows.map((r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r['trainer'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary)),
+                  Text('${r['sessionsThisWeek']} sessions · ${r['schoolsVisitedThisWeek']}/${r['assignedSchools']} schools visited · avg MII ${r['avgMii']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+}
+
+class _SchoolMonthlyReportTable extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _SchoolMonthlyReportTable({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    final rows = (data['schools'] as List? ?? []).cast<Map<String, dynamic>>();
+    if (rows.isEmpty) return Text('No schools yet.', style: TextStyle(fontSize: 12, color: s.textMuted));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Month starting ${data['monthStarting']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
+        const SizedBox(height: 10),
+        ...rows.map((r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${r['school']} — MII ${r['miiScore']} (${r['trend'] >= 0 ? '+' : ''}${r['trend']})', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary)),
+                  Text('${r['sessionsThisMonth']} sessions · ${r['evidenceThisMonth']} evidence uploads this month', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+}
+
+class _StudentProgressReportTable extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _StudentProgressReportTable({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    final rows = (data['schools'] as List? ?? []).cast<Map<String, dynamic>>();
+    if (rows.isEmpty) return Text('No schools yet.', style: TextStyle(fontSize: 12, color: s.textMuted));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows.map((r) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${r['school']} · ${r['studentCount']} students', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary)),
+                Text('Participation ${r['participationScore']}/15 · Academic ${r['academicScore']}/10 · Buddy/GRS ${r['buddyGrsScore']}/10', style: TextStyle(fontSize: 11, color: s.textMuted)),
+              ],
+            ),
+          )).toList(),
     );
   }
 }
