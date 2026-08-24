@@ -13,12 +13,12 @@ class SystemUi {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
-  static void apply({required bool dark}) {
+  static void apply({required bool dark, Color? navigationBarColor}) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
       statusBarBrightness: dark ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: dark ? AppColors.darkBg : AppColors.lightBg,
+      systemNavigationBarColor: navigationBarColor ?? (dark ? AppColors.darkBg : AppColors.lightBg),
       systemNavigationBarIconBrightness: dark ? Brightness.light : Brightness.dark,
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarContrastEnforced: false,

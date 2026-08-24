@@ -135,12 +135,7 @@ class _BodyState extends State<_Body> {
     if (videoId == null) return;
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: YoutubePlayer(
-          controller: YoutubePlayerController(initialVideoId: videoId, flags: const YoutubePlayerFlags(autoPlay: true)),
-        ),
-      ),
+      builder: (dialogContext) => _VideoPlayerDialog(videoId: videoId),
     );
   }
 
@@ -199,6 +194,39 @@ class _BodyState extends State<_Body> {
         if (canAdd)
           Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_video', backgroundColor: AppColors.saffron500, onPressed: _openAdd, child: const Icon(Icons.add, color: Colors.white))),
       ],
+    );
+  }
+}
+
+/// Owns the [YoutubePlayerController] itself (rather than building one inline
+/// in a dialog builder) so it has a dispose() hook — otherwise the controller
+/// and its underlying WebView outlive the dialog once it's dismissed, leaving
+/// the video (and its audio) still playing in the background.
+class _VideoPlayerDialog extends StatefulWidget {
+  final String videoId;
+  const _VideoPlayerDialog({required this.videoId});
+
+  @override
+  State<_VideoPlayerDialog> createState() => _VideoPlayerDialogState();
+}
+
+class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
+  late final YoutubePlayerController _controller = YoutubePlayerController(
+    initialVideoId: widget.videoId,
+    flags: const YoutubePlayerFlags(autoPlay: true),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: YoutubePlayer(controller: _controller),
     );
   }
 }

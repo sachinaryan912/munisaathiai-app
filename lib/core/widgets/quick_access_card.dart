@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/section_card.dart';
+import '../theme/app_theme.dart';
+import 'section_card.dart';
 
 class QuickAccessCard extends StatelessWidget {
   final String? route;

@@ -199,4 +199,45 @@ class ManagementRepository {
         final res = await _dio.post('/management/users', data: payload);
         return res.data as Map<String, dynamic>;
       });
+
+  // ── Vidya AI knowledge notes ─────────────────────────────────────────────
+  Future<List<Map<String, dynamic>>> getKnowledgeNotes() => apiCall(() async {
+        final res = await _dio.get('/management/knowledge-notes');
+        return (res.data as List).cast<Map<String, dynamic>>();
+      });
+
+  Future<Map<String, dynamic>> addKnowledgeNote(String title, String content) => apiCall(() async {
+        final res = await _dio.post('/management/knowledge-notes', data: {'title': title, 'content': content});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> updateKnowledgeNote(int id, String title, String content) => apiCall(() async {
+        final res = await _dio.put('/management/knowledge-notes/$id', data: {'title': title, 'content': content});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> setKnowledgeNoteActive(int id, bool active) => apiCall(() async {
+        final res = await _dio.patch('/management/knowledge-notes/$id/active', data: {'active': active});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<void> deleteKnowledgeNote(int id) => apiCall(() async {
+        await _dio.delete('/management/knowledge-notes/$id');
+      });
+
+  // ── Vidya AI knowledge base — full view/edit ─────────────────────────────
+  Future<Map<String, dynamic>> getKnowledgeBase() => apiCall(() async {
+        final res = await _dio.get('/management/knowledge-base');
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> updateKnowledgeBase(String content) => apiCall(() async {
+        final res = await _dio.put('/management/knowledge-base', data: {'content': content});
+        return res.data as Map<String, dynamic>;
+      });
+
+  Future<Map<String, dynamic>> resetKnowledgeBase() => apiCall(() async {
+        final res = await _dio.post('/management/knowledge-base/reset');
+        return res.data as Map<String, dynamic>;
+      });
 }

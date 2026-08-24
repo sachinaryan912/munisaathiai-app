@@ -20,7 +20,7 @@ import 'progress_chart_screen.dart';
 import 'self_growth_hub_screen.dart';
 import 'student_repository.dart';
 import 'widgets/dashboard_skeleton.dart';
-import 'widgets/quick_access_card.dart';
+import '../../core/widgets/quick_access_card.dart';
 import 'widgets/student_speed_dial.dart';
 
 class StudentDashboardScreen extends StatelessWidget {

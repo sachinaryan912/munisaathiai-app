@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/theme_provider.dart';
@@ -83,20 +84,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => context.push('/settings'),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(colors: AppColors.roleGradient(role), begin: Alignment.topLeft, end: Alignment.bottomRight),
-                        border: Border.all(color: s.bg, width: 2),
-                        boxShadow: [BoxShadow(color: AppColors.roleColor(role).withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3))],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        auth.user?.initials ?? 'U',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
-                      ),
+                    child: UserAvatar(
+                      size: 36,
+                      fontSize: 12,
+                      border: Border.all(color: s.bg, width: 2),
+                      boxShadow: [BoxShadow(color: AppColors.roleColor(role).withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3))],
                     ),
                   ),
                   const SizedBox(width: 16),

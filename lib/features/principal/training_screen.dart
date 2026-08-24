@@ -23,6 +23,12 @@ class _PrincipalTrainingScreenState extends State<PrincipalTrainingScreen> with 
   late final TabController _tabController = TabController(length: 3, vsync: this);
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = context.surface;
     return AppShell(

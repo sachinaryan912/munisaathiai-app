@@ -7,17 +7,15 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/theme_provider.dart';
-import '../action_plans/action_plan_sheet.dart';
 import '../auth/data/auth_provider.dart';
-import '../management/audit_log_screen.dart';
+import '../management/knowledge_notes_screen.dart';
 import '../notifications/notification_panel.dart';
 import '../notifications/notifications_provider.dart';
-import '../shared/community_hub_screen.dart';
 
 /// A custom, highly polished iOS-style App Bar specifically for Dashboards.
-/// Displays an uppercase date, actions (theme toggle, notification bell),
+/// Displays an uppercase date, role-specific action icons, a notification bell,
 /// role-gradient avatar, and a large, warm greeting header with an optional subtitle.
 class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
@@ -43,7 +41,6 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
     final auth = context.watch<AuthProvider>();
     final role = auth.user?.role ?? 'STUDENT';
     final notifs = context.watch<NotificationsProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
 
     final fullName = auth.user?.fullName.trim() ?? '';
     final parts = fullName.split(RegExp(r'\s+'));
@@ -83,30 +80,14 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _ChromeButton(
-                        icon: themeProvider.isDark ? LucideIcons.sun : LucideIcons.moon,
-                        onTap: themeProvider.toggle,
-                      ),
-                      // Students reach Action Plan / Community Hub via Quick Access cards on
-                      // their dashboard instead — keep the app bar uncluttered for them.
-                      if (role != 'STUDENT') ...[
-                        const SizedBox(width: 8),
-                        _ChromeButton(
-                          icon: LucideIcons.clipboardList,
-                          onTap: () => showMyActionPlansSheet(context),
-                        ),
-                        const SizedBox(width: 8),
-                        _ChromeButton(
-                          icon: LucideIcons.globe,
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-                        ),
-                      ],
+                      // Theme toggle lives on the Profile/Settings screen now, and Action Plan,
+                      // Audit Log and Community Hub all moved to clickable Quick Access cards on
+                      // each dashboard — keeps this bar from accumulating one icon per feature.
                       if (role == 'MANAGEMENT') ...[
                         const SizedBox(width: 8),
                         _ChromeButton(
-                          icon: LucideIcons.history,
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AuditLogScreen())),
+                          icon: LucideIcons.brainCircuit,
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const KnowledgeNotesScreen())),
                         ),
                       ],
                       const SizedBox(width: 8),
@@ -118,34 +99,17 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                       const SizedBox(width: 10),
                       GestureDetector(
                         onTap: () => context.push('/settings'),
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: AppColors.roleGradient(role),
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        child: UserAvatar(
+                          size: 32,
+                          fontSize: 11,
+                          border: Border.all(color: s.bg, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.roleColor(role).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            border: Border.all(color: s.bg, width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.roleColor(role).withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            auth.user?.initials ?? 'U',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                          ],
                         ),
                       ),
                     ],

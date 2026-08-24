@@ -22,6 +22,13 @@ const _actionColors = {
   'ADD_SCHOOL_CLASS': AppColors.success,
   'DELETE_SCHOOL_CLASS': AppColors.danger,
   'UPDATE_THRESHOLDS': Color(0xFF6366F1),
+  'ADD_KNOWLEDGE_NOTE': AppColors.success,
+  'UPDATE_KNOWLEDGE_NOTE': Color(0xFF6366F1),
+  'ENABLE_KNOWLEDGE_NOTE': AppColors.success,
+  'DISABLE_KNOWLEDGE_NOTE': AppColors.warning,
+  'DELETE_KNOWLEDGE_NOTE': AppColors.danger,
+  'EDIT_KNOWLEDGE_BASE': Color(0xFF6366F1),
+  'RESET_KNOWLEDGE_BASE': AppColors.danger,
 };
 
 const _actionLabels = {
@@ -37,6 +44,13 @@ const _actionLabels = {
   'ADD_SCHOOL_CLASS': 'Added class/section',
   'DELETE_SCHOOL_CLASS': 'Removed class/section',
   'UPDATE_THRESHOLDS': 'Updated thresholds',
+  'ADD_KNOWLEDGE_NOTE': 'Added Vidya training note',
+  'UPDATE_KNOWLEDGE_NOTE': 'Updated Vidya training note',
+  'ENABLE_KNOWLEDGE_NOTE': 'Turned on Vidya training note',
+  'DISABLE_KNOWLEDGE_NOTE': 'Turned off Vidya training note',
+  'DELETE_KNOWLEDGE_NOTE': 'Removed Vidya training note',
+  'EDIT_KNOWLEDGE_BASE': 'Edited the knowledge base',
+  'RESET_KNOWLEDGE_BASE': 'Reset knowledge base to original',
 };
 
 class AuditLogScreen extends StatelessWidget {

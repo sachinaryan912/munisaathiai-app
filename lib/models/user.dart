@@ -14,6 +14,10 @@ class AppUser {
   final bool emailVerified;
   final bool enabled;
 
+  /// Set when a profile photo exists. Doubles as a cache key — when it changes, the
+  /// cached avatar bytes are stale and must be refetched from `/users/me/photo`.
+  final DateTime? profileImageUpdatedAt;
+
   AppUser({
     required this.id,
     required this.fullName,
@@ -26,7 +30,10 @@ class AppUser {
     this.designation,
     required this.emailVerified,
     required this.enabled,
+    this.profileImageUpdatedAt,
   });
+
+  bool get hasProfileImage => profileImageUpdatedAt != null;
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
@@ -41,6 +48,7 @@ class AppUser {
       designation: json['designation'] as String?,
       emailVerified: json['emailVerified'] as bool? ?? false,
       enabled: json['enabled'] as bool? ?? true,
+      profileImageUpdatedAt: DateTime.tryParse(json['profileImageUpdatedAt'] as String? ?? ''),
     );
   }
 
@@ -56,6 +64,7 @@ class AppUser {
         'designation': designation,
         'emailVerified': emailVerified,
         'enabled': enabled,
+        'profileImageUpdatedAt': profileImageUpdatedAt?.toIso8601String(),
       };
 
   AppUser copyWith({
@@ -66,6 +75,10 @@ class AppUser {
     String? section,
     String? designation,
     bool? emailVerified,
+    DateTime? profileImageUpdatedAt,
+    /// Removing a photo has to set the timestamp back to null, which the `??`
+    /// fallbacks above can't express — passing null just means "leave unchanged".
+    bool clearProfileImage = false,
   }) {
     return AppUser(
       id: id,
@@ -79,6 +92,8 @@ class AppUser {
       designation: designation ?? this.designation,
       emailVerified: emailVerified ?? this.emailVerified,
       enabled: enabled,
+      profileImageUpdatedAt:
+          clearProfileImage ? null : (profileImageUpdatedAt ?? this.profileImageUpdatedAt),
     );
   }
 
@@ -94,14 +109,26 @@ class AppUser {
 /// and a `message`.
 class AuthSession {
   final String token;
+
+  /// Long-lived, rotated on every use. Empty only when talking to a backend that
+  /// predates refresh-token support — callers must tolerate that rather than
+  /// treating it as a failed login.
+  final String refreshToken;
+
   final AppUser user;
   final String message;
 
-  AuthSession({required this.token, required this.user, required this.message});
+  AuthSession({
+    required this.token,
+    required this.refreshToken,
+    required this.user,
+    required this.message,
+  });
 
   factory AuthSession.fromJson(Map<String, dynamic> json) {
     return AuthSession(
       token: json['token'] as String? ?? '',
+      refreshToken: json['refreshToken'] as String? ?? '',
       user: AppUser.fromJson(json),
       message: json['message'] as String? ?? '',
     );

@@ -103,17 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 6),
             GradientButton(label: 'Sign In', loading: _loading, onPressed: _submit),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Don't have an account? ", style: TextStyle(color: s.textSecondary, fontSize: 13)),
-                GestureDetector(
-                  onTap: () => context.push('/register'),
-                  child: const Text('Create one', style: TextStyle(color: AppColors.saffron600, fontSize: 13, fontWeight: FontWeight.w800)),
-                ),
-              ],
-            ),
           ],
         ),
       ),

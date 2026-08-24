@@ -5,8 +5,11 @@ import 'package:provider/provider.dart';
 import '../../core/nav/nav_items.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_shadows.dart';
+import '../../core/services/profile_image_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../auth/data/auth_provider.dart';
 import '../auth/data/auth_repository.dart';
 import '../management/thresholds_screen.dart';
@@ -33,6 +36,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _savingPassword = false;
   String? _passwordMsg;
   String? _passwordErr;
+
+  bool _savingPhoto = false;
+  String? _photoError;
+
+  bool _signingOut = false;
+
+  // ── Profile photo ────────────────────────────────────────────────────────
+
+  Future<void> _showPhotoOptions() async {
+    final hasPhoto = context.read<AuthProvider>().user?.hasProfileImage ?? false;
+    final s = context.surface;
+
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: s.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: s.textMuted.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(LucideIcons.camera, size: 20),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(sheetContext, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(LucideIcons.image, size: 20),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(sheetContext, 'gallery'),
+            ),
+            if (hasPhoto)
+              ListTile(
+                leading: const Icon(LucideIcons.trash2, size: 20, color: Color(0xFFDC2626)),
+                title: const Text('Remove photo', style: TextStyle(color: Color(0xFFDC2626))),
+                onTap: () => Navigator.pop(sheetContext, 'remove'),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+    if (choice == 'remove') {
+      await _removePhoto();
+    } else {
+      await _pickAndUploadPhoto(
+        choice == 'camera' ? ImageSourceChoice.camera : ImageSourceChoice.gallery,
+      );
+    }
+  }
+
+  Future<void> _pickAndUploadPhoto(ImageSourceChoice source) async {
+    setState(() => _photoError = null);
+
+    // Picking happens before the spinner: the user is off in the system camera or
+    // gallery UI, which can take a while, and a spinner behind it means nothing.
+    final PickedAvatar? picked;
+    try {
+      picked = await ProfileImageService.instance.pickAndCompress(source);
+    } on ProfileImageException catch (e) {
+      if (mounted) setState(() => _photoError = e.message);
+      return;
+    }
+    if (picked == null || !mounted) return;
+
+    setState(() => _savingPhoto = true);
+    try {
+      await context.read<AuthProvider>().uploadProfileImage(picked.bytes);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _photoError = e.toString().replaceFirst('ApiException: ', ''));
+      }
+    } finally {
+      if (mounted) setState(() => _savingPhoto = false);
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    setState(() {
+      _savingPhoto = true;
+      _photoError = null;
+    });
+    try {
+      await context.read<AuthProvider>().removeProfileImage();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _photoError = e.toString().replaceFirst('ApiException: ', ''));
+      }
+    } finally {
+      if (mounted) setState(() => _savingPhoto = false);
+    }
+  }
 
   Future<void> _saveProfile() async {
     setState(() {
@@ -67,7 +175,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     setState(() => _savingPassword = true);
     try {
-      await _repo.changePassword(currentPassword: _currentPassword.text, newPassword: _newPassword.text);
+      // Via the provider, not the repository: the response carries replacement
+      // session tokens that have to reach secure storage.
+      await context.read<AuthProvider>().changePassword(
+            currentPassword: _currentPassword.text,
+            newPassword: _newPassword.text,
+          );
+      if (!mounted) return;
       setState(() {
         _passwordMsg = 'Password changed successfully!';
         _currentPassword.clear();
@@ -82,6 +196,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text("You'll need to sign in again to use the app."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Sign Out', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _signingOut = true);
     await context.read<AuthProvider>().logout();
     if (mounted) context.go('/login');
   }
@@ -235,6 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final user = context.watch<AuthProvider>().user;
     final role = user?.role ?? 'STUDENT';
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -249,18 +384,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const SizedBox(height: 10),
               Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 88,
-                      height: 88,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: AppColors.roleGradient(role),
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                child: GestureDetector(
+                  onTap: _savingPhoto ? null : _showPhotoOptions,
+                  child: Stack(
+                    children: [
+                      UserAvatar(
+                        size: 88,
+                        fontSize: 28,
                         border: Border.all(color: s.bg, width: 3),
                         boxShadow: [
                           BoxShadow(
@@ -270,33 +400,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ],
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        user?.initials ?? 'U',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
+                      if (_savingPhoto)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.45),
+                            ),
+                            alignment: Alignment.center,
+                            child: const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: AppColors.saffron500,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: s.bg, width: 2),
+                          ),
+                          child: const Icon(LucideIcons.camera, color: Colors.white, size: 12),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: AppColors.saffron500,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: s.bg, width: 2),
-                        ),
-                        child: const Icon(LucideIcons.camera, color: Colors.white, size: 12),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+              if (_photoError != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _photoError!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFDC2626)),
+                ),
+              ],
               const SizedBox(height: 12),
               Text(
                 user?.fullName ?? '',
@@ -411,6 +554,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
           const SizedBox(height: 12),
 
+          // Section: Preferences
+          _buildSectionHeader('Preferences'),
+          _buildGroup([
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(color: const Color(0xFF6366F1), borderRadius: BorderRadius.circular(8)),
+                    child: Icon(themeProvider.isDark ? LucideIcons.moon : LucideIcons.sun, color: Colors.white, size: 16),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Dark Mode', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: s.textPrimary))),
+                  Switch.adaptive(
+                    value: themeProvider.isDark,
+                    activeThumbColor: AppColors.saffron500,
+                    onChanged: (_) => themeProvider.toggle(),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+          const SizedBox(height: 12),
+
           // Section: Security
           _buildSectionHeader('Security'),
           _buildGroup([
@@ -484,7 +653,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Section: Account Actions
           GestureDetector(
-            onTap: _logout,
+            // Null while signing out so a second tap can't fire logout again mid-flight.
+            onTap: _signingOut ? null : _logout,
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
@@ -493,14 +663,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 border: dark ? null : Border.all(color: s.border),
                 boxShadow: AppShadows.soft(dark),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.logOut, color: AppColors.danger, size: 18),
-                  SizedBox(width: 8),
+                  if (_signingOut)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.danger),
+                    )
+                  else
+                    const Icon(LucideIcons.logOut, color: AppColors.danger, size: 18),
+                  const SizedBox(width: 8),
                   Text(
-                    'Sign Out',
-                    style: TextStyle(
+                    _signingOut ? 'Signing Out…' : 'Sign Out',
+                    style: const TextStyle(
                       color: AppColors.danger,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

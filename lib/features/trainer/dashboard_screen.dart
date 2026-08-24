@@ -7,8 +7,11 @@ import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/loading_view.dart';
+import '../../core/widgets/quick_access_card.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
+import '../action_plans/action_plan_sheet.dart';
+import '../shared/community_hub_screen.dart';
 import '../shell/app_shell.dart';
 import 'school_detail_screen.dart';
 import 'trainer_repository.dart';
@@ -83,6 +86,35 @@ class _BodyState extends State<_Body> {
             StatTile(label: 'Avg MII', value: '$avgMii', icon: LucideIcons.trendingUp, color: const Color(0xFF10B981), animateIndex: 1),
             StatTile(label: 'Teachers', value: '$teacherCount', icon: LucideIcons.users, color: const Color(0xFF6366F1), animateIndex: 2),
             StatTile(label: 'Pending Evidence', value: '$pendingEvidence', icon: LucideIcons.bookOpen, color: AppColors.warning, animateIndex: 3),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.05,
+          children: [
+            QuickAccessCard(
+              onTap: () => showMyActionPlansSheet(context),
+              icon: LucideIcons.clipboardList,
+              color: const Color(0xFF0EA5E9),
+              title: 'Action Plan',
+              subtitle: 'Corrective tasks and follow-ups assigned to you',
+              cta: 'View Tasks',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+              icon: LucideIcons.globe,
+              color: const Color(0xFF14B8A6),
+              title: 'Community Hub',
+              subtitle: 'Wakeup Call Board, events, workshops & clubs',
+              cta: 'Explore',
+            ),
           ],
         ),
         if (alerts.isNotEmpty) ...[

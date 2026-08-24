@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+
 import '../../../core/network/api_client.dart';
 import '../../../models/user.dart';
 
@@ -34,6 +38,17 @@ class AuthRepository {
         });
         return AuthSession.fromJson(res.data as Map<String, dynamic>);
       });
+
+  /// Best-effort server-side revocation of [refreshToken]. Never throws: the local
+  /// session is being torn down either way, and a network failure must not leave the
+  /// user stuck on a screen they asked to leave.
+  Future<void> revokeRefreshToken(String refreshToken) async {
+    try {
+      await _dio.post('/auth/logout', data: {'refreshToken': refreshToken});
+    } catch (_) {
+      // Token still expires on its own; nothing useful to tell the user here.
+    }
+  }
 
   Future<String> forgotPassword(String email) => apiCall(() async {
         final res = await _dio.post('/auth/forgot-password', data: {'email': email});
@@ -84,7 +99,47 @@ class AuthRepository {
         return AppUser.fromJson(res.data as Map<String, dynamic>);
       });
 
-  Future<void> changePassword({required String currentPassword, required String newPassword}) => apiCall(() async {
-        await _dio.post('/users/me/password', data: {'currentPassword': currentPassword, 'newPassword': newPassword});
+  // ── Profile photo ────────────────────────────────────────────────────────
+
+  Future<AppUser> uploadProfileImage(Uint8List bytes) => apiCall(() async {
+        final form = FormData.fromMap({
+          // Compression always emits JPEG, and the backend validates the content type,
+          // so both are stated explicitly rather than guessed from a file extension.
+          'file': MultipartFile.fromBytes(
+            bytes,
+            filename: 'avatar.jpg',
+            contentType: DioMediaType('image', 'jpeg'),
+          ),
+        });
+        final res = await _dio.post('/users/me/photo', data: form);
+        return AppUser.fromJson(res.data as Map<String, dynamic>);
+      });
+
+  Future<AppUser> deleteProfileImage() => apiCall(() async {
+        final res = await _dio.delete('/users/me/photo');
+        return AppUser.fromJson(res.data as Map<String, dynamic>);
+      });
+
+  Future<Uint8List> fetchProfileImage() => apiCall(() async {
+        final res = await _dio.get<List<int>>(
+          '/users/me/photo',
+          options: Options(responseType: ResponseType.bytes),
+        );
+        return Uint8List.fromList(res.data ?? const []);
+      });
+
+  /// Returns a fresh session. Changing the password revokes every refresh token on
+  /// the account (including this device's), so the new pair in the response has to
+  /// replace what's in storage or the app signs itself out at the next refresh.
+  Future<AuthSession> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      apiCall(() async {
+        final res = await _dio.post('/users/me/password', data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        });
+        return AuthSession.fromJson(res.data as Map<String, dynamic>);
       });
 }

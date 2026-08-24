@@ -13,11 +13,18 @@ class SecureStorage {
   );
 
   static const _tokenKey = 'muni_token';
+  static const _refreshTokenKey = 'muni_refresh_token';
   static const _userKey = 'muni_user_json';
   static const _rememberMeKey = 'muni_remember_me';
 
   Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
   Future<String?> readToken() => _storage.read(key: _tokenKey);
+
+  /// The long-lived credential exchanged at `/api/auth/refresh` for a new access
+  /// token. This — not the access token — is what keeps a user signed in across
+  /// restarts, so it must outlive everything except an explicit logout.
+  Future<void> saveRefreshToken(String token) => _storage.write(key: _refreshTokenKey, value: token);
+  Future<String?> readRefreshToken() => _storage.read(key: _refreshTokenKey);
 
   Future<void> saveUserJson(String json) => _storage.write(key: _userKey, value: json);
   Future<String?> readUserJson() => _storage.read(key: _userKey);

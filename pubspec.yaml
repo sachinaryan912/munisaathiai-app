@@ -1,7 +1,7 @@
 name: munisaathiai
 description: "Muni Saathi AI — AI-powered monitoring and implementation-tracking platform for the Muni Model."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.2+3
 
 environment:
   sdk: ^3.11.5
@@ -37,15 +37,28 @@ dependencies:
 
   # Files / media
   file_picker: ^8.1.4
+  # Profile photos: image_picker for camera/gallery capture, flutter_image_compress to shrink
+  # the result before it ever touches the network (native codecs, so it's fast on low-end
+  # devices and handles EXIF rotation that would otherwise show avatars sideways).
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
   intl: ^0.19.0
   path_provider: ^2.1.5
   open_file: ^3.5.10
   youtube_player_flutter: ^9.1.1
 
+  # Play Store update check — asks Play directly whether a newer published
+  # version exists, so no backend endpoint is needed to drive this.
+  in_app_update: ^4.2.2
+
   # Push notifications
   firebase_core: ^3.8.0
   firebase_messaging: ^15.1.5
   flutter_local_notifications: ^18.0.1
+  flutter_tts: ^4.2.5
+  speech_to_text: ^7.4.0
+  flutter_edge_tts: ^0.0.2
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:

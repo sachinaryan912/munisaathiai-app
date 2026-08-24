@@ -33,6 +33,12 @@ class _TeacherJournalScreenState extends State<TeacherJournalScreen> with Single
   final _repo = TeacherRepository();
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = context.surface;
     return AppShell(

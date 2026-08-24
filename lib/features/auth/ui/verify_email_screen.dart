@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/system_ui.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/widgets/otp_input.dart';
 import '../../../core/widgets/resend_timer.dart';
@@ -46,7 +47,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       final email = context.read<AuthProvider>().user?.email;
       if (email != null && email.isNotEmpty) {
         _repo.sendVerification(email).catchError((e) {
-          if (mounted) setState(() => _sendError = e.toString().replaceFirst('ApiException: ', ''));
+          if (mounted)
+            setState(
+              () =>
+                  _sendError = e.toString().replaceFirst('ApiException: ', ''),
+            );
           return '';
         });
       }
@@ -87,7 +92,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     try {
       await _repo.sendVerification(email);
     } catch (e) {
-      setState(() => _sendError = e.toString().replaceFirst('ApiException: ', ''));
+      setState(
+        () => _sendError = e.toString().replaceFirst('ApiException: ', ''),
+      );
     }
     _otpKey.currentState?.clear();
   }
@@ -102,6 +109,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     final email = context.watch<AuthProvider>().user?.email ?? '';
 
     if (_success) {
+      SystemUi.apply(
+        dark: Theme.of(context).brightness == Brightness.dark,
+        navigationBarColor: s.bg,
+      );
       return Scaffold(
         backgroundColor: s.bg,
         body: Center(
@@ -111,13 +122,30 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               Container(
                 width: 80,
                 height: 80,
-                decoration: const BoxDecoration(color: Color(0xFFD1FAE5), shape: BoxShape.circle),
-                child: const Icon(LucideIcons.checkCheck, color: Color(0xFF059669), size: 38),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD1FAE5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  LucideIcons.checkCheck,
+                  color: Color(0xFF059669),
+                  size: 38,
+                ),
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
               const SizedBox(height: 20),
-              Text('Email Verified!', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: s.textPrimary)),
+              Text(
+                'Email Verified!',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                  color: s.textPrimary,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text('Taking you to your dashboard…', style: TextStyle(color: s.textSecondary, fontSize: 13)),
+              Text(
+                'Taking you to your dashboard…',
+                style: TextStyle(color: s.textSecondary, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -133,17 +161,37 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.saffron200, width: 2)),
-            child: const Icon(LucideIcons.mail, color: AppColors.saffron500, size: 26),
+            decoration: BoxDecoration(
+              color: AppColors.saffron50,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.saffron200, width: 2),
+            ),
+            child: const Icon(
+              LucideIcons.mail,
+              color: AppColors.saffron500,
+              size: 26,
+            ),
           ),
           const SizedBox(height: 18),
           RichText(
             text: TextSpan(
-              style: TextStyle(color: s.textSecondary, fontSize: 13.5, height: 1.5),
+              style: TextStyle(
+                color: s.textSecondary,
+                fontSize: 13.5,
+                height: 1.5,
+              ),
               children: [
                 const TextSpan(text: "We've sent a 6-digit code to "),
-                TextSpan(text: maskEmail(email), style: TextStyle(fontWeight: FontWeight.w800, color: s.textPrimary)),
-                const TextSpan(text: '. Enter it below to activate your account.'),
+                TextSpan(
+                  text: maskEmail(email),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: s.textPrimary,
+                  ),
+                ),
+                const TextSpan(
+                  text: '. Enter it below to activate your account.',
+                ),
               ],
             ),
           ),
@@ -151,14 +199,31 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(12)),
-              child: Text(_sendError!, style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 12)),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _sendError!,
+                style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 12),
+              ),
             ),
           ],
           const SizedBox(height: 26),
-          OtpInput(key: _otpKey, onChanged: (v) { _otp = v; }, error: _otpError),
+          OtpInput(
+            key: _otpKey,
+            onChanged: (v) {
+              _otp = v;
+            },
+            error: _otpError,
+          ),
           const SizedBox(height: 22),
-          GradientButton(label: 'Verify Email', icon: Icons.arrow_forward_rounded, loading: _loading, onPressed: _verify),
+          GradientButton(
+            label: 'Verify Email',
+            icon: Icons.arrow_forward_rounded,
+            loading: _loading,
+            onPressed: _verify,
+          ),
           const SizedBox(height: 16),
           ResendTimer(onResend: _resend),
           const SizedBox(height: 8),
@@ -173,7 +238,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           Center(
             child: TextButton(
               onPressed: _leave,
-              child: Text("Not now — I'll verify later", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: s.textMuted)),
+              child: Text(
+                "Not now — I'll verify later",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: s.textMuted,
+                ),
+              ),
             ),
           ),
         ],

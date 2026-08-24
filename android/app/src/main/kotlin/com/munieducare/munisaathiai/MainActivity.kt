@@ -1,4 +1,4 @@
-package com.company.munisaathiai.mobile
+package com.munieducare.munisaathiai
 
 import io.flutter.embedding.android.FlutterActivity
 

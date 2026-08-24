@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import '../../core/nav/nav_items.dart';
+import '../../core/services/tts_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_theme.dart';
@@ -43,11 +46,16 @@ class _AiChatBodyState extends State<AiChatBody> {
   String? _error;
   final Set<int> _animatedMessageIds = {};
 
+  final _speech = SpeechToText();
+  bool _speechAvailable = false;
+  bool _listening = false;
+
   // The backend always seeds a welcome assistant message into every conversation (both the
   // very first one and every "New chat"), so `_messages` is never literally empty — treat a
   // conversation holding only that single seeded greeting as "fresh" too, so the suggestion
   // welcome screen actually gets a chance to show instead of being permanently dead code.
-  bool get _showWelcome => _messages.isEmpty || (_messages.length == 1 && !_messages.first.isUser);
+  bool get _showWelcome =>
+      _messages.isEmpty || (_messages.length == 1 && !_messages.first.isUser);
 
   @override
   void initState() {
@@ -55,11 +63,23 @@ class _AiChatBodyState extends State<AiChatBody> {
     _loadConversations();
   }
 
+  @override
+  void dispose() {
+    // Speech recognition keeps the mic hot until explicitly stopped — leaving
+    // this screen mid-listen must not leave it running in the background.
+    if (_listening) _speech.stop();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadConversations() async {
     try {
       final conversations = await _repo.getConversations();
       final first = conversations.isNotEmpty ? conversations.first : null;
-      final messages = first != null ? await _repo.getConversationMessages(first.id) : <AiChatMessage>[];
+      final messages = first != null
+          ? await _repo.getConversationMessages(first.id)
+          : <AiChatMessage>[];
       setState(() {
         _conversations = conversations;
         _activeConversationId = first?.id;
@@ -134,18 +154,101 @@ class _AiChatBodyState extends State<AiChatBody> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+    );
     if (result?.files.single.path != null) {
       setState(() => _attachedFile = File(result!.files.single.path!));
     }
   }
 
+  // Tap to start: live partial transcripts overwrite the input box as the
+  // user talks. Tap again — or stay silent for a few seconds, which the
+  // plugin reports as a status change rather than a callback we call
+  // ourselves — to stop, and whatever ended up in the box gets sent.
+  Future<void> _toggleListening() async {
+    if (_listening) {
+      await _speech.stop();
+      return;
+    }
+
+    if (!_speechAvailable) {
+      _speechAvailable = await _speech.initialize(
+        onStatus: (status) {
+          if (!mounted || !_listening) return;
+          if (status == SpeechToText.notListeningStatus ||
+              status == SpeechToText.doneStatus) {
+            setState(() => _listening = false);
+            if (_controller.text.trim().isNotEmpty) _send();
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _listening = false);
+        },
+      );
+    }
+    if (!_speechAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Speech recognition isn't available on this device."),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _listening = true);
+    await _speech.listen(
+      onResult: (result) {
+        // stop() triggers one last onResult delivering the final transcript,
+        // which can arrive after onStatus has already flipped _listening
+        // false and sent whatever was in the box — without this guard, that
+        // late callback repopulates the (just-cleared) input with the old
+        // spoken text right as the AI reply comes back.
+        if (!_listening) return;
+        setState(() {
+          _controller.text = result.recognizedWords;
+          _controller.selection = TextSelection.collapsed(
+            offset: _controller.text.length,
+          );
+        });
+      },
+      listenOptions: SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: true,
+        pauseFor: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _send() async {
+    // Sending can happen without ever going through _toggleListening's own
+    // stop path — e.g. tapping the arrow button while still recording. If a
+    // listen session is left running, its next (or delayed final) onResult
+    // callback repopulates the box with the old words right as the reply
+    // comes back, since nothing ever told the recognizer to stop.
+    if (_listening) {
+      setState(() => _listening = false);
+      await _speech.stop();
+    }
+
     final text = _controller.text.trim();
     final conversationId = _activeConversationId;
-    if ((text.isEmpty && _attachedFile == null) || _sending || conversationId == null) return;
+    if ((text.isEmpty && _attachedFile == null) ||
+        _sending ||
+        conversationId == null)
+      return;
 
-    final userMsg = AiChatMessage(id: -DateTime.now().millisecondsSinceEpoch, role: 'user', content: text.isEmpty ? '📎 ${_attachedFile!.path.split(Platform.pathSeparator).last}' : text, timestamp: DateTime.now());
+    final userMsg = AiChatMessage(
+      id: -DateTime.now().millisecondsSinceEpoch,
+      role: 'user',
+      content: text.isEmpty
+          ? '📎 ${_attachedFile!.path.split(Platform.pathSeparator).last}'
+          : text,
+      timestamp: DateTime.now(),
+    );
     final fileToSend = _attachedFile;
     setState(() {
       _messages = [..._messages, userMsg];
@@ -156,15 +259,22 @@ class _AiChatBodyState extends State<AiChatBody> {
     _scrollToBottom();
 
     try {
-      final reply = await _repo.sendMessage(conversationId, content: text.isEmpty ? null : text, file: fileToSend);
+      final reply = await _repo.sendMessage(
+        conversationId,
+        content: text.isEmpty ? null : text,
+        file: fileToSend,
+      );
       setState(() {
         _messages = [..._messages, reply];
         _sending = false;
       });
       _scrollToBottom();
-      _repo.getConversations().then((list) {
-        if (mounted) setState(() => _conversations = list);
-      }).catchError((_) {});
+      _repo
+          .getConversations()
+          .then((list) {
+            if (mounted) setState(() => _conversations = list);
+          })
+          .catchError((_) {});
     } catch (e) {
       setState(() {
         _sending = false;
@@ -173,7 +283,8 @@ class _AiChatBodyState extends State<AiChatBody> {
           AiChatMessage(
             id: -DateTime.now().millisecondsSinceEpoch,
             role: 'assistant',
-            content: "Sorry, I couldn't respond right now — ${e.toString().replaceFirst('ApiException: ', '')}",
+            content:
+                "Sorry, I couldn't respond right now — ${e.toString().replaceFirst('ApiException: ', '')}",
             timestamp: DateTime.now(),
           ),
         ];
@@ -207,11 +318,23 @@ class _AiChatBodyState extends State<AiChatBody> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Vidya', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: s.textPrimary)),
+                      Text(
+                        'Vidya',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: s.textPrimary,
+                        ),
+                      ),
                       const SizedBox(width: 4),
                       ShaderMask(
-                        shaderCallback: (bounds) => AppColors.aiGradient.createShader(bounds),
-                        child: const Icon(LucideIcons.bot, color: Colors.white, size: 13),
+                        shaderCallback: (bounds) =>
+                            AppColors.aiGradient.createShader(bounds),
+                        child: const Icon(
+                          LucideIcons.bot,
+                          color: Colors.white,
+                          size: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -219,7 +342,11 @@ class _AiChatBodyState extends State<AiChatBody> {
                     activeTitle ?? 'Muni Model Study Buddy',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: s.textMuted),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: s.textMuted,
+                    ),
                   ),
                 ],
               ),
@@ -227,7 +354,14 @@ class _AiChatBodyState extends State<AiChatBody> {
             IconButton(
               onPressed: _creatingChat ? null : _startNewChat,
               icon: _creatingChat
-                  ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: s.textSecondary))
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: s.textSecondary,
+                      ),
+                    )
                   : Icon(LucideIcons.plus, color: s.textSecondary, size: 21),
             ),
           ],
@@ -260,10 +394,23 @@ class _AiChatBodyState extends State<AiChatBody> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
                     child: Row(
                       children: [
-                        Expanded(child: Text('Chats', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: s.textPrimary))),
+                        Expanded(
+                          child: Text(
+                            'Chats',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: s.textPrimary,
+                            ),
+                          ),
+                        ),
                         IconButton(
                           onPressed: () => setState(() => _historyOpen = false),
-                          icon: Icon(LucideIcons.x, color: s.textMuted, size: 19),
+                          icon: Icon(
+                            LucideIcons.x,
+                            color: s.textMuted,
+                            size: 19,
+                          ),
                         ),
                       ],
                     ),
@@ -275,18 +422,29 @@ class _AiChatBodyState extends State<AiChatBody> {
                       child: ClipRRect(
                         borderRadius: AppRadius.mdAll,
                         child: DecoratedBox(
-                          decoration: const BoxDecoration(gradient: AppColors.aiGradient),
+                          decoration: const BoxDecoration(
+                            gradient: AppColors.aiGradient,
+                          ),
                           child: ElevatedButton.icon(
                             onPressed: _creatingChat ? null : _startNewChat,
                             icon: _creatingChat
-                                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
                                 : const Icon(LucideIcons.plus, size: 16),
                             label: const Text('New chat'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
                               elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppRadius.mdAll,
+                              ),
                             ),
                           ),
                         ),
@@ -297,7 +455,14 @@ class _AiChatBodyState extends State<AiChatBody> {
                   Expanded(
                     child: _conversations.isEmpty
                         ? Center(
-                            child: Text('No chats yet.', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: s.textMuted)),
+                            child: Text(
+                              'No chats yet.',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: s.textMuted,
+                              ),
+                            ),
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -309,31 +474,53 @@ class _AiChatBodyState extends State<AiChatBody> {
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: () => _selectConversation(c.id),
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 2),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
                                     gradient: active
                                         ? LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
-                                            colors: AppColors.aiGradient.colors.map((c) => c.withValues(alpha: 0.1)).toList(),
+                                            colors: AppColors.aiGradient.colors
+                                                .map(
+                                                  (c) =>
+                                                      c.withValues(alpha: 0.1),
+                                                )
+                                                .toList(),
                                           )
                                         : null,
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       active
                                           ? ShaderMask(
-                                              shaderCallback: (bounds) => AppColors.aiGradient.createShader(bounds),
-                                              child: const Icon(LucideIcons.messageSquare, size: 16, color: Colors.white),
+                                              shaderCallback: (bounds) =>
+                                                  AppColors.aiGradient
+                                                      .createShader(bounds),
+                                              child: const Icon(
+                                                LucideIcons.messageSquare,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
                                             )
-                                          : Icon(LucideIcons.messageSquare, size: 16, color: s.textMuted),
+                                          : Icon(
+                                              LucideIcons.messageSquare,
+                                              size: 16,
+                                              color: s.textMuted,
+                                            ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               c.title,
@@ -342,11 +529,20 @@ class _AiChatBodyState extends State<AiChatBody> {
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
-                                                color: active ? const Color(0xFF7C4DFF) : s.textPrimary,
+                                                color: active
+                                                    ? const Color(0xFF7C4DFF)
+                                                    : s.textPrimary,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
-                                            Text(timeAgo(c.updatedAt), style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: s.textMuted)),
+                                            Text(
+                                              timeAgo(c.updatedAt),
+                                              style: TextStyle(
+                                                fontSize: 10.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: s.textMuted,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -370,14 +566,25 @@ class _AiChatBodyState extends State<AiChatBody> {
                         }
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         child: Row(
                           children: [
-                            Icon(LucideIcons.arrowLeft, size: 16, color: s.textSecondary),
+                            Icon(
+                              LucideIcons.arrowLeft,
+                              size: 16,
+                              color: s.textSecondary,
+                            ),
                             const SizedBox(width: 10),
                             Text(
                               canPop ? 'Back' : 'Back to Dashboard',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textSecondary),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: s.textSecondary,
+                              ),
                             ),
                           ],
                         ),
@@ -388,7 +595,12 @@ class _AiChatBodyState extends State<AiChatBody> {
               ),
             ),
           ),
-        ).animate().slideX(begin: -1, end: 0, duration: 260.ms, curve: Curves.easeOutCubic),
+        ).animate().slideX(
+          begin: -1,
+          end: 0,
+          duration: 260.ms,
+          curve: Curves.easeOutCubic,
+        ),
       ],
     );
   }
@@ -404,36 +616,46 @@ class _AiChatBodyState extends State<AiChatBody> {
         Positioned(
           top: -80,
           left: -40,
-          child: Container(
-            width: 240,
-            height: 240,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.saffron500.withValues(alpha: dark ? 0.08 : 0.04),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                begin: const Offset(1.0, 1.0),
-                end: const Offset(1.25, 1.25),
-                duration: 4.seconds,
-                curve: Curves.easeInOut,
-              ),
+          child:
+              Container(
+                    width: 240,
+                    height: 240,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.saffron500.withValues(
+                        alpha: dark ? 0.08 : 0.04,
+                      ),
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.25, 1.25),
+                    duration: 4.seconds,
+                    curve: Curves.easeInOut,
+                  ),
         ),
         Positioned(
           bottom: 120,
           right: -80,
-          child: Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF6366F1).withValues(alpha: dark ? 0.08 : 0.03),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                begin: const Offset(1.0, 1.0),
-                end: const Offset(1.2, 1.2),
-                duration: 5.seconds,
-                curve: Curves.easeInOut,
-              ),
+          child:
+              Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(
+                        0xFF6366F1,
+                      ).withValues(alpha: dark ? 0.08 : 0.03),
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.2, 1.2),
+                    duration: 5.seconds,
+                    curve: Curves.easeInOut,
+                  ),
         ),
 
         // Main content
@@ -444,42 +666,52 @@ class _AiChatBodyState extends State<AiChatBody> {
               child: _loadingHistory
                   ? const LoadingView(message: 'Waking up Vidya...')
                   : _error != null
-                      ? Center(child: Text(_error!, style: TextStyle(color: s.textMuted)))
-                      : _switchingChat
-                          ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C4DFF)))
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                              itemCount: _showWelcome && !_sending
-                                  ? 1
-                                  : _messages.length + (_sending ? 1 : 0),
-                              itemBuilder: (context, i) {
-                                if (_showWelcome && !_sending) {
-                                  return _WelcomeView(
-                                    onSelectPrompt: (prompt) {
-                                      _controller.text = prompt;
-                                      _send();
-                                    },
-                                  );
-                                }
-                                if (i == _messages.length) return const _TypingBubble();
+                  ? Center(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(color: s.textMuted),
+                      ),
+                    )
+                  : _switchingChat
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7C4DFF),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                      itemCount: _showWelcome && !_sending
+                          ? 1
+                          : _messages.length + (_sending ? 1 : 0),
+                      itemBuilder: (context, i) {
+                        if (_showWelcome && !_sending) {
+                          return _WelcomeView(
+                            onSelectPrompt: (prompt) {
+                              _controller.text = prompt;
+                              _send();
+                            },
+                          );
+                        }
+                        if (i == _messages.length) return const _TypingBubble();
 
-                                final message = _messages[i];
-                                final isNewAssistantMessage = !message.isUser &&
-                                    i == _messages.length - 1 &&
-                                    !_animatedMessageIds.contains(message.id);
+                        final message = _messages[i];
+                        final isNewAssistantMessage =
+                            !message.isUser &&
+                            i == _messages.length - 1 &&
+                            !_animatedMessageIds.contains(message.id);
 
-                                return _ChatBubble(
-                                  message: message,
-                                  typewriter: isNewAssistantMessage,
-                                  onTypewriterComplete: () {
-                                    setState(() {
-                                      _animatedMessageIds.add(message.id);
-                                    });
-                                  },
-                                );
-                              },
-                            ),
+                        return _ChatBubble(
+                          message: message,
+                          typewriter: isNewAssistantMessage,
+                          onTypewriterComplete: () {
+                            setState(() {
+                              _animatedMessageIds.add(message.id);
+                            });
+                          },
+                        );
+                      },
+                    ),
             ),
             _Composer(
               controller: _controller,
@@ -488,6 +720,8 @@ class _AiChatBodyState extends State<AiChatBody> {
               onAttach: _pickFile,
               onSend: _send,
               sending: _sending,
+              listening: _listening,
+              onMicTap: _toggleListening,
             ),
           ],
         ),
@@ -510,40 +744,136 @@ class _Suggestion {
 // the Muni Model methodologies, not a generic assistant demo.
 const Map<String, List<_Suggestion>> _kSuggestionsByRole = {
   'STUDENT': [
-    _Suggestion(LucideIcons.bookOpen, 'UPLC Help', 'Help me do UPLC self-study for my next chapter — walk me through Understand, Problem, Learning and Communicate.'),
-    _Suggestion(LucideIcons.users, 'Buddy Study Tips', 'Give me 3 tips to make my next Buddy Study session with my study buddy more effective.'),
-    _Suggestion(LucideIcons.calculator, 'Vedic Math Trick', 'Teach me a quick Vedic Math trick for multiplication.'),
-    _Suggestion(LucideIcons.landmark, 'Child Parliament', 'Explain what the Child Parliament is and how I can get more involved.'),
+    _Suggestion(
+      LucideIcons.bookOpen,
+      'UPLC Help',
+      'Help me do UPLC self-study for my next chapter — walk me through Understand, Problem, Learning and Communicate.',
+    ),
+    _Suggestion(
+      LucideIcons.users,
+      'Buddy Study Tips',
+      'Give me 3 tips to make my next Buddy Study session with my study buddy more effective.',
+    ),
+    _Suggestion(
+      LucideIcons.calculator,
+      'Vedic Math Trick',
+      'Teach me a quick Vedic Math trick for multiplication.',
+    ),
+    _Suggestion(
+      LucideIcons.landmark,
+      'Child Parliament',
+      'Explain what the Child Parliament is and how I can get more involved.',
+    ),
   ],
   'TEACHER': [
-    _Suggestion(LucideIcons.presentation, 'Lesson Plan', "Help me plan tomorrow's lesson using Guided Discovery for my class."),
-    _Suggestion(LucideIcons.users, 'Buddy System Setup', 'Give me a step-by-step plan to start the Buddy System in my class this week.'),
-    _Suggestion(LucideIcons.camera, 'Evidence Tips', 'What kind of evidence should I upload today to show GRS is being implemented well?'),
-    _Suggestion(LucideIcons.notebookPen, 'Daily Reflection', "Help me write today's self-reflection on how UPLC went in my class."),
+    _Suggestion(
+      LucideIcons.presentation,
+      'Lesson Plan',
+      "Help me plan tomorrow's lesson using Guided Discovery for my class.",
+    ),
+    _Suggestion(
+      LucideIcons.users,
+      'Buddy System Setup',
+      'Give me a step-by-step plan to start the Buddy System in my class this week.',
+    ),
+    _Suggestion(
+      LucideIcons.camera,
+      'Evidence Tips',
+      'What kind of evidence should I upload today to show GRS is being implemented well?',
+    ),
+    _Suggestion(
+      LucideIcons.notebookPen,
+      'Daily Reflection',
+      "Help me write today's self-reflection on how UPLC went in my class.",
+    ),
   ],
   'PRINCIPAL': [
-    _Suggestion(LucideIcons.chartNoAxesCombined, 'MII Score Help', "What can I do this month to improve my school's MII score?"),
-    _Suggestion(LucideIcons.userCheck, 'Support a Teacher', 'Suggest how to support a teacher who is weak in implementing UPLC.'),
-    _Suggestion(LucideIcons.clipboardCheck, 'Plan Observations', "Help me plan this week's classroom observations across methodologies."),
-    _Suggestion(LucideIcons.calendarCheck, 'Corrective Meeting', "Draft an agenda for a corrective meeting with a teacher who's behind on evidence uploads."),
+    _Suggestion(
+      LucideIcons.chartNoAxesCombined,
+      'MII Score Help',
+      "What can I do this month to improve my school's MII score?",
+    ),
+    _Suggestion(
+      LucideIcons.userCheck,
+      'Support a Teacher',
+      'Suggest how to support a teacher who is weak in implementing UPLC.',
+    ),
+    _Suggestion(
+      LucideIcons.clipboardCheck,
+      'Plan Observations',
+      "Help me plan this week's classroom observations across methodologies.",
+    ),
+    _Suggestion(
+      LucideIcons.calendarCheck,
+      'Corrective Meeting',
+      "Draft an agenda for a corrective meeting with a teacher who's behind on evidence uploads.",
+    ),
   ],
   'TRAINER': [
-    _Suggestion(LucideIcons.presentation, 'Training Plan', "Help me plan this week's training session on the Buddy System."),
-    _Suggestion(LucideIcons.clipboardList, 'Pre/Post Test', 'Suggest 5 questions for a pre/post test on GRS for teachers.'),
-    _Suggestion(LucideIcons.messageSquare, 'Teacher Feedback', 'Help me draft constructive feedback for a teacher who needs re-training in UPLC.'),
-    _Suggestion(LucideIcons.school, 'Follow-up Plan', 'What follow-up actions should I take for a school with weak Buddy System implementation?'),
+    _Suggestion(
+      LucideIcons.presentation,
+      'Training Plan',
+      "Help me plan this week's training session on the Buddy System.",
+    ),
+    _Suggestion(
+      LucideIcons.clipboardList,
+      'Pre/Post Test',
+      'Suggest 5 questions for a pre/post test on GRS for teachers.',
+    ),
+    _Suggestion(
+      LucideIcons.messageSquare,
+      'Teacher Feedback',
+      'Help me draft constructive feedback for a teacher who needs re-training in UPLC.',
+    ),
+    _Suggestion(
+      LucideIcons.school,
+      'Follow-up Plan',
+      'What follow-up actions should I take for a school with weak Buddy System implementation?',
+    ),
   ],
   'MANAGEMENT': [
-    _Suggestion(LucideIcons.chartNoAxesCombined, 'MII Overview', 'Give me a summary of which schools need urgent intervention right now.'),
-    _Suggestion(LucideIcons.triangleAlert, 'Flag Weak Schools', 'Which schools are showing weak Buddy System or GRS implementation this week?'),
-    _Suggestion(LucideIcons.fileText, 'Report Insight', "Summarize the network's overall implementation trend this month."),
-    _Suggestion(LucideIcons.userCog, 'Trainer Assignment', 'Suggest how to reassign trainers to better support low-MII schools.'),
+    _Suggestion(
+      LucideIcons.chartNoAxesCombined,
+      'MII Overview',
+      'Give me a summary of which schools need urgent intervention right now.',
+    ),
+    _Suggestion(
+      LucideIcons.triangleAlert,
+      'Flag Weak Schools',
+      'Which schools are showing weak Buddy System or GRS implementation this week?',
+    ),
+    _Suggestion(
+      LucideIcons.fileText,
+      'Report Insight',
+      "Summarize the network's overall implementation trend this month.",
+    ),
+    _Suggestion(
+      LucideIcons.userCog,
+      'Trainer Assignment',
+      'Suggest how to reassign trainers to better support low-MII schools.',
+    ),
   ],
   'PARENT': [
-    _Suggestion(LucideIcons.house, 'Ghar Ek Pathshala', 'Suggest a fun Ghar Ek Pathshala home activity I can do with my child this week.'),
-    _Suggestion(LucideIcons.heart, 'Support at Home', "How can I support my child's Growth Habits at home?"),
-    _Suggestion(LucideIcons.bookOpen, 'Understand Muni Model', 'Explain the Muni Model in simple terms so I can understand what my child is learning.'),
-    _Suggestion(LucideIcons.trendingUp, "My Child's Progress", "Help me understand my child's recent progress and what I should focus on."),
+    _Suggestion(
+      LucideIcons.house,
+      'Ghar Ek Pathshala',
+      'Suggest a fun Ghar Ek Pathshala home activity I can do with my child this week.',
+    ),
+    _Suggestion(
+      LucideIcons.heart,
+      'Support at Home',
+      "How can I support my child's Growth Habits at home?",
+    ),
+    _Suggestion(
+      LucideIcons.bookOpen,
+      'Understand Muni Model',
+      'Explain the Muni Model in simple terms so I can understand what my child is learning.',
+    ),
+    _Suggestion(
+      LucideIcons.trendingUp,
+      "My Child's Progress",
+      "Help me understand my child's recent progress and what I should focus on.",
+    ),
   ],
 };
 
@@ -600,18 +930,20 @@ class _WelcomeView extends StatelessWidget {
         children: [
           // Outer Glow pulsing
           Container(
-            width: 130,
-            height: 130,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFFC084FC).withValues(alpha: 0.25),
-                  const Color(0xFFC084FC).withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFC084FC).withValues(alpha: 0.25),
+                      const Color(0xFFC084FC).withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
                 begin: const Offset(0.9, 0.9),
                 end: const Offset(1.1, 1.1),
                 duration: 2500.ms,
@@ -620,28 +952,30 @@ class _WelcomeView extends StatelessWidget {
 
           // Vidya mascot, clipped into the glowing circle
           Container(
-            width: 80,
-            height: 80,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFC084FC).withValues(alpha: 0.35),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 4),
+                width: 80,
+                height: 80,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFC084FC).withValues(alpha: 0.35),
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Image.asset(
-              'assets/images/divya.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              cacheWidth: 160,
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                child: Image.asset(
+                  'assets/images/divya.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  cacheWidth: 160,
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
                 begin: const Offset(0.95, 0.95),
                 end: const Offset(1.05, 1.05),
                 duration: 1600.ms,
@@ -653,28 +987,43 @@ class _WelcomeView extends StatelessWidget {
   }
 
   Widget _buildSuggestionsGrid(BuildContext context, String? role) {
-    final suggestions = _kSuggestionsByRole[role] ?? _kSuggestionsByRole['STUDENT']!;
+    final suggestions =
+        _kSuggestionsByRole[role] ?? _kSuggestionsByRole['STUDENT']!;
     return Column(
-      children: [
-        for (var i = 0; i < suggestions.length; i += 2) ...[
-          if (i > 0) const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _buildSuggestionCard(context: context, suggestion: suggestions[i])),
-              const SizedBox(width: 12),
-              Expanded(
-                child: i + 1 < suggestions.length
-                    ? _buildSuggestionCard(context: context, suggestion: suggestions[i + 1])
-                    : const SizedBox.shrink(),
+          children: [
+            for (var i = 0; i < suggestions.length; i += 2) ...[
+              if (i > 0) const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSuggestionCard(
+                      context: context,
+                      suggestion: suggestions[i],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: i + 1 < suggestions.length
+                        ? _buildSuggestionCard(
+                            context: context,
+                            suggestion: suggestions[i + 1],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
-      ],
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
+          ],
+        )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
   }
 
-  Widget _buildSuggestionCard({required BuildContext context, required _Suggestion suggestion}) {
+  Widget _buildSuggestionCard({
+    required BuildContext context,
+    required _Suggestion suggestion,
+  }) {
     final s = context.surface;
     return GestureDetector(
       onTap: () => onSelectPrompt(suggestion.prompt),
@@ -697,7 +1046,8 @@ class _WelcomeView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ShaderMask(
-              shaderCallback: (bounds) => AppColors.aiGradient.createShader(bounds),
+              shaderCallback: (bounds) =>
+                  AppColors.aiGradient.createShader(bounds),
               child: Icon(suggestion.icon, color: Colors.white, size: 18),
             ),
             const SizedBox(height: 8),
@@ -751,50 +1101,54 @@ class _ChatBubble extends StatelessWidget {
     if (isUser) {
       // User bubble - shrink-wraps exactly to message text width (no Row/Expanded)
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.76,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: AppColors.aiGradient,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(4),
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.76,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: AppColors.aiGradient,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(4),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF7722).withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  message.content,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF7722).withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
             ),
-            child: Text(
-              message.content,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1.45,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ).animate().fadeIn(
-            duration: 350.ms,
-            curve: Curves.easeOut,
-          ).slideY(
+          )
+          .animate()
+          .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+          .slideY(
             begin: 0.15,
             end: 0,
             duration: 350.ms,
             curve: Curves.easeOutCubic,
-          ).scaleXY(
+          )
+          .scaleXY(
             begin: 0.95,
             end: 1,
             duration: 350.ms,
@@ -803,98 +1157,258 @@ class _ChatBubble extends StatelessWidget {
     } else {
       // Assistant bubble - no avatar, wraps to content dynamically
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: s.card,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-              border: Border.all(color: s.border.withValues(alpha: 0.6)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                )
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left-side gradient accent strip
-                Container(
-                  width: 3.5,
-                  height: 24,
-                  margin: const EdgeInsets.only(right: 10, top: 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    gradient: LinearGradient(
-                      colors: AppColors.aiGradient.colors,
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.8,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: s.card,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(18),
+                        bottomLeft: Radius.circular(18),
+                        bottomRight: Radius.circular(18),
+                      ),
+                      border: Border.all(
+                        color: s.border.withValues(alpha: 0.6),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left-side gradient accent strip
+                        Container(
+                          width: 3.5,
+                          height: 24,
+                          margin: const EdgeInsets.only(right: 10, top: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            gradient: LinearGradient(
+                              colors: AppColors.aiGradient.colors,
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          child: typewriter
+                              ? _TypewriterText(
+                                  text: message.content,
+                                  style: TextStyle(
+                                    color: s.textPrimary,
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  onComplete: onTypewriterComplete,
+                                )
+                              : MarkdownBody(
+                                  data: message.content,
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: TextStyle(
+                                      color: s.textPrimary,
+                                      fontSize: 14,
+                                      height: 1.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    strong: TextStyle(
+                                      color: s.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    listBullet: TextStyle(
+                                      color: s.textSecondary,
+                                    ),
+                                    a: const TextStyle(
+                                      color: Color(0xFF7C4DFF),
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                Flexible(
-                  child: typewriter
-                      ? _TypewriterText(
-                          text: message.content,
-                          style: TextStyle(
-                            color: s.textPrimary,
-                            fontSize: 14,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          onComplete: onTypewriterComplete,
-                        )
-                      : MarkdownBody(
-                          data: message.content,
-                          styleSheet: MarkdownStyleSheet(
-                            p: TextStyle(
-                              color: s.textPrimary,
-                              fontSize: 14,
-                              height: 1.5,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            strong: TextStyle(
-                              color: s.textPrimary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            listBullet: TextStyle(color: s.textSecondary),
-                            a: const TextStyle(color: Color(0xFF7C4DFF), decoration: TextDecoration.underline),
-                          ),
-                        ),
-                ),
+                // Only shown once the message has fully rendered — while
+                // `typewriter` is still animating, `message.content` may be
+                // mid-stream and isn't yet what the user wants to copy/hear.
+                if (!typewriter) _MessageActions(message: message),
               ],
             ),
-          ),
-        ),
-      ).animate().fadeIn(
-            duration: 350.ms,
-            curve: Curves.easeOut,
-          ).slideY(
+          )
+          .animate()
+          .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+          .slideY(
             begin: 0.15,
             end: 0,
             duration: 350.ms,
             curve: Curves.easeOutCubic,
-          ).scaleXY(
+          )
+          .scaleXY(
             begin: 0.95,
             end: 1,
             duration: 350.ms,
             curve: Curves.easeOutBack,
           );
     }
+  }
+}
+
+class _MessageActions extends StatefulWidget {
+  final AiChatMessage message;
+
+  const _MessageActions({required this.message});
+
+  @override
+  State<_MessageActions> createState() => _MessageActionsState();
+}
+
+class _MessageActionsState extends State<_MessageActions> {
+  bool _copied = false;
+  bool _speaking = false;
+  // True only for the synthesis wait (no audio yet) — without it, that wait
+  // renders identically to "actively speaking" and the several-second delay
+  // (a real network round-trip to Microsoft's TTS endpoint) reads as the
+  // button being unresponsive or broken.
+  bool _loadingSpeech = false;
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.message.content));
+    if (!mounted) return;
+    setState(() => _copied = true);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _copied = false);
+    });
+  }
+
+  Future<void> _toggleSpeak() async {
+    if (_speaking) {
+      await TtsService.instance.stop();
+      if (mounted)
+        setState(() {
+          _speaking = false;
+          _loadingSpeech = false;
+        });
+      return;
+    }
+    setState(() {
+      _speaking = true;
+      _loadingSpeech = true;
+    });
+    await TtsService.instance.speak(
+      widget.message.id,
+      widget.message.content,
+      onPlaybackStart: () {
+        if (mounted) setState(() => _loadingSpeech = false);
+      },
+    );
+    if (mounted)
+      setState(() {
+        _speaking = false;
+        _loadingSpeech = false;
+      });
+  }
+
+  @override
+  void dispose() {
+    if (_speaking) TtsService.instance.stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, left: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ActionIconButton(
+            icon: _copied ? LucideIcons.check : LucideIcons.copy,
+            active: _copied,
+            tooltip: 'Copy',
+            onTap: _copy,
+          ),
+          const SizedBox(width: 2),
+          _speaking && _loadingSpeech
+              ? Tooltip(
+                  message: 'Stop',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _toggleSpeak,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.saffron500,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : _ActionIconButton(
+                  icon: _speaking ? LucideIcons.volumeX : LucideIcons.volume2,
+                  active: _speaking,
+                  tooltip: _speaking ? 'Stop' : 'Listen',
+                  onTap: _toggleSpeak,
+                ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionIconButton extends StatelessWidget {
+  final IconData icon;
+  final bool active;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ActionIconButton({
+    required this.icon,
+    required this.active,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(
+            icon,
+            size: 15,
+            color: active ? AppColors.saffron500 : s.textMuted,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -936,7 +1450,10 @@ class _TypewriterTextState extends State<_TypewriterText> {
       if (!mounted) return;
       if (_currentIndex < widget.text.length) {
         setState(() {
-          final nextIndex = (_currentIndex + charsPerStep).clamp(0, widget.text.length);
+          final nextIndex = (_currentIndex + charsPerStep).clamp(
+            0,
+            widget.text.length,
+          );
           _displayedText += widget.text.substring(_currentIndex, nextIndex);
           _currentIndex = nextIndex;
         });
@@ -960,8 +1477,13 @@ class _TypewriterTextState extends State<_TypewriterText> {
       styleSheet: MarkdownStyleSheet(
         p: widget.style,
         strong: widget.style.copyWith(fontWeight: FontWeight.w800),
-        listBullet: TextStyle(color: widget.style.color?.withValues(alpha: 0.7)),
-        a: const TextStyle(color: Color(0xFF7C4DFF), decoration: TextDecoration.underline),
+        listBullet: TextStyle(
+          color: widget.style.color?.withValues(alpha: 0.7),
+        ),
+        a: const TextStyle(
+          color: Color(0xFF7C4DFF),
+          decoration: TextDecoration.underline,
+        ),
       ),
     );
   }
@@ -993,22 +1515,24 @@ class _TypingBubble extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: List.generate(3, (i) {
               return Container(
-                width: 6,
-                height: 6,
-                margin: EdgeInsets.only(left: i == 0 ? 0 : 4),
-                decoration: BoxDecoration(
-                  color: AppColors.aiGradient.colors[i],
-                  shape: BoxShape.circle,
-                ),
-              ).animate(
-                onPlay: (c) => c.repeat(reverse: true),
-                delay: (i * 120).ms,
-              ).scale(
-                begin: const Offset(0.6, 0.6),
-                end: const Offset(1.2, 1.2),
-                duration: 400.ms,
-                curve: Curves.easeInOut,
-              );
+                    width: 6,
+                    height: 6,
+                    margin: EdgeInsets.only(left: i == 0 ? 0 : 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.aiGradient.colors[i],
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                  .animate(
+                    onPlay: (c) => c.repeat(reverse: true),
+                    delay: (i * 120).ms,
+                  )
+                  .scale(
+                    begin: const Offset(0.6, 0.6),
+                    end: const Offset(1.2, 1.2),
+                    duration: 400.ms,
+                    curve: Curves.easeInOut,
+                  );
             }),
           ),
         ),
@@ -1024,6 +1548,8 @@ class _Composer extends StatelessWidget {
   final VoidCallback onAttach;
   final VoidCallback onSend;
   final bool sending;
+  final bool listening;
+  final VoidCallback onMicTap;
 
   const _Composer({
     required this.controller,
@@ -1032,6 +1558,8 @@ class _Composer extends StatelessWidget {
     required this.onAttach,
     required this.onSend,
     required this.sending,
+    required this.listening,
+    required this.onMicTap,
   });
 
   @override
@@ -1051,7 +1579,10 @@ class _Composer extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.only(left: 12, bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.saffron500.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
@@ -1062,7 +1593,11 @@ class _Composer extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(LucideIcons.paperclip, size: 12, color: AppColors.saffron600),
+                      const Icon(
+                        LucideIcons.paperclip,
+                        size: 12,
+                        color: AppColors.saffron600,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         attachedFile!.path.split(Platform.pathSeparator).last,
@@ -1075,7 +1610,11 @@ class _Composer extends StatelessWidget {
                       const SizedBox(width: 6),
                       GestureDetector(
                         onTap: onClearAttachment,
-                        child: const Icon(LucideIcons.x, size: 12, color: AppColors.saffron700),
+                        child: const Icon(
+                          LucideIcons.x,
+                          size: 12,
+                          color: AppColors.saffron700,
+                        ),
                       ),
                     ],
                   ),
@@ -1099,22 +1638,42 @@ class _Composer extends StatelessWidget {
                       textCapitalization: TextCapitalization.sentences,
                       cursorColor: const Color(0xFF7C4DFF),
                       style: TextStyle(fontSize: 14.5, color: s.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'Ask me anything...',
-                        hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14.5),
+                      decoration: InputDecoration(
+                        hintText: listening
+                            ? 'Listening...'
+                            : 'Ask me anything...',
+                        hintStyle: const TextStyle(
+                          color: Color(0xFF9CA3AF),
+                          fontSize: 14.5,
+                        ),
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         filled: false,
-                        contentPadding: EdgeInsets.symmetric(vertical: 11),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 11,
+                        ),
                         isDense: true,
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
+                    onTap: onMicTap,
+                    child: Icon(
+                      listening ? LucideIcons.micOff : LucideIcons.mic,
+                      color: listening ? AppColors.danger : s.textSecondary,
+                      size: 19,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
                     onTap: onAttach,
-                    child: Icon(LucideIcons.paperclip, color: s.textSecondary, size: 19),
+                    child: Icon(
+                      LucideIcons.paperclip,
+                      color: s.textSecondary,
+                      size: 19,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   // Gradient send circle button
@@ -1125,7 +1684,12 @@ class _Composer extends StatelessWidget {
                       onTap: sending ? null : onSend,
                       customBorder: const CircleBorder(),
                       child: Ink(
-                        decoration: sending ? null : const BoxDecoration(gradient: AppColors.aiGradient, shape: BoxShape.circle),
+                        decoration: sending
+                            ? null
+                            : const BoxDecoration(
+                                gradient: AppColors.aiGradient,
+                                shape: BoxShape.circle,
+                              ),
                         child: Padding(
                           padding: const EdgeInsets.all(8),
                           child: sending
@@ -1134,10 +1698,16 @@ class _Composer extends StatelessWidget {
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
-                              : const Icon(LucideIcons.arrowUp, color: Colors.white, size: 16),
+                              : const Icon(
+                                  LucideIcons.arrowUp,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                         ),
                       ),
                     ),

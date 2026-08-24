@@ -7,9 +7,13 @@ import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
+import '../../core/widgets/quick_access_card.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
+import '../action_plans/action_plan_sheet.dart';
+import '../shared/community_hub_screen.dart';
 import '../shell/app_shell.dart';
+import 'audit_log_screen.dart';
 import 'management_repository.dart';
 import 'widgets/school_status_widgets.dart';
 
@@ -79,6 +83,43 @@ class _BodyState extends State<_Body> {
             StatTile(label: 'Average MII', value: averageMii != null ? (averageMii as num).toStringAsFixed(1) : '—', icon: LucideIcons.trendingUp, color: const Color(0xFF10B981), animateIndex: 1),
             StatTile(label: 'Active Trainers', value: '${summary['activeTrainers'] ?? 0}', icon: LucideIcons.users, color: const Color(0xFF6366F1), animateIndex: 2),
             StatTile(label: 'Total Students', value: '${summary['totalStudents'] ?? 0}', icon: LucideIcons.graduationCap, color: AppColors.saffron500, animateIndex: 3),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.05,
+          children: [
+            QuickAccessCard(
+              onTap: () => showMyActionPlansSheet(context),
+              icon: LucideIcons.clipboardList,
+              color: const Color(0xFF0EA5E9),
+              title: 'Action Plan',
+              subtitle: 'Corrective tasks and follow-ups network-wide',
+              cta: 'View Tasks',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AuditLogScreen())),
+              icon: LucideIcons.history,
+              color: const Color(0xFF6366F1),
+              title: 'Audit Log',
+              subtitle: 'Every user/school/knowledge-base change, with actor and time',
+              cta: 'View Log',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+              icon: LucideIcons.globe,
+              color: const Color(0xFF14B8A6),
+              title: 'Community Hub',
+              subtitle: 'Wakeup Call Board, events, workshops & clubs',
+              cta: 'Explore',
+            ),
           ],
         ),
         const SizedBox(height: 16),

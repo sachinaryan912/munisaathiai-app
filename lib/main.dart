@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/notifications/fcm_service.dart';
 import 'core/router/app_router.dart';
+import 'core/services/app_update_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/system_ui.dart';
 import 'core/theme/theme_provider.dart';
+import 'core/widgets/app_update_dialog.dart';
 import 'features/auth/data/auth_provider.dart';
 import 'features/notifications/notifications_provider.dart';
 import 'features/parent/selected_child_provider.dart';
@@ -71,6 +73,21 @@ class _MuniAppState extends State<MuniApp> {
     } else if (status == AuthStatus.unauthenticated && previous == AuthStatus.authenticated) {
       FcmService.instance.unregisterCurrentToken();
     }
+    if (previous == null) {
+      // First time auth resolves — splash is exiting for a real page, which is
+      // the right moment to check Play Store rather than racing the splash.
+      _checkForAppUpdate();
+    }
+  }
+
+  void _checkForAppUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final info = await AppUpdateService.instance.checkForUpdate();
+      if (info == null) return;
+      final context = rootNavigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      await showAppUpdateDialog(context, info);
+    });
   }
 
   @override

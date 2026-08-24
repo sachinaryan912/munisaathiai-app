@@ -39,6 +39,13 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
     _load();
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {

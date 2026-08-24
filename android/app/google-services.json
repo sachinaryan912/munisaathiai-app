@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1046544478759:android:3b325579dcf7cbca3dd402",
+        "mobilesdk_app_id": "1:1046544478759:android:affbe3d3737532e53dd402",
         "android_client_info": {
-          "package_name": "com.company.munisaathiai.mobile"
+          "package_name": "com.munieducare.munisaathiai"
         }
       },
       "oauth_client": [],

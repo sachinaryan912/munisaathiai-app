@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -6,8 +7,11 @@ import '../../core/utils/icon_map.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
+import '../../core/widgets/quick_access_card.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
+import '../action_plans/action_plan_sheet.dart';
+import '../shared/community_hub_screen.dart';
 import '../shell/app_shell.dart';
 import 'parent_repository.dart';
 import 'selected_child_provider.dart';
@@ -99,6 +103,35 @@ class _Body extends StatelessWidget {
             final st = stats[i];
             return StatTile(label: st['label'] as String, value: st['value'] as String, icon: lucideByName(st['icon'] as String?), color: _statColors[i % _statColors.length], animateIndex: i);
           }),
+        ),
+        const SizedBox(height: 22),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.05,
+          children: [
+            QuickAccessCard(
+              onTap: () => showMyActionPlansSheet(context),
+              icon: LucideIcons.clipboardList,
+              color: const Color(0xFF0EA5E9),
+              title: 'Action Plan',
+              subtitle: 'Corrective tasks and follow-ups assigned to you',
+              cta: 'View Tasks',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+              icon: LucideIcons.globe,
+              color: const Color(0xFF14B8A6),
+              title: 'Community Hub',
+              subtitle: 'Wakeup Call Board, events, workshops & clubs',
+              cta: 'Explore',
+            ),
+          ],
         ),
         if (subjects.isNotEmpty) ...[
           const SizedBox(height: 22),

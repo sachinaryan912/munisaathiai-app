@@ -6,8 +6,11 @@ import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/progress_ring.dart';
+import '../../core/widgets/quick_access_card.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
+import '../action_plans/action_plan_sheet.dart';
+import '../shared/community_hub_screen.dart';
 import '../shell/app_shell.dart';
 import 'principal_repository.dart';
 import 'widgets/ai_daily_report_view.dart';
@@ -100,6 +103,35 @@ class _BodyState extends State<_Body> {
           children: [
             StatTile(label: 'Teachers', value: '$teacherCount', icon: LucideIcons.users, color: AppColors.roleColor('PRINCIPAL'), animateIndex: 0),
             StatTile(label: 'Pending Alerts', value: '$pendingAlerts', icon: LucideIcons.triangleAlert, color: AppColors.warning, animateIndex: 1),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.05,
+          children: [
+            QuickAccessCard(
+              onTap: () => showMyActionPlansSheet(context),
+              icon: LucideIcons.clipboardList,
+              color: const Color(0xFF0EA5E9),
+              title: 'Action Plan',
+              subtitle: 'Corrective tasks and follow-ups assigned to you',
+              cta: 'View Tasks',
+            ),
+            QuickAccessCard(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+              icon: LucideIcons.globe,
+              color: const Color(0xFF14B8A6),
+              title: 'Community Hub',
+              subtitle: 'Wakeup Call Board, events, workshops & clubs',
+              cta: 'Explore',
+            ),
           ],
         ),
         if (weakMethodologies.isNotEmpty) ...[
