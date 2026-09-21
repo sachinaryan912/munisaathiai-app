@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -32,12 +32,12 @@ class ParentProgressScreen extends StatelessWidget {
       actions: [
         if (selectedChild != null) ...[
           IconButton(
-            icon: const Icon(LucideIcons.calendarClock),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 20, color: AppColors.saffron600),
             tooltip: 'Timetable',
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimetableScreen(title: "Child's Timetable"))),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.clipboardCheck),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedClipboardCheck, size: 20, color: AppColors.saffron600),
             tooltip: 'Evaluation Sheet',
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EvaluationSheetScreen(
                   studentId: selectedChild['id'] as int,
@@ -46,7 +46,7 @@ class ParentProgressScreen extends StatelessWidget {
                 ))),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.fileText),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedFile01, size: 20, color: AppColors.saffron600),
             tooltip: 'PTM File',
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PtmFileScreen(studentId: selectedChild['id'] as int))),
           ),
@@ -92,10 +92,10 @@ class _Body extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 1.35,
           children: [
-            StatTile(label: 'Overall Score', value: '$overallScore%', icon: LucideIcons.trendingUp, color: AppColors.saffron500, animateIndex: 0),
-            StatTile(label: 'Class Rank', value: classRank != null ? '#${classRank['rank']}' : '—', sublabel: classRank != null ? 'of ${classRank['total']}' : null, icon: LucideIcons.award, color: const Color(0xFF6366F1), animateIndex: 1),
-            StatTile(label: 'Attendance', value: attendance != null ? '$attendance%' : '—', icon: LucideIcons.calendarCheck, color: const Color(0xFF10B981), animateIndex: 2),
-            StatTile(label: 'Milestones', value: '$milestones', icon: LucideIcons.medal, color: const Color(0xFF8B5CF6), animateIndex: 3),
+            StatTile(label: 'Overall Score', value: '$overallScore%', icon: HugeIcons.strokeRoundedTradeUp, color: AppColors.saffron500, animateIndex: 0),
+            StatTile(label: 'Class Rank', value: classRank != null ? '#${classRank['rank']}' : '—', sublabel: classRank != null ? 'of ${classRank['total']}' : null, icon: HugeIcons.strokeRoundedAward01, color: const Color(0xFF6366F1), animateIndex: 1),
+            StatTile(label: 'Attendance', value: attendance != null ? '$attendance%' : '—', icon: HugeIcons.strokeRoundedCalendarCheck01, color: const Color(0xFF10B981), animateIndex: 2),
+            StatTile(label: 'Milestones', value: '$milestones', icon: HugeIcons.strokeRoundedMedal01, color: const Color(0xFF8B5CF6), animateIndex: 3),
           ],
         ),
         if (subjects.isNotEmpty) ...[
@@ -131,7 +131,7 @@ class _Body extends StatelessWidget {
         Text('Teacher Notes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
         const SizedBox(height: 10),
         if (notes.isEmpty)
-          const SectionCard(child: EmptyView(title: 'No notes yet', icon: LucideIcons.notebookPen))
+          const SectionCard(child: EmptyView(title: 'No notes yet', icon: HugeIcons.strokeRoundedNote01))
         else
           SectionCard(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -140,7 +140,7 @@ class _Body extends StatelessWidget {
                 final teacher = n['teacher'] as Map<String, dynamic>?;
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  leading: const CircleAvatar(radius: 16, backgroundColor: AppColors.saffron100, child: Icon(LucideIcons.notebookPen, size: 14, color: AppColors.saffron700)),
+                  leading: const CircleAvatar(radius: 16, backgroundColor: AppColors.saffron100, child: HugeIcon(icon: HugeIcons.strokeRoundedNote01, size: 14, color: AppColors.saffron700)),
                   title: Text(n['content'] as String, style: TextStyle(fontSize: 12.5, color: s.textPrimary, height: 1.4)),
                   subtitle: Text('${teacher?['fullName'] ?? 'Teacher'} · ${timeAgo(DateTime.tryParse(n['createdAt'] as String? ?? ''))}', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
                 );

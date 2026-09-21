@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
@@ -67,7 +67,7 @@ class AuditLogScreen extends StatelessWidget {
         builder: (context, entries, refresh) {
           final s = context.surface;
           if (entries.isEmpty) {
-            return const EmptyView(title: 'No activity recorded yet', subtitle: 'User and school management actions will show up here.', icon: LucideIcons.history);
+            return const EmptyView(title: 'No activity recorded yet', subtitle: 'User and school management actions will show up here.', icon: HugeIcons.strokeRoundedTime02);
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
@@ -27,6 +28,12 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemStatusBarContrastEnforced: false,
+        ),
         foregroundColor: const Color(0xFF0F172A),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 17,
@@ -145,6 +152,12 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemStatusBarContrastEnforced: false,
+        ),
         foregroundColor: const Color(0xFFF1F5F9),
         titleTextStyle: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFFF1F5F9)),
         iconTheme: const IconThemeData(color: Color(0xFF94A3B8)),
@@ -246,6 +259,8 @@ class MuniSurface extends ThemeExtension<MuniSurface> {
   final Color primaryContainer;
   final Color surfaceVariant;
   final Color disabled;
+
+  bool get isDark => bg.computeLuminance() < 0.5;
 
   const MuniSurface({
     required this.bg,

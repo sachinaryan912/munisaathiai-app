@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -48,7 +48,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No peer teaching logged yet', subtitle: 'Teach a friend and log it here to earn stars!', icon: LucideIcons.graduationCap)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No peer teaching logged yet', subtitle: 'Teach a friend and log it here to earn stars!', icon: HugeIcons.strokeRoundedGraduationScroll)])
             : AnimationLimiter(
                 child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -66,7 +66,7 @@ class _BodyState extends State<_Body> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(13)),
-                            child: const Icon(LucideIcons.graduationCap, size: 18, color: Color(0xFF7C3AED)),
+                            child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedGraduationScroll, size: 18, color: Color(0xFF7C3AED))),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -83,7 +83,7 @@ class _BodyState extends State<_Body> {
                                 if ((t['teacherFeedback'] as String?)?.isNotEmpty ?? false) ...[
                                   const SizedBox(height: 8),
                                   Row(children: [
-                                    Icon(LucideIcons.userCheck, size: 10, color: s.textMuted),
+                                    HugeIcon(icon: HugeIcons.strokeRoundedUserCheck01, size: 10, color: s.textMuted),
                                     const SizedBox(width: 4),
                                     Text('Teacher feedback', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: s.textMuted, letterSpacing: 0.3)),
                                   ]),
@@ -92,7 +92,7 @@ class _BodyState extends State<_Body> {
                                 ] else ...[
                                   const SizedBox(height: 8),
                                   Row(children: [
-                                    Icon(LucideIcons.clock, size: 10, color: AppColors.warning),
+                                    HugeIcon(icon: HugeIcons.strokeRoundedTime02, size: 10, color: AppColors.warning),
                                     const SizedBox(width: 4),
                                     Text('Pending teacher review', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.warning, letterSpacing: 0.3)),
                                   ]),

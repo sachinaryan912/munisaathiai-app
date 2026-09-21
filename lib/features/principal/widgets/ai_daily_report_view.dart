@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -64,7 +64,7 @@ class AiDailyReportView extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(LucideIcons.triangleAlert, size: 14, color: _urgencyColors[a['urgency']] ?? AppColors.warning),
+                      HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, size: 14, color: _urgencyColors[a['urgency']] ?? AppColors.warning),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(

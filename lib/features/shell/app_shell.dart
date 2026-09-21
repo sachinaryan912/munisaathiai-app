@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/data/auth_provider.dart';
@@ -65,7 +65,7 @@ class _AppShellState extends State<AppShell> {
                   backgroundColor: AppColors.saffron500,
                   elevation: 6,
                   onPressed: () => context.push('/ai-chat'),
-                  child: const Icon(LucideIcons.bot, color: Colors.white),
+                  child: const HugeIcon(icon: HugeIcons.strokeRoundedAiChat01, color: Colors.white, size: 24),
                 )
               : null),
     );

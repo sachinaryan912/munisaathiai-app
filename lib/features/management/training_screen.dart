@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -9,7 +9,6 @@ import '../../core/widgets/list_search_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../shell/app_shell.dart';
 import '../videos/video_screen.dart';
-import 'knowledge_base_editor_screen.dart';
 import 'management_repository.dart';
 
 class ManagementTrainingScreen extends StatefulWidget {
@@ -38,13 +37,6 @@ class _ManagementTrainingScreenState extends State<ManagementTrainingScreen> wit
     return AppShell(
       title: 'Training',
       showAiFab: false,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'edit_knowledge_base',
-        backgroundColor: AppColors.saffron500,
-        icon: const Icon(LucideIcons.brainCircuit, color: Colors.white),
-        label: const Text("Edit Vidya's Instructions", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const KnowledgeBaseEditorScreen())),
-      ),
       body: AsyncScreen<List<dynamic>>(
         loader: () => Future.wait([_repo.getNetworkTrainingSessions(), _repo.getCertifications()]),
         builder: (context, results, refresh) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -124,7 +124,7 @@ class _BodyState extends State<_Body> {
   Widget build(BuildContext context) {
     final s = context.surface;
     if (widget.list.isEmpty) {
-      return const EmptyView(title: 'No peer teaching sessions logged yet', subtitle: 'Your students\' peer-teaching logs will show up here for review.', icon: LucideIcons.graduationCap);
+      return const EmptyView(title: 'No peer teaching sessions logged yet', subtitle: 'Your students\' peer-teaching logs will show up here for review.', icon: HugeIcons.strokeRoundedGraduationScroll);
     }
     final pending = widget.list.where((l) => l['teacherFeedback'] == null).toList();
     final reviewed = widget.list.where((l) => l['teacherFeedback'] != null).toList();
@@ -147,7 +147,7 @@ class _BodyState extends State<_Body> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(13)),
-                  child: const Icon(LucideIcons.graduationCap, size: 18, color: Color(0xFF7C3AED)),
+                  child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedGraduationScroll, size: 18, color: Color(0xFF7C3AED))),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -160,7 +160,7 @@ class _BodyState extends State<_Body> {
                       const SizedBox(height: 6),
                       if (isPending)
                         Row(children: [
-                          const Icon(LucideIcons.clock, size: 11, color: AppColors.warning),
+                          const HugeIcon(icon: HugeIcons.strokeRoundedClock01, size: 11, color: AppColors.warning),
                           const SizedBox(width: 4),
                           const Text('Tap to review', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.warning)),
                         ])

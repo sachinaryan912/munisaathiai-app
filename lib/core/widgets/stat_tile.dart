@@ -8,7 +8,7 @@ import 'section_card.dart';
 class StatTile extends StatelessWidget {
   final String label;
   final String value;
-  final IconData icon;
+  final dynamic icon;
   final Color color;
   final String? sublabel;
   final int animateIndex;

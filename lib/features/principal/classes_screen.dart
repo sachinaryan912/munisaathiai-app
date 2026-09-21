@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -23,7 +23,7 @@ class PrincipalClassesScreen extends StatelessWidget {
         loader: repo.getClasses,
         builder: (context, classes, refresh) {
           if (classes.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No classes found', icon: LucideIcons.school)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No classes found', icon: HugeIcons.strokeRoundedSchool)]);
           }
           final lowestScoring = classes
               .expand((c) => ((c['students'] as List? ?? []).cast<Map<String, dynamic>>()).map((st) => {
@@ -81,7 +81,7 @@ class _ClassCardState extends State<_ClassCard> {
           children: [
             Row(
               children: [
-                Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Icon(LucideIcons.school, size: 18, color: AppColors.saffron600)),
+                Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedSchool, size: 18, color: AppColors.saffron600))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -92,7 +92,7 @@ class _ClassCardState extends State<_ClassCard> {
                     ],
                   ),
                 ),
-                Icon(_expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown, size: 18, color: s.textMuted),
+                HugeIcon(icon: _expanded ? HugeIcons.strokeRoundedArrowUp01 : HugeIcons.strokeRoundedArrowDown01, size: 18, color: s.textMuted),
               ],
             ),
             const SizedBox(height: 10),
@@ -116,7 +116,7 @@ class _ClassCardState extends State<_ClassCard> {
                         editable: true,
                         title: '${c['displayName']} Timetable',
                       ))),
-                  icon: const Icon(LucideIcons.calendarClock, size: 15),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 15, color: AppColors.saffron600),
                   label: const Text('Timetable', style: TextStyle(fontSize: 12)),
                 ),
               ),
@@ -153,7 +153,7 @@ class _LowestScoringCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(LucideIcons.triangleAlert, size: 16, color: AppColors.warning),
+            const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, size: 16, color: AppColors.warning),
             const SizedBox(width: 8),
             Text('Lowest Scoring Students', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary)),
           ]),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
@@ -76,7 +76,7 @@ class _BodyState extends State<_Body> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(children: [const Icon(LucideIcons.heart, size: 17, color: AppColors.saffron500), const SizedBox(width: 8), Text('Share your feedback', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary))]),
+            Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedFavourite, size: 17, color: AppColors.saffron500), const SizedBox(width: 8), Text('Share your feedback', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary))]),
             const SizedBox(height: 14),
             Wrap(
               spacing: 8,
@@ -117,7 +117,7 @@ class _BodyState extends State<_Body> {
           Text('Your Feedback History', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
           const SizedBox(height: 10),
           if (widget.list.isEmpty)
-            const SectionCard(child: EmptyView(title: 'No feedback sent yet', icon: LucideIcons.heart))
+            const SectionCard(child: EmptyView(title: 'No feedback sent yet', icon: HugeIcons.strokeRoundedFavourite))
           else
             Column(
               children: widget.list.map((f) {

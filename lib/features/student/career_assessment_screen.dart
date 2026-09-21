@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -124,7 +124,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No assessments yet', subtitle: 'Discover directions that suit your passions and strengths.', icon: LucideIcons.compass)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No assessments yet', subtitle: 'Discover directions that suit your passions and strengths.', icon: HugeIcons.strokeRoundedCompass)])
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: widget.list.length,
@@ -137,7 +137,7 @@ class _BodyState extends State<_Body> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            const Icon(LucideIcons.sparkles, size: 14, color: AppColors.saffron600),
+                            const HugeIcon(icon: HugeIcons.strokeRoundedSparkles, size: 14, color: AppColors.saffron600),
                             const SizedBox(width: 6),
                             Text(e['date'] as String, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: s.textMuted)),
                           ]),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/system_ui.dart';
 
@@ -9,6 +8,7 @@ class AuthScaffold extends StatelessWidget {
   final String subtitle;
   final Widget child;
   final bool showLogo;
+  final bool centered;
 
   const AuthScaffold({
     super.key,
@@ -16,111 +16,93 @@ class AuthScaffold extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.showLogo = true,
+    this.centered = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
-    // This screen's own background reaches the bottom edge (no floating bottom
-    // nav like the dashboard shells have) — the system nav bar must match it,
-    // regardless of what an earlier-visited dashboard tab last set it to.
     SystemUi.apply(
       dark: Theme.of(context).brightness == Brightness.dark,
       navigationBarColor: s.bg,
     );
     return Scaffold(
       backgroundColor: s.bg,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -120,
-            right: -80,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.saffron300.withValues(alpha: 0.28),
-                    Colors.transparent,
-                  ],
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
                 ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showLogo) ...[
-                        Container(
-                              width: 52,
-                              height: 52,
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: s.card,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.saffron500.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(13),
-                                child: Image.asset(
-                                  'assets/images/muni_logo.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(duration: 300.ms)
-                            .scale(begin: const Offset(0.85, 0.85)),
-                        const SizedBox(height: 22),
-                      ],
-                      Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.w900,
-                              color: s.textPrimary,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                      children: [
+                        if (showLogo) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              'assets/images/muni_logo.png',
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
                             ),
                           )
-                          .animate(delay: 60.ms)
-                          .fadeIn(duration: 320.ms)
-                          .slideY(begin: 0.15, end: 0),
-                      const SizedBox(height: 6),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          color: s.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ).animate(delay: 100.ms).fadeIn(duration: 320.ms),
-                      const SizedBox(height: 28),
-                      child
-                          .animate(delay: 140.ms)
-                          .fadeIn(duration: 360.ms)
-                          .slideY(begin: 0.08, end: 0),
-                    ],
+                          .animate()
+                          .fadeIn(duration: 350.ms, curve: Curves.easeOutCubic)
+                          .scale(begin: const Offset(0.88, 0.88), curve: Curves.easeOutBack),
+                          const SizedBox(height: 20),
+                        ],
+                        Text(
+                          title,
+                          textAlign: centered ? TextAlign.center : TextAlign.start,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.4,
+                            color: s.textPrimary,
+                          ),
+                        )
+                        .animate(delay: 50.ms)
+                        .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                        .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
+                        const SizedBox(height: 6),
+                        if (subtitle.isNotEmpty) ...[
+                          Text(
+                            subtitle,
+                            textAlign: centered ? TextAlign.center : TextAlign.start,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: s.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              height: 1.35,
+                            ),
+                          )
+                          .animate(delay: 90.ms)
+                          .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                          .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+                          const SizedBox(height: 24),
+                        ] else
+                          const SizedBox(height: 16),
+                        child
+                            .animate(delay: 130.ms)
+                            .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)
+                            .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

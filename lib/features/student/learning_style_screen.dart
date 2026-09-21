@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -125,7 +125,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No results yet', subtitle: 'Take the quiz to find your best way to learn.', icon: LucideIcons.lightbulb)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No results yet', subtitle: 'Take the quiz to find your best way to learn.', icon: HugeIcons.strokeRoundedLightbulb)])
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: widget.list.length,
@@ -136,7 +136,7 @@ class _BodyState extends State<_Body> {
                     child: SectionCard(
                       child: Row(
                         children: [
-                          Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFEC4899).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(13)), child: const Icon(LucideIcons.lightbulb, size: 18, color: Color(0xFFEC4899))),
+                          Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFEC4899).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(13)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedLightbulb, size: 18, color: Color(0xFFEC4899)))),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(

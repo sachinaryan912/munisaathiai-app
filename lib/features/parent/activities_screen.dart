@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -129,7 +129,7 @@ class _BodyState extends State<_Body> {
                 child: Column(
                   children: pending.map((a) => ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                        leading: Container(width: 34, height: 34, decoration: BoxDecoration(color: const Color(0xFFE0E7FF), borderRadius: BorderRadius.circular(11)), child: const Icon(LucideIcons.clock, size: 15, color: Color(0xFF4F46E5))),
+                        leading: Container(width: 34, height: 34, decoration: BoxDecoration(color: const Color(0xFFE0E7FF), borderRadius: BorderRadius.circular(11)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedClock01, size: 15, color: Color(0xFF4F46E5)))),
                         title: Text(a['name'] as String, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
                       )).toList(),
                 ),
@@ -139,7 +139,7 @@ class _BodyState extends State<_Body> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(children: [const Icon(LucideIcons.heart, size: 16, color: AppColors.saffron500), const SizedBox(width: 8), Text('Leave Feedback', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary))]),
+              Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedFavourite, size: 16, color: AppColors.saffron500), const SizedBox(width: 8), Text('Leave Feedback', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary))]),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,

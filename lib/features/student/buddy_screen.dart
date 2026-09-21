@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -72,7 +72,7 @@ class _BodyState extends State<_Body> {
       SectionCard(
         padding: const EdgeInsets.all(20),
         child: groupmates.isEmpty
-            ? const EmptyView(title: 'No group assigned yet', subtitle: 'Ask your teacher to add you to a buddy/GRS group.', icon: LucideIcons.userPlus)
+            ? const EmptyView(title: 'No group assigned yet', subtitle: 'Ask your teacher to add you to a buddy/GRS group.', icon: HugeIcons.strokeRoundedUserAdd01)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -140,7 +140,7 @@ class _BodyState extends State<_Body> {
           Text('Session History', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
           const SizedBox(height: 10),
           if (sessions.isEmpty)
-            const SectionCard(child: EmptyView(title: 'No sessions logged yet', icon: LucideIcons.users))
+            const SectionCard(child: EmptyView(title: 'No sessions logged yet', icon: HugeIcons.strokeRoundedUserGroup))
           else
             Column(
               children: sessions.map((sess) {
@@ -155,7 +155,7 @@ class _BodyState extends State<_Body> {
                           width: 34,
                           height: 34,
                           decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(LucideIcons.users, size: 16, color: AppColors.saffron600),
+                          child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: 16, color: AppColors.saffron600)),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

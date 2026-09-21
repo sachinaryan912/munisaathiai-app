@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/csv_export.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/list_search_field.dart';
@@ -27,6 +28,7 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
   bool _selectionMode = false;
   final Set<int> _selectedIds = {};
   bool _bulkWorking = false;
+  bool _migrationNoticeSending = false;
 
   void _toggleSelectionMode() => setState(() {
         _selectionMode = !_selectionMode;
@@ -100,6 +102,44 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
     }
   }
 
+  Future<void> _notifyUsernameMigration() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Notify username migration?'),
+        content: const Text(
+          "This emails every already-onboarded account the username it was assigned "
+          "(login now requires a username instead of email). It's a one-time notice — "
+          "only run this once, right after the username migration.",
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Send')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _migrationNoticeSending = true);
+    try {
+      final result = await _repo.notifyUsernameMigration();
+      final sent = result['sent'] as int? ?? 0;
+      final total = result['total'] as int? ?? 0;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: sent < total ? AppColors.danger : null,
+          content: Text(sent < total
+              ? 'Sent to $sent of $total accounts — some emails failed, check server logs.'
+              : 'Sent to $sent account${sent == 1 ? '' : 's'}.'),
+        ));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _migrationNoticeSending = false);
+    }
+  }
+
   Future<void> _toggleBlock(Map<String, dynamic> user, Future<void> Function() refresh) async {
     final enabled = user['enabled'] as bool? ?? true;
     try {
@@ -120,8 +160,19 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
       title: 'Users',
       showAiFab: false,
       actions: [
+        if (_migrationNoticeSending)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else
+          IconButton(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMail01, size: 20, color: AppColors.saffron600),
+            tooltip: 'Notify username migration',
+            onPressed: _notifyUsernameMigration,
+          ),
         IconButton(
-          icon: Icon(_selectionMode ? LucideIcons.x : LucideIcons.checkCheck),
+          icon: HugeIcon(icon: _selectionMode ? HugeIcons.strokeRoundedCancel01 : HugeIcons.strokeRoundedCheckmarkSquare02, size: 20, color: AppColors.saffron600),
           tooltip: _selectionMode ? 'Cancel selection' : 'Select multiple',
           onPressed: _toggleSelectionMode,
         ),
@@ -149,7 +200,7 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
                       children: [
                         Expanded(child: ListSearchField(controller: _searchCtrl, hint: 'Search by name or email', onChanged: (v) => setState(() => _query = v))),
                         const SizedBox(width: 8),
-                        IconButton(icon: const Icon(LucideIcons.download), tooltip: 'Export CSV', onPressed: () => _export(filtered)),
+                        IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedDownload01, size: 20, color: AppColors.saffron500), tooltip: 'Export CSV', onPressed: () => _export(filtered)),
                       ],
                     ),
                   ),
@@ -169,7 +220,7 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
                   ),
                   Expanded(
                     child: filtered.isEmpty
-                        ? EmptyView(title: q.isEmpty ? 'No users found' : 'No users match your search', icon: LucideIcons.userCog)
+                        ? EmptyView(title: q.isEmpty ? 'No users found' : 'No users match your search', icon: HugeIcons.strokeRoundedUserSettings01)
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
                             itemCount: filtered.length,
@@ -210,9 +261,9 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
                                       const SizedBox(height: 10),
                                       Row(
                                         children: [
-                                          _ActionBtn(icon: LucideIcons.pencil, label: 'Edit', onTap: () => _edit(u, refresh)),
-                                          _ActionBtn(icon: LucideIcons.keyRound, label: 'Reset PW', onTap: () => _resetPassword(u)),
-                                          _ActionBtn(icon: enabled ? LucideIcons.ban : LucideIcons.circleCheck, label: enabled ? 'Block' : 'Unblock', color: enabled ? AppColors.danger : AppColors.success, onTap: () => _toggleBlock(u, refresh)),
+                                          _ActionBtn(icon: HugeIcons.strokeRoundedEdit02, label: 'Edit', onTap: () => _edit(u, refresh)),
+                                          _ActionBtn(icon: HugeIcons.strokeRoundedKey01, label: 'Reset PW', onTap: () => _resetPassword(u)),
+                                          _ActionBtn(icon: enabled ? HugeIcons.strokeRoundedUnavailable : HugeIcons.strokeRoundedCheckmarkCircle02, label: enabled ? 'Block' : 'Unblock', color: enabled ? AppColors.danger : AppColors.success, onTap: () => _toggleBlock(u, refresh)),
                                         ],
                                       ),
                                     ],
@@ -263,7 +314,7 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
 }
 
 class _ActionBtn extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final Color? color;
   final VoidCallback onTap;
@@ -279,7 +330,7 @@ class _ActionBtn extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(children: [Icon(icon, size: 15, color: c), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: c))]),
+          child: Column(children: [AppIcon(icon, size: 15, color: c), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: c))]),
         ),
       ),
     );

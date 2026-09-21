@@ -4,6 +4,7 @@
 class AppUser {
   final int id;
   final String fullName;
+  final String username;
   final String email;
   final String phone;
   final String role;
@@ -21,6 +22,7 @@ class AppUser {
   AppUser({
     required this.id,
     required this.fullName,
+    required this.username,
     required this.email,
     required this.phone,
     required this.role,
@@ -39,6 +41,7 @@ class AppUser {
     return AppUser(
       id: (json['id'] as num).toInt(),
       fullName: json['fullName'] as String? ?? '',
+      username: json['username'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String? ?? '',
@@ -55,6 +58,7 @@ class AppUser {
   Map<String, dynamic> toJson() => {
         'id': id,
         'fullName': fullName,
+        'username': username,
         'email': email,
         'phone': phone,
         'role': role,
@@ -83,6 +87,7 @@ class AppUser {
     return AppUser(
       id: id,
       fullName: fullName ?? this.fullName,
+      username: username,
       email: email,
       phone: phone ?? this.phone,
       role: role,

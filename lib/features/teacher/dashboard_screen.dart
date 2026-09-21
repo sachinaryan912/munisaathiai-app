@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -28,7 +28,10 @@ class TeacherDashboardScreen extends StatelessWidget {
       title: '',
       isDashboard: true,
       dashboardSubtitle: "Here's your class today.",
-      body: AsyncScreen<Map<String, dynamic>>(loader: repo.getDashboard, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
+      body: AsyncScreen<Map<String, dynamic>>(
+        loader: repo.getDashboard,
+        builder: (context, data, refresh) => _Body(data: data, repo: repo),
+      ),
     );
   }
 }
@@ -59,7 +62,7 @@ class _BodyState extends State<_Body> {
       final existing = await widget.repo.getDailyReport();
       if (existing['exists'] == true && mounted) setState(() => _report = existing);
     } catch (_) {
-      // No stored report yet (or a transient error) — leave the "Generate Report" button showing.
+      // No stored report yet
     }
   }
 
@@ -95,6 +98,7 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final data = widget.data;
     final studentsCount = data['studentsCount'] as int? ?? 0;
     final evidenceToday = data['evidenceToday'] as num? ?? 0;
@@ -104,13 +108,14 @@ class _BodyState extends State<_Body> {
     final recentEvidence = (data['recentEvidence'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return ListView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
         SectionCard(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              ProgressRing(value: implementationPercent, color: AppColors.roleColor('TEACHER'), subLabel: 'Today', radius: 42),
+              ProgressRing(value: implementationPercent, color: AppColors.roleColor('TEACHER'), subLabel: 'Today', radius: 40),
               const SizedBox(width: 18),
               Expanded(
                 child: Column(
@@ -125,33 +130,33 @@ class _BodyState extends State<_Body> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
           childAspectRatio: 1.5,
           children: [
-            StatTile(label: 'My Students', value: '$studentsCount', icon: LucideIcons.users, color: AppColors.roleColor('TEACHER'), animateIndex: 0),
-            StatTile(label: 'Evidence Today', value: '$evidenceToday', icon: LucideIcons.bookOpen, color: const Color(0xFF6366F1), animateIndex: 1),
+            StatTile(label: 'My Students', value: '$studentsCount', icon: HugeIcons.strokeRoundedUserGroup, color: AppColors.roleColor('TEACHER'), animateIndex: 0),
+            StatTile(label: 'Evidence Today', value: '$evidenceToday', icon: HugeIcons.strokeRoundedBookOpen01, color: const Color(0xFF6366F1), animateIndex: 1),
           ],
         ),
-        const SizedBox(height: 22),
-        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 20),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
         const SizedBox(height: 10),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.05,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.08,
           children: [
             QuickAccessCard(
               onTap: () => showMyActionPlansSheet(context),
-              icon: LucideIcons.clipboardList,
+              icon: HugeIcons.strokeRoundedTask01,
               color: const Color(0xFF0EA5E9),
               title: 'Action Plan',
               subtitle: 'Corrective tasks and follow-ups assigned to you',
@@ -159,17 +164,25 @@ class _BodyState extends State<_Body> {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-              icon: LucideIcons.globe,
+              icon: HugeIcons.strokeRoundedGlobe02,
               color: const Color(0xFF14B8A6),
               title: 'Community Hub',
               subtitle: 'Wakeup Call Board, events, workshops & clubs',
               cta: 'Explore',
             ),
+            QuickAccessCard(
+              route: '/teacher/videos',
+              icon: HugeIcons.strokeRoundedVideo01,
+              color: const Color(0xFFDC2626),
+              title: 'Video Gallery',
+              subtitle: 'Browse unlisted YouTube videos from Management',
+              cta: 'Watch Videos',
+            ),
           ],
         ),
         if (pending.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          Text('Not Yet Logged Today', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+          const SizedBox(height: 20),
+          Text('Not Yet Logged Today', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
           const SizedBox(height: 10),
           SectionCard(
             child: Wrap(
@@ -179,13 +192,13 @@ class _BodyState extends State<_Body> {
             ),
           ),
         ],
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                const Icon(LucideIcons.sparkles, size: 17, color: AppColors.saffron500),
+                const HugeIcon(icon: HugeIcons.strokeRoundedAiMagic, size: 17, color: AppColors.saffron500),
                 const SizedBox(width: 8),
                 Text('AI Daily Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
               ]),
@@ -203,7 +216,7 @@ class _BodyState extends State<_Body> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: _generateReport,
-                    icon: const Icon(LucideIcons.refreshCw, size: 14),
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 14, color: AppColors.saffron500),
                     label: const Text('Regenerate', style: TextStyle(fontSize: 12)),
                   ),
                 ),
@@ -213,34 +226,39 @@ class _BodyState extends State<_Body> {
           ),
         ),
         if (recentEvidence.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          Text('Recent Evidence', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+          const SizedBox(height: 20),
+          Text('Recent Evidence', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
           const SizedBox(height: 10),
           SectionCard(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.zero,
             child: Column(
-              children: recentEvidence.map((e) {
-                final id = e['id'] as int;
-                return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    onTap: _openingEvidenceId == id ? null : () => _viewEvidence(id, e['fileName'] as String),
+              children: [
+                for (int i = 0; i < recentEvidence.length; i++) ...[
+                  if (i > 0)
+                    Divider(height: 1, indent: 52, endIndent: 16, color: dark ? const Color(0xFF262E3D) : const Color(0xFFE5E7EB)),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    onTap: _openingEvidenceId == recentEvidence[i]['id'] ? null : () => _viewEvidence(recentEvidence[i]['id'] as int, recentEvidence[i]['fileName'] as String),
                     leading: Container(
                       width: 34,
                       height: 34,
-                      decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(11)),
-                      child: _openingEvidenceId == id
+                      decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(10)),
+                      child: _openingEvidenceId == recentEvidence[i]['id']
                           ? const Padding(padding: EdgeInsets.all(9), child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(LucideIcons.fileCheck, size: 15, color: AppColors.saffron600),
+                          : const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedDocumentValidation, size: 16, color: AppColors.saffron600)),
                     ),
-                    title: Text(e['methodology'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
-                    subtitle: Text(e['fileName'] as String, maxLines: 1, style: TextStyle(fontSize: 10.5, color: s.textMuted), overflow: TextOverflow.ellipsis),
-                    trailing: (e['trainerVerified'] as bool? ?? false) ? const Icon(LucideIcons.circleCheck, size: 16, color: AppColors.success) : Icon(LucideIcons.clock, size: 15, color: s.textMuted),
-                  );
-              }).toList(),
+                    title: Text(recentEvidence[i]['methodology'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                    subtitle: Text(recentEvidence[i]['fileName'] as String, maxLines: 1, style: TextStyle(fontSize: 10.5, color: s.textMuted), overflow: TextOverflow.ellipsis),
+                    trailing: (recentEvidence[i]['trainerVerified'] as bool? ?? false)
+                        ? const HugeIcon(icon: HugeIcons.strokeRoundedTick02, size: 16, color: AppColors.success)
+                        : HugeIcon(icon: HugeIcons.strokeRoundedClock01, size: 15, color: s.textMuted),
+                  ),
+                ],
+              ],
             ),
           ),
         ] else
-          const EmptyView(title: 'No evidence uploaded yet', icon: LucideIcons.bookOpen),
+          const EmptyView(title: 'No evidence uploaded yet', icon: Icons.book_outlined),
       ],
     );
   }
@@ -261,13 +279,13 @@ class _ReportView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (implemented.isNotEmpty) ...[
-          Text('✓ Implemented', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.success)),
+          const Text('✓ Implemented', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.success)),
           const SizedBox(height: 6),
           ...implemented.map((i) => Padding(padding: const EdgeInsets.only(bottom: 4), child: Text('${i['methodology']}: ${i['note']}', style: TextStyle(fontSize: 12, color: s.textSecondary)))),
           const SizedBox(height: 10),
         ],
         if (gaps.isNotEmpty) ...[
-          Text('✗ Gaps', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.danger)),
+          const Text('✗ Gaps', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.danger)),
           const SizedBox(height: 6),
           ...gaps.map((g) => Padding(padding: const EdgeInsets.only(bottom: 4), child: Text('${g['methodology']}: ${g['note']}', style: TextStyle(fontSize: 12, color: s.textSecondary)))),
           const SizedBox(height: 10),

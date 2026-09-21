@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,6 +9,7 @@ import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/video_fullscreen_scope.dart';
 import '../auth/data/auth_provider.dart';
 import 'video_repository.dart';
 
@@ -133,10 +134,9 @@ class _BodyState extends State<_Body> {
   void _play(Map<String, dynamic> video) {
     final videoId = YoutubePlayer.convertUrlToId(video['youtubeUrl'] as String);
     if (videoId == null) return;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => _VideoPlayerDialog(videoId: videoId),
-    );
+    // A full page rather than a dialog (a dialog can't take over the screen), on the root
+    // navigator so it covers RootTabShell's bottom nav bar instead of opening inside it.
+    Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => _VideoPlayerPage(videoId: videoId)));
   }
 
   Future<void> _delete(int id) async {
@@ -151,6 +151,7 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final role = context.watch<AuthProvider>().user?.role;
     final userId = context.watch<AuthProvider>().user?.id;
     final canAdd = role == 'TRAINER' || role == 'MANAGEMENT';
@@ -158,7 +159,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.videos.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No training videos yet', subtitle: 'Trainers and Management can add YouTube links here.', icon: LucideIcons.tv)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No training videos yet', subtitle: 'Trainers and Management can add YouTube links here.', icon: HugeIcons.strokeRoundedTv01)])
             : ListView.builder(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, canAdd ? 100 : 24),
                 itemCount: widget.videos.length,
@@ -171,7 +172,21 @@ class _BodyState extends State<_Body> {
                       onTap: () => _play(v),
                       child: Row(
                         children: [
-                          Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Icon(LucideIcons.play, size: 18, color: AppColors.saffron600)),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: dark ? AppColors.saffron500.withValues(alpha: 0.18) : AppColors.saffron50,
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Center(
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedPlay,
+                                size: 18,
+                                color: dark ? AppColors.saffron400 : AppColors.saffron600,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -184,7 +199,7 @@ class _BodyState extends State<_Body> {
                             ),
                           ),
                           if (canDelete)
-                            IconButton(icon: Icon(LucideIcons.trash2, size: 16, color: s.textMuted), onPressed: () => _delete(v['id'] as int)),
+                            IconButton(icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: s.textMuted), onPressed: () => _delete(v['id'] as int)),
                         ],
                       ),
                     ),
@@ -192,25 +207,28 @@ class _BodyState extends State<_Body> {
                 },
               ),
         if (canAdd)
-          Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_video', backgroundColor: AppColors.saffron500, onPressed: _openAdd, child: const Icon(Icons.add, color: Colors.white))),
+          Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_video', backgroundColor: AppColors.saffron500, onPressed: _openAdd, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
       ],
     );
   }
 }
 
-/// Owns the [YoutubePlayerController] itself (rather than building one inline
-/// in a dialog builder) so it has a dispose() hook — otherwise the controller
-/// and its underlying WebView outlive the dialog once it's dismissed, leaving
-/// the video (and its audio) still playing in the background.
-class _VideoPlayerDialog extends StatefulWidget {
+/// Owns the [YoutubePlayerController] itself (rather than building one inline in a route
+/// builder) so it has a dispose() hook — otherwise the controller and its underlying WebView
+/// outlive the page once it's dismissed, leaving the video (and its audio) still playing in
+/// the background.
+///
+/// The app is portrait-only; the one exception is this player's fullscreen mode, which
+/// YoutubePlayerBuilder switches to landscape and back.
+class _VideoPlayerPage extends StatefulWidget {
   final String videoId;
-  const _VideoPlayerDialog({required this.videoId});
+  const _VideoPlayerPage({required this.videoId});
 
   @override
-  State<_VideoPlayerDialog> createState() => _VideoPlayerDialogState();
+  State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
 }
 
-class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
+class _VideoPlayerPageState extends State<_VideoPlayerPage> {
   late final YoutubePlayerController _controller = YoutubePlayerController(
     initialVideoId: widget.videoId,
     flags: const YoutubePlayerFlags(autoPlay: true),
@@ -224,9 +242,18 @@ class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: YoutubePlayer(controller: _controller),
+    return VideoFullscreenScope(
+      child: Material(
+        color: Colors.black,
+        child: YoutubePlayerBuilder(
+          player: YoutubePlayer(controller: _controller),
+          builder: (context, player) => Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, elevation: 0),
+            body: Center(child: player),
+          ),
+        ),
+      ),
     );
   }
 }

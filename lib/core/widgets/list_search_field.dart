@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// A search box for filtering an already-loaded list client-side. Pair with a
 /// `String _query = ''` field on the host screen's state and filter the list
@@ -18,11 +18,14 @@ class ListSearchField extends StatelessWidget {
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: const Icon(LucideIcons.search, size: 18),
+        prefixIcon: const Padding(
+          padding: EdgeInsets.all(12),
+          child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, size: 18, color: Colors.grey),
+        ),
         suffixIcon: controller.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(LucideIcons.x, size: 16),
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 16, color: Colors.grey),
                 onPressed: () {
                   controller.clear();
                   onChanged('');

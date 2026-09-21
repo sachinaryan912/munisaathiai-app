@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -117,7 +117,7 @@ class _Body extends StatelessWidget {
           children: [
             QuickAccessCard(
               onTap: () => showMyActionPlansSheet(context),
-              icon: LucideIcons.clipboardList,
+              icon: HugeIcons.strokeRoundedClipboardCheck,
               color: const Color(0xFF0EA5E9),
               title: 'Action Plan',
               subtitle: 'Corrective tasks and follow-ups assigned to you',
@@ -125,11 +125,19 @@ class _Body extends StatelessWidget {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-              icon: LucideIcons.globe,
+              icon: HugeIcons.strokeRoundedGlobe,
               color: const Color(0xFF14B8A6),
               title: 'Community Hub',
               subtitle: 'Wakeup Call Board, events, workshops & clubs',
               cta: 'Explore',
+            ),
+            QuickAccessCard(
+              route: '/parent/videos',
+              icon: HugeIcons.strokeRoundedClapperboard,
+              color: const Color(0xFFDC2626),
+              title: 'Video Gallery',
+              subtitle: 'Browse unlisted YouTube videos from Management',
+              cta: 'Watch Videos',
             ),
           ],
         ),

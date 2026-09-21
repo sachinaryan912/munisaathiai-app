@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -194,7 +194,7 @@ class _BodyState extends State<_Body> {
         const SizedBox(height: 16),
         if (_tab == 'meetings') ...[
           if (widget.meetings.isEmpty)
-            const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No meetings logged yet', icon: LucideIcons.landmark))
+            const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No meetings logged yet', icon: HugeIcons.strokeRoundedCourtHouse))
           else
             ...widget.meetings.map((m) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -215,10 +215,10 @@ class _BodyState extends State<_Body> {
                   ),
                 )),
           const SizedBox(height: 12),
-          GradientButton(label: 'Log Meeting', icon: Icons.add, onPressed: _logMeeting, height: 46),
+          GradientButton(label: 'Log Meeting', icon: HugeIcons.strokeRoundedAdd01, onPressed: _logMeeting, height: 46),
         ] else ...[
           if (widget.activities.isEmpty)
-            const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No activities logged yet', icon: LucideIcons.clipboardList))
+            const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No activities logged yet', icon: HugeIcons.strokeRoundedClipboardCheck))
           else
             ...widget.activities.map((a) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -240,7 +240,7 @@ class _BodyState extends State<_Body> {
                   ),
                 )),
           const SizedBox(height: 12),
-          GradientButton(label: 'Log Activity', icon: Icons.add, onPressed: _logActivity, height: 46),
+          GradientButton(label: 'Log Activity', icon: HugeIcons.strokeRoundedAdd01, onPressed: _logActivity, height: 46),
         ],
       ],
     );

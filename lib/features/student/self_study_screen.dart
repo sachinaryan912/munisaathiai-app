@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -148,7 +148,7 @@ class _Body extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(LucideIcons.bookOpen, size: 16, color: AppColors.saffron600),
+            const HugeIcon(icon: HugeIcons.strokeRoundedBookOpen01, size: 16, color: AppColors.saffron600),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -165,7 +165,7 @@ class _Body extends StatelessWidget {
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: () => _showAddChapterSheet(context, repo, refresh),
-          icon: const Icon(LucideIcons.plus, size: 16),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 16, color: AppColors.saffron600),
           label: const Text('Add a chapter'),
         ),
       ),
@@ -180,7 +180,7 @@ class _Body extends StatelessWidget {
           EmptyView(
             title: 'No chapters yet',
             subtitle: 'Add a chapter to start your first UPLC self-study.',
-            icon: LucideIcons.bookOpen,
+            icon: HugeIcons.strokeRoundedBookOpen01,
           ),
         ],
       );
@@ -274,7 +274,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(color: isDone ? const Color(0xFFD1FAE5) : AppColors.saffron50, borderRadius: BorderRadius.circular(12)),
-                    child: Icon(isDone ? LucideIcons.circleCheck : LucideIcons.bookOpen, size: 17, color: isDone ? const Color(0xFF059669) : AppColors.saffron600),
+                    child: Center(child: HugeIcon(icon: isDone ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedBookOpen01, size: 17, color: isDone ? const Color(0xFF059669) : AppColors.saffron600)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -301,7 +301,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: Icon(LucideIcons.chevronDown, size: 16, color: s.textMuted),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, size: 16, color: s.textMuted),
                   ),
                 ],
               ),
@@ -351,7 +351,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                       onPressed: _saving ? null : _save,
                       icon: _saving
                           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(LucideIcons.check, size: 15),
+                          : const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 15, color: Colors.white),
                       label: const Text('Save'),
                     ),
                   ),

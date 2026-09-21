@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/section_card.dart';
@@ -86,7 +87,7 @@ class _KnowledgeNotesScreenState extends State<KnowledgeNotesScreen> {
       showAiFab: false,
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.fileText),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedNote01, size: 20, color: AppColors.saffron600),
           tooltip: 'View & edit the full knowledge base',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const KnowledgeBaseEditorScreen())),
         ),
@@ -106,7 +107,7 @@ class _KnowledgeNotesScreenState extends State<KnowledgeNotesScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(LucideIcons.brainCircuit, size: 18, color: AppColors.saffron500),
+                          const HugeIcon(icon: HugeIcons.strokeRoundedAiBrain01, size: 18, color: AppColors.saffron500),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -125,7 +126,7 @@ class _KnowledgeNotesScreenState extends State<KnowledgeNotesScreen> {
                         ? const EmptyView(
                             title: 'No training notes yet',
                             subtitle: "Tap + to teach Vidya something that isn't in the knowledge base yet.",
-                            icon: LucideIcons.brainCircuit,
+                            icon: HugeIcons.strokeRoundedAiBrain01,
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
@@ -175,13 +176,13 @@ class _KnowledgeNotesScreenState extends State<KnowledgeNotesScreen> {
                                         const SizedBox(height: 8),
                                         Row(
                                           children: [
-                                            _ActionBtn(icon: LucideIcons.pencil, label: 'Edit', onTap: () => _edit(note, refresh)),
+                                            _ActionBtn(icon: HugeIcons.strokeRoundedEdit02, label: 'Edit', onTap: () => _edit(note, refresh)),
                                             _ActionBtn(
-                                              icon: active ? LucideIcons.eyeOff : LucideIcons.eye,
+                                              icon: active ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
                                               label: active ? 'Turn off' : 'Turn on',
                                               onTap: () => _toggleActive(note, refresh),
                                             ),
-                                            _ActionBtn(icon: LucideIcons.trash2, label: 'Remove', color: AppColors.danger, onTap: () => _delete(note, refresh)),
+                                            _ActionBtn(icon: HugeIcons.strokeRoundedDelete02, label: 'Remove', color: AppColors.danger, onTap: () => _delete(note, refresh)),
                                           ],
                                         ),
                                       ],
@@ -213,7 +214,7 @@ class _KnowledgeNotesScreenState extends State<KnowledgeNotesScreen> {
 }
 
 class _ActionBtn extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final Color? color;
   final VoidCallback onTap;
@@ -229,7 +230,7 @@ class _ActionBtn extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(children: [Icon(icon, size: 15, color: c), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: c))]),
+          child: Column(children: [AppIcon(icon, size: 15, color: c), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: c))]),
         ),
       ),
     );

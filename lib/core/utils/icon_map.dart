@@ -1,52 +1,51 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
-/// Maps lucide-react icon name strings sent by the backend (badges, stat
-/// cards, recent-activity feeds, notifications) to lucide_icons_flutter
-/// equivalents. Falls back to a generic dot icon for anything unmapped.
-IconData lucideByName(String? name) {
+/// Maps icon name strings sent by the backend (badges, stat
+/// cards, recent-activity feeds, notifications) to HugeIcons
+/// equivalents. Falls back to a generic circle icon for anything unmapped.
+dynamic lucideByName(String? name) {
   switch (name) {
     case 'Users':
-      return LucideIcons.users;
+      return HugeIcons.strokeRoundedUserGroup;
     case 'BookOpen':
-      return LucideIcons.bookOpen;
+      return HugeIcons.strokeRoundedBookOpen01;
     case 'TrendingUp':
-      return LucideIcons.trendingUp;
+      return HugeIcons.strokeRoundedTradeUp;
     case 'Star':
-      return LucideIcons.star;
+      return HugeIcons.strokeRoundedStar;
     case 'FileCheck':
-      return LucideIcons.fileCheck;
+      return HugeIcons.strokeRoundedFileCheck;
     case 'GraduationCap':
-      return LucideIcons.graduationCap;
+      return HugeIcons.strokeRoundedGraduationScroll;
     case 'Heart':
-      return LucideIcons.heart;
+      return HugeIcons.strokeRoundedFavourite;
     case 'MessageSquareText':
-      return LucideIcons.messageSquareText;
+      return HugeIcons.strokeRoundedComment01;
     case 'CalendarCheck':
-      return LucideIcons.calendarCheck;
+      return HugeIcons.strokeRoundedCalendarCheck01;
     case 'AlertTriangle':
-      return LucideIcons.triangleAlert;
+      return HugeIcons.strokeRoundedAlertCircle;
     case 'CheckCircle':
-      return LucideIcons.circleCheck;
+      return HugeIcons.strokeRoundedCheckmarkCircle02;
     case 'School':
-      return LucideIcons.school;
+      return HugeIcons.strokeRoundedSchool;
     case 'ClipboardList':
-      return LucideIcons.clipboardList;
+      return HugeIcons.strokeRoundedClipboardCheck;
     case 'BarChart3':
-      return LucideIcons.barChart3;
+      return HugeIcons.strokeRoundedAnalytics01;
     case 'Sparkles':
-      return LucideIcons.sparkles;
+      return HugeIcons.strokeRoundedSparkles;
     case 'Bell':
-      return LucideIcons.bell;
+      return HugeIcons.strokeRoundedNotification02;
     case 'Award':
-      return LucideIcons.award;
+      return HugeIcons.strokeRoundedAward01;
     case 'Download':
-      return LucideIcons.download;
+      return HugeIcons.strokeRoundedDownload01;
     case 'Eye':
-      return LucideIcons.eye;
+      return HugeIcons.strokeRoundedView;
     case 'Zap':
-      return LucideIcons.zap;
+      return HugeIcons.strokeRoundedEnergy;
     default:
-      return LucideIcons.circle;
+      return HugeIcons.strokeRoundedCircle;
   }
 }

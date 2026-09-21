@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_typography.dart';
+import 'app_icon.dart';
 
 class EmptyView extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final IconData icon;
+  final dynamic icon;
   final Widget? action;
 
   const EmptyView({
     super.key,
     required this.title,
     this.subtitle,
-    this.icon = LucideIcons.inbox,
+    this.icon = HugeIcons.strokeRoundedInbox,
     this.action,
   });
 
@@ -31,7 +32,7 @@ class EmptyView extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(color: s.surfaceVariant, shape: BoxShape.circle),
-              child: Icon(icon, size: 30, color: s.textMuted),
+              child: Center(child: AppIcon(icon, size: 30, color: s.textMuted)),
             ),
             const SizedBox(height: 16),
             Text(title, style: AppTypography.headline(s.textPrimary), textAlign: TextAlign.center),

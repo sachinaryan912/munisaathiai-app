@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -24,7 +24,7 @@ class PrincipalAttendanceReportScreen extends StatelessWidget {
       title: 'Attendance Report',
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.trendingUp),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedTradeUp, size: 20, color: AppColors.saffron600),
           tooltip: 'Attendance Trends',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrincipalAttendanceTrendsScreen())),
         ),
@@ -33,7 +33,7 @@ class PrincipalAttendanceReportScreen extends StatelessWidget {
         loader: repo.getClasses,
         builder: (context, classes, refresh) {
           if (classes.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No classes found', icon: LucideIcons.school)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No classes found', icon: HugeIcons.strokeRoundedSchool)]);
           }
           return _Body(classes: classes, repo: repo);
         },
@@ -124,7 +124,7 @@ class _BodyState extends State<_Body> {
                   decoration: BoxDecoration(border: Border.all(color: s.border), borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
-                      Icon(LucideIcons.calendarRange, size: 16, color: s.textMuted),
+                      HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: s.textMuted),
                       const SizedBox(width: 8),
                       Text('${dateFmt.format(_range.start)} — ${dateFmt.format(_range.end)}', style: TextStyle(fontSize: 12.5, color: s.textPrimary)),
                     ],
@@ -132,7 +132,7 @@ class _BodyState extends State<_Body> {
                 ),
               ),
               const SizedBox(height: 16),
-              GradientButton(label: 'Generate Report', icon: Icons.auto_awesome, onPressed: _generate, loading: _loading, height: 46),
+              GradientButton(label: 'Generate Report', icon: HugeIcons.strokeRoundedSparkles, onPressed: _generate, loading: _loading, height: 46),
             ],
           ),
         ),

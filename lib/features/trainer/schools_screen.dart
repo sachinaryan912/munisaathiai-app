@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -24,7 +24,7 @@ class TrainerSchoolsScreen extends StatelessWidget {
         builder: (context, schools, refresh) {
           final s = context.surface;
           if (schools.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No schools assigned yet', icon: LucideIcons.school)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No schools assigned yet', icon: HugeIcons.strokeRoundedSchool)]);
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
@@ -47,7 +47,7 @@ class TrainerSchoolsScreen extends StatelessWidget {
                             Text('${sc['district']} · ${sc['phase']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
                             const SizedBox(height: 6),
                             Row(children: [
-                              Icon(trend >= 0 ? LucideIcons.trendingUp : LucideIcons.trendingDown, size: 12, color: trend >= 0 ? AppColors.success : AppColors.danger),
+                              HugeIcon(icon: trend >= 0 ? HugeIcons.strokeRoundedTrendingUp : HugeIcons.strokeRoundedTrendingDown, size: 12, color: trend >= 0 ? AppColors.success : AppColors.danger),
                               const SizedBox(width: 3),
                               Text('${trend >= 0 ? '+' : ''}$trend this month', style: TextStyle(fontSize: 10.5, color: trend >= 0 ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w700)),
                               Text(' · ${sc['teacherCount']} teachers · ${sc['studentCount']} students', style: TextStyle(fontSize: 10.5, color: s.textMuted)),

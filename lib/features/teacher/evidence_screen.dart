@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -140,7 +140,7 @@ class _BodyState extends State<_Body> {
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
                         child: Row(
                           children: [
-                            Icon(file != null ? LucideIcons.fileCheck : LucideIcons.upload, color: AppColors.saffron600, size: 20),
+                            HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: AppColors.saffron600, size: 20),
                             const SizedBox(width: 10),
                             Expanded(child: Text(file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo, video or PDF', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary), overflow: TextOverflow.ellipsis)),
                           ],
@@ -220,7 +220,7 @@ class _BodyState extends State<_Body> {
                       EmptyView(
                         title: widget.list.isEmpty ? 'No evidence uploaded yet' : 'No evidence matches your search',
                         subtitle: widget.list.isEmpty ? 'Tap + to upload your first piece of evidence.' : null,
-                        icon: LucideIcons.bookOpen,
+                        icon: HugeIcons.strokeRoundedBookOpen01,
                       ),
                     ])
                   : ListView.builder(
@@ -253,7 +253,7 @@ class _BodyState extends State<_Body> {
                                 decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)),
                                 child: _openingId == id
                                     ? const Padding(padding: EdgeInsets.all(11), child: CircularProgressIndicator(strokeWidth: 2))
-                                    : Icon(isVideo ? LucideIcons.video : LucideIcons.fileCheck, size: 18, color: AppColors.saffron600),
+                                    : Center(child: HugeIcon(icon: isVideo ? HugeIcons.strokeRoundedVideo01 : HugeIcons.strokeRoundedFileCheck, size: 18, color: AppColors.saffron600)),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -266,7 +266,7 @@ class _BodyState extends State<_Body> {
                                 ),
                               ),
                               if (trainerVerified)
-                                const Icon(LucideIcons.circleCheck, size: 18, color: AppColors.success)
+                                const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 18, color: AppColors.success)
                               else
                                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: AppColors.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(99)), child: const Text('Pending review', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.warning))),
                             ],
@@ -299,7 +299,7 @@ class _BodyState extends State<_Body> {
                               width: double.infinity,
                               child: OutlinedButton.icon(
                                 onPressed: _analyzingId == id ? null : () => _analyze(id),
-                                icon: _analyzingId == id ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.sparkles, size: 15),
+                                icon: _analyzingId == id ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const HugeIcon(icon: HugeIcons.strokeRoundedSparkles, size: 15, color: AppColors.saffron600),
                                 label: Text(_analyzingId == id ? 'Analyzing...' : 'Analyze with AI'),
                                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                               ),
@@ -317,7 +317,7 @@ class _BodyState extends State<_Body> {
         Positioned(
           right: 16,
           bottom: 16,
-          child: FloatingActionButton(heroTag: 'upload_evidence', backgroundColor: AppColors.saffron500, onPressed: _openUpload, child: const Icon(Icons.add, color: Colors.white)),
+          child: FloatingActionButton(heroTag: 'upload_evidence', backgroundColor: AppColors.saffron500, onPressed: _openUpload, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white)),
         ),
       ],
     );

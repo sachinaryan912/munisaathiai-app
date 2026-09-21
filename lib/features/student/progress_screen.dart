@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
@@ -56,10 +56,10 @@ class _Body extends StatelessWidget {
         crossAxisSpacing: 12,
         childAspectRatio: 1.35,
         children: [
-          StatTile(label: 'Overall Score', value: '$overallScore%', icon: LucideIcons.trendingUp, color: AppColors.saffron500, animateIndex: 0),
-          StatTile(label: 'Class Rank', value: classRank != null ? '#${classRank['rank']}' : '—', sublabel: classRank != null ? 'of ${classRank['total']}' : null, icon: LucideIcons.award, color: const Color(0xFF6366F1), animateIndex: 1),
-          StatTile(label: 'Attendance', value: attendance != null ? '$attendance%' : '—', icon: LucideIcons.calendarCheck, color: const Color(0xFF10B981), animateIndex: 2),
-          StatTile(label: 'Milestones', value: '$milestones', icon: LucideIcons.medal, color: const Color(0xFF8B5CF6), animateIndex: 3),
+          StatTile(label: 'Overall Score', value: '$overallScore%', icon: HugeIcons.strokeRoundedTrendingUp, color: AppColors.saffron500, animateIndex: 0),
+          StatTile(label: 'Class Rank', value: classRank != null ? '#${classRank['rank']}' : '—', sublabel: classRank != null ? 'of ${classRank['total']}' : null, icon: HugeIcons.strokeRoundedAward01, color: const Color(0xFF6366F1), animateIndex: 1),
+          StatTile(label: 'Attendance', value: attendance != null ? '$attendance%' : '—', icon: HugeIcons.strokeRoundedCalendarCheck01, color: const Color(0xFF10B981), animateIndex: 2),
+          StatTile(label: 'Milestones', value: '$milestones', icon: HugeIcons.strokeRoundedMedal01, color: const Color(0xFF8B5CF6), animateIndex: 3),
         ],
       ),
       if (trend.isNotEmpty)
@@ -133,7 +133,7 @@ class _Body extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(child: Text(subj['name'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary))),
-                            Icon(aboveAvg ? LucideIcons.trendingUp : LucideIcons.trendingDown, size: 13, color: aboveAvg ? AppColors.success : AppColors.warning),
+                            HugeIcon(icon: aboveAvg ? HugeIcons.strokeRoundedTrendingUp : HugeIcons.strokeRoundedTrendingDown, size: 13, color: aboveAvg ? AppColors.success : AppColors.warning),
                             const SizedBox(width: 4),
                             Text('$score', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary)),
                           ],
@@ -168,7 +168,7 @@ class _Body extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Icon(LucideIcons.award, size: 15, color: AppColors.saffron500),
+              const HugeIcon(icon: HugeIcons.strokeRoundedAward01, size: 15, color: AppColors.saffron500),
               const SizedBox(width: 6),
               Text('My Badges', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
             ]),
@@ -211,7 +211,7 @@ class _Body extends StatelessWidget {
           Text('Teacher Notes', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
           const SizedBox(height: 10),
           if (notes.isEmpty)
-            const SectionCard(child: EmptyView(title: 'No notes yet', subtitle: 'Your teacher hasn\'t left any notes.', icon: LucideIcons.notebookPen))
+            const SectionCard(child: EmptyView(title: 'No notes yet', subtitle: 'Your teacher hasn\'t left any notes.', icon: HugeIcons.strokeRoundedNotebookPen))
           else
             SectionCard(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -220,7 +220,7 @@ class _Body extends StatelessWidget {
                   final teacher = n['teacher'] as Map<String, dynamic>?;
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    leading: const CircleAvatar(radius: 16, backgroundColor: AppColors.saffron100, child: Icon(LucideIcons.notebookPen, size: 14, color: AppColors.saffron700)),
+                    leading: const CircleAvatar(radius: 16, backgroundColor: AppColors.saffron100, child: HugeIcon(icon: HugeIcons.strokeRoundedNotebookPen, size: 14, color: AppColors.saffron700)),
                     title: Text(n['content'] as String, style: TextStyle(fontSize: 12.5, color: s.textPrimary, height: 1.4)),
                     subtitle: Text('${teacher?['fullName'] ?? 'Teacher'} · ${timeAgo(DateTime.tryParse(n['createdAt'] as String? ?? ''))}', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
                   );

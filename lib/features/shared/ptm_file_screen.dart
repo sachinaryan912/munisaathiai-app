@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -48,7 +49,7 @@ class PtmFileScreen extends StatelessWidget {
               PdfDownloadButton(fileName: 'ptm_file.pdf', download: () => repo.downloadPtmFilePdf(studentId)),
               const SizedBox(height: 20),
 
-              _Section(title: 'Subject Reports', icon: LucideIcons.bookOpen, empty: subjects.isEmpty,
+              _Section(title: 'Subject Reports', icon: HugeIcons.strokeRoundedBookOpen01, empty: subjects.isEmpty,
                 child: Column(children: subjects.map((sub) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(children: [
@@ -57,21 +58,21 @@ class PtmFileScreen extends StatelessWidget {
                       ]),
                     )).toList())),
 
-              _Section(title: 'Timetable', icon: LucideIcons.calendarClock, empty: timetable.isEmpty,
+              _Section(title: 'Timetable', icon: HugeIcons.strokeRoundedCalendar03, empty: timetable.isEmpty,
                 child: Column(children: timetable.map((t) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Text('${t['dayOfWeek']} P${t['periodNumber']}: ${t['subject']} (${t['startTime']}–${t['endTime']})', style: TextStyle(fontSize: 11.5, color: s.textSecondary)),
                     )).toList())),
 
-              _Section(title: 'Extracurricular', icon: LucideIcons.usersRound, empty: false,
+              _Section(title: 'Extracurricular', icon: HugeIcons.strokeRoundedUserGroup, empty: false,
                 child: Text(data['extracurricularClub'] as String, style: TextStyle(fontSize: 12.5, color: s.textSecondary))),
 
-              _OpinionSection(title: 'Feedback / Complaints', icon: LucideIcons.messageSquare, items: asStringList('feedbackComplaints')),
-              _OpinionSection(title: "Parents' Thoughts", icon: LucideIcons.heart, items: asStringList('parentsThoughts')),
-              _OpinionSection(title: 'Community Opinion', icon: LucideIcons.house, items: asStringList('communityOpinion')),
-              _OpinionSection(title: 'Work Done (½ km / Define Yourself)', icon: LucideIcons.megaphone, items: asStringList('workInHalfKm')),
-              _OpinionSection(title: 'Buddy Opinion', icon: LucideIcons.userCheck, items: asStringList('buddyOpinion')),
-              _OpinionSection(title: "Teachers' Opinion", icon: LucideIcons.graduationCap, items: asStringList('teachersOpinion')),
+              _OpinionSection(title: 'Feedback / Complaints', icon: HugeIcons.strokeRoundedComment01, items: asStringList('feedbackComplaints')),
+              _OpinionSection(title: "Parents' Thoughts", icon: HugeIcons.strokeRoundedFavourite, items: asStringList('parentsThoughts')),
+              _OpinionSection(title: 'Community Opinion', icon: HugeIcons.strokeRoundedHome01, items: asStringList('communityOpinion')),
+              _OpinionSection(title: 'Work Done (½ km / Define Yourself)', icon: HugeIcons.strokeRoundedMegaphone01, items: asStringList('workInHalfKm')),
+              _OpinionSection(title: 'Buddy Opinion', icon: HugeIcons.strokeRoundedUserCheck01, items: asStringList('buddyOpinion')),
+              _OpinionSection(title: "Teachers' Opinion", icon: HugeIcons.strokeRoundedGraduationScroll, items: asStringList('teachersOpinion')),
             ],
           );
         },
@@ -82,7 +83,7 @@ class PtmFileScreen extends StatelessWidget {
 
 class _Section extends StatelessWidget {
   final String title;
-  final IconData icon;
+  final dynamic icon;
   final bool empty;
   final Widget child;
   const _Section({required this.title, required this.icon, required this.empty, required this.child});
@@ -95,7 +96,7 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [Icon(icon, size: 15, color: AppColors.saffron600), const SizedBox(width: 6), Text(title, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary))]),
+          Row(children: [AppIcon(icon, size: 15, color: AppColors.saffron600), const SizedBox(width: 6), Text(title, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary))]),
           const SizedBox(height: 8),
           SectionCard(child: empty ? Text('No data yet.', style: TextStyle(fontSize: 11.5, color: s.textMuted)) : child),
         ],
@@ -106,7 +107,7 @@ class _Section extends StatelessWidget {
 
 class _OpinionSection extends StatelessWidget {
   final String title;
-  final IconData icon;
+  final dynamic icon;
   final List<String> items;
   const _OpinionSection({required this.title, required this.icon, required this.items});
 

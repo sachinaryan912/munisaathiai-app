@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/csv_export.dart';
@@ -75,7 +75,7 @@ class _ManagementMiiScreenState extends State<ManagementMiiScreen> {
               Row(
                 children: [
                   Expanded(child: Text('Comparative — All Schools', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary))),
-                  IconButton(icon: const Icon(LucideIcons.download, size: 19), tooltip: 'Export CSV', onPressed: schools.isEmpty ? null : () => _export(schools)),
+                  IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedDownload01, size: 19, color: AppColors.saffron500), tooltip: 'Export CSV', onPressed: schools.isEmpty ? null : () => _export(schools)),
                 ],
               ),
               const SizedBox(height: 10),
@@ -86,41 +86,44 @@ class _ManagementMiiScreenState extends State<ManagementMiiScreen> {
               if (schools.isEmpty)
                 Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text('No schools match your search.', style: TextStyle(fontSize: 12, color: s.textMuted)))
               else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columnSpacing: 18,
-                  headingRowHeight: 36,
-                  dataRowMinHeight: 44,
-                  dataRowMaxHeight: 52,
-                  columns: const [
-                    DataColumn(label: Text('School', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('MII', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Training', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Classroom', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Evidence', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Particip.', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Buddy/GRS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Parent', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Academic', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                    DataColumn(label: Text('Reporting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-                  ],
-                  rows: schools.map((sc) {
-                    return DataRow(cells: [
-                      DataCell(Text(sc['name'] as String, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: s.textPrimary))),
-                      DataCell(Text('${sc['miiScore']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: statusColor(sc['status'] as String?)))),
-                      DataCell(Text('${sc['trainingScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['classroomScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['evidenceScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['participationScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['buddyGrsScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['parentScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['academicScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                      DataCell(Text('${sc['reportingScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
-                    ]);
-                  }).toList(),
+                SectionCard(
+                  padding: EdgeInsets.zero,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 18,
+                      headingRowHeight: 38,
+                      dataRowMinHeight: 44,
+                      dataRowMaxHeight: 52,
+                      columns: const [
+                        DataColumn(label: Text('School', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('MII', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Training', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Classroom', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Evidence', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Particip.', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Buddy/GRS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Parent', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Academic', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                        DataColumn(label: Text('Reporting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+                      ],
+                      rows: schools.map((sc) {
+                        return DataRow(cells: [
+                          DataCell(Text(sc['name'] as String, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: s.textPrimary))),
+                          DataCell(Text('${sc['miiScore']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: statusColor(sc['status'] as String?)))),
+                          DataCell(Text('${sc['trainingScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['classroomScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['evidenceScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['participationScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['buddyGrsScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['parentScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['academicScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                          DataCell(Text('${sc['reportingScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
+                        ]);
+                      }).toList(),
+                    ),
+                  ),
                 ),
-              ),
             ],
           );
         },

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -25,7 +25,10 @@ class PrincipalDashboardScreen extends StatelessWidget {
       title: '',
       isDashboard: true,
       dashboardSubtitle: "Here's how your school is doing today.",
-      body: AsyncScreen<Map<String, dynamic>>(loader: repo.getDashboard, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
+      body: AsyncScreen<Map<String, dynamic>>(
+        loader: repo.getDashboard,
+        builder: (context, data, refresh) => _Body(data: data, repo: repo),
+      ),
     );
   }
 }
@@ -64,20 +67,21 @@ class _BodyState extends State<_Body> {
     final data = widget.data;
     final schoolMii = data['schoolMii'] as int? ?? 0;
     final teacherCount = data['teacherCount'] as int? ?? 0;
-    final classCount = data['classCount'] as num? ?? 0;
+    final classCount = data['classCount'] as int? ?? 0;
     final studentCount = data['studentCount'] as int? ?? 0;
-    final pendingAlerts = data['pendingAlerts'] as num? ?? 0;
+    final pendingAlerts = data['pendingAlerts'] as int? ?? 0;
     final methodologyScores = (data['methodologyScores'] as List? ?? []).cast<Map<String, dynamic>>();
     final weakMethodologies = (data['weakMethodologies'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return ListView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
         SectionCard(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              ProgressRing(value: schoolMii, color: AppColors.roleColor('PRINCIPAL'), subLabel: 'MII', radius: 42),
+              ProgressRing(value: schoolMii, color: AppColors.roleColor('PRINCIPAL'), subLabel: 'MII', radius: 40),
               const SizedBox(width: 18),
               Expanded(
                 child: Column(
@@ -92,33 +96,33 @@ class _BodyState extends State<_Body> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
           childAspectRatio: 1.5,
           children: [
-            StatTile(label: 'Teachers', value: '$teacherCount', icon: LucideIcons.users, color: AppColors.roleColor('PRINCIPAL'), animateIndex: 0),
-            StatTile(label: 'Pending Alerts', value: '$pendingAlerts', icon: LucideIcons.triangleAlert, color: AppColors.warning, animateIndex: 1),
+            StatTile(label: 'Teachers', value: '$teacherCount', icon: HugeIcons.strokeRoundedUserGroup, color: AppColors.roleColor('PRINCIPAL'), animateIndex: 0),
+            StatTile(label: 'Pending Alerts', value: '$pendingAlerts', icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, animateIndex: 1),
           ],
         ),
-        const SizedBox(height: 22),
-        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+        const SizedBox(height: 20),
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
         const SizedBox(height: 10),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.05,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.08,
           children: [
             QuickAccessCard(
               onTap: () => showMyActionPlansSheet(context),
-              icon: LucideIcons.clipboardList,
+              icon: HugeIcons.strokeRoundedTask01,
               color: const Color(0xFF0EA5E9),
               title: 'Action Plan',
               subtitle: 'Corrective tasks and follow-ups assigned to you',
@@ -126,11 +130,19 @@ class _BodyState extends State<_Body> {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-              icon: LucideIcons.globe,
+              icon: HugeIcons.strokeRoundedGlobe02,
               color: const Color(0xFF14B8A6),
               title: 'Community Hub',
               subtitle: 'Wakeup Call Board, events, workshops & clubs',
               cta: 'Explore',
+            ),
+            QuickAccessCard(
+              route: '/principal/videos',
+              icon: HugeIcons.strokeRoundedVideo01,
+              color: const Color(0xFFDC2626),
+              title: 'Video Gallery',
+              subtitle: 'Browse unlisted YouTube videos from Management',
+              cta: 'Watch Videos',
             ),
           ],
         ),
@@ -141,7 +153,7 @@ class _BodyState extends State<_Body> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(children: [
-                  const Icon(LucideIcons.triangleAlert, size: 16, color: AppColors.warning),
+                  const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 16, color: AppColors.warning),
                   const SizedBox(width: 8),
                   Text('Methodologies Needing Attention', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: s.textPrimary)),
                 ]),
@@ -157,13 +169,13 @@ class _BodyState extends State<_Body> {
             ),
           ),
         ],
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                const Icon(LucideIcons.sparkles, size: 17, color: AppColors.saffron500),
+                const HugeIcon(icon: HugeIcons.strokeRoundedAiMagic, size: 17, color: AppColors.saffron500),
                 const SizedBox(width: 8),
                 Text('AI Principal Assistant', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
               ]),
@@ -182,8 +194,8 @@ class _BodyState extends State<_Body> {
           ),
         ),
         if (methodologyScores.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          Text('Methodology Implementation', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
+          const SizedBox(height: 20),
+          Text('Methodology Implementation', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
           const SizedBox(height: 10),
           SectionCard(
             child: Column(

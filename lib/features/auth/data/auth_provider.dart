@@ -110,14 +110,15 @@ class AuthProvider extends ChangeNotifier {
   /// against a backend that hasn't picked up the 401 entry-point fix yet.
   bool _isSessionRejected(int? statusCode) => statusCode == 401 || statusCode == 403;
 
-  Future<void> login(String email, String password, {bool rememberMe = true}) async {
-    final session = await _repo.login(email, password);
+  Future<void> login(String username, String password, {bool rememberMe = true}) async {
+    final session = await _repo.login(username, password);
     await _persistSession(session);
     await _storage.saveRememberMe(rememberMe);
   }
 
   Future<void> register({
     required String fullName,
+    required String username,
     required String email,
     required String password,
     required String phone,
@@ -129,6 +130,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     final session = await _repo.register(
       fullName: fullName,
+      username: username,
       email: email,
       password: password,
       phone: phone,

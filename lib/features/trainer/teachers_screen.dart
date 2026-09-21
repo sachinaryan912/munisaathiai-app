@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -35,7 +35,7 @@ class _TrainerTeachersScreenState extends State<TrainerTeachersScreen> {
         loader: () => _repo.getTeachers(),
         builder: (context, allTeachers, refresh) {
           if (allTeachers.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: LucideIcons.users)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: HugeIcons.strokeRoundedUserGroup)]);
           }
           final q = _query.trim().toLowerCase();
           final teachers = q.isEmpty
@@ -53,7 +53,7 @@ class _TrainerTeachersScreenState extends State<TrainerTeachersScreen> {
               ),
               Expanded(
                 child: teachers.isEmpty
-                    ? const EmptyView(title: 'No teachers match your search', icon: LucideIcons.users)
+                    ? const EmptyView(title: 'No teachers match your search', icon: HugeIcons.strokeRoundedUserGroup)
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                         itemCount: teachers.length,
@@ -162,7 +162,7 @@ class _TeacherCardState extends State<_TeacherCard> {
             else
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(onPressed: _generateFeedback, icon: const Icon(LucideIcons.sparkles, size: 14), label: const Text('AI Feedback', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 9))),
+                child: OutlinedButton.icon(onPressed: _generateFeedback, icon: const HugeIcon(icon: HugeIcons.strokeRoundedSparkles, size: 14, color: AppColors.saffron600), label: const Text('AI Feedback', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 9))),
               ),
           ],
         ),

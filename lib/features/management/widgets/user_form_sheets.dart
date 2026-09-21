@@ -37,6 +37,7 @@ class _UserFormSheet extends StatefulWidget {
 class _UserFormSheetState extends State<_UserFormSheet> {
   final _authRepo = AuthRepository();
   late final _fullName = TextEditingController(text: widget.existing?['fullName'] as String? ?? '');
+  late final _username = TextEditingController(text: widget.existing?['username'] as String? ?? '');
   late final _email = TextEditingController(text: widget.existing?['email'] as String? ?? '');
   late final _password = TextEditingController();
   late final _phone = TextEditingController(text: widget.existing?['phone'] as String? ?? '');
@@ -68,7 +69,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
 
   void _save() {
     final isEdit = widget.existing != null;
-    if (_fullName.text.trim().isEmpty || (!isEdit && _email.text.trim().isEmpty)) {
+    if (_fullName.text.trim().isEmpty || (!isEdit && (_username.text.trim().isEmpty || _email.text.trim().isEmpty))) {
       setState(() => _error = 'Please fill in the required fields.');
       return;
     }
@@ -89,6 +90,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
       }
       Navigator.pop(context, {
         'fullName': _fullName.text.trim(),
+        'username': _username.text.trim(),
         'email': _email.text.trim(),
         'password': _password.text.trim(),
         'phone': _phone.text.trim(),
@@ -121,6 +123,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
               const SizedBox(height: 16),
               AppTextField(label: 'Full Name', controller: _fullName),
               const SizedBox(height: 14),
+              if (!isEdit) ...[AppTextField(label: 'Username', controller: _username), const SizedBox(height: 14)],
               AppTextField(label: 'Email', controller: _email, enabled: !isEdit, keyboardType: TextInputType.emailAddress),
               if (!isEdit) ...[const SizedBox(height: 14), AppTextField(label: 'Password', controller: _password, obscure: true)],
               const SizedBox(height: 14),

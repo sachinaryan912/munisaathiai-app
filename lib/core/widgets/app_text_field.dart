@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 class AppTextField extends StatefulWidget {
   final String label;
@@ -6,7 +8,7 @@ class AppTextField extends StatefulWidget {
   final TextEditingController controller;
   final bool obscure;
   final TextInputType? keyboardType;
-  final IconData? prefixIcon;
+  final dynamic prefixIcon;
   final String? Function(String?)? validator;
   final int maxLines;
   final bool enabled;
@@ -54,10 +56,24 @@ class _AppTextFieldState extends State<AppTextField> {
           onChanged: widget.onChanged,
           decoration: InputDecoration(
             hintText: widget.hint,
-            prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, size: 20) : null,
+            prefixIcon: widget.prefixIcon != null
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 8),
+                    child: AppIcon(
+                      widget.prefixIcon,
+                      size: 19,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                  )
+                : null,
+            prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             suffixIcon: widget.obscure
                 ? IconButton(
-                    icon: Icon(_obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 20),
+                    icon: HugeIcon(
+                      icon: _obscured ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
+                      size: 19,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                    ),
                     onPressed: () => setState(() => _obscured = !_obscured),
                   )
                 : widget.suffix,

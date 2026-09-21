@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -115,7 +115,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No progress logged yet', subtitle: 'Beat your own previous time on a topic and log it here.', icon: LucideIcons.trendingUp)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No progress logged yet', subtitle: 'Beat your own previous time on a topic and log it here.', icon: HugeIcons.strokeRoundedTrendingUp)])
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: widget.list.length,
@@ -133,7 +133,7 @@ class _BodyState extends State<_Body> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(color: (improved ? AppColors.success : AppColors.warning).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(13)),
-                            child: Icon(improved ? LucideIcons.trendingUp : LucideIcons.trendingDown, size: 18, color: improved ? AppColors.success : AppColors.warning),
+                            child: Center(child: HugeIcon(icon: improved ? HugeIcons.strokeRoundedTrendingUp : HugeIcons.strokeRoundedTrendingDown, size: 18, color: improved ? AppColors.success : AppColors.warning)),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/pdf_export_button.dart';
-import '../../core/widgets/quick_access_card.dart';
 import '../../core/widgets/section_card.dart';
-import '../../core/widgets/stat_tile.dart';
 import '../action_plans/action_plan_sheet.dart';
 import '../shared/community_hub_screen.dart';
 import '../shell/app_shell.dart';
@@ -27,7 +26,10 @@ class ManagementDashboardScreen extends StatelessWidget {
       title: '',
       isDashboard: true,
       dashboardSubtitle: "Here's how your network is doing today.",
-      body: AsyncScreen<Map<String, dynamic>>(loader: repo.getOverview, builder: (context, data, refresh) => _Body(data: data, repo: repo)),
+      body: AsyncScreen<Map<String, dynamic>>(
+        loader: repo.getOverview,
+        builder: (context, data, refresh) => _Body(data: data, repo: repo),
+      ),
     );
   }
 }
@@ -63,83 +65,134 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final s = context.surface;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final summary = widget.data['summary'] as Map<String, dynamic>? ?? {};
     final alerts = (widget.data['alerts'] as List? ?? []).cast<Map<String, dynamic>>();
     final schools = (widget.data['schools'] as List? ?? []).cast<Map<String, dynamic>>();
     final averageMii = summary['averageMii'];
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
       children: [
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.4,
-          children: [
-            StatTile(label: 'Total Schools', value: '${summary['totalSchools'] ?? 0}', icon: LucideIcons.school, color: AppColors.roleColor('MANAGEMENT'), animateIndex: 0),
-            StatTile(label: 'Average MII', value: averageMii != null ? (averageMii as num).toStringAsFixed(1) : '—', icon: LucideIcons.trendingUp, color: const Color(0xFF10B981), animateIndex: 1),
-            StatTile(label: 'Active Trainers', value: '${summary['activeTrainers'] ?? 0}', icon: LucideIcons.users, color: const Color(0xFF6366F1), animateIndex: 2),
-            StatTile(label: 'Total Students', value: '${summary['totalStudents'] ?? 0}', icon: LucideIcons.graduationCap, color: AppColors.saffron500, animateIndex: 3),
-          ],
-        ),
-        const SizedBox(height: 22),
-        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
-        const SizedBox(height: 10),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.05,
-          children: [
-            QuickAccessCard(
-              onTap: () => showMyActionPlansSheet(context),
-              icon: LucideIcons.clipboardList,
-              color: const Color(0xFF0EA5E9),
-              title: 'Action Plan',
-              subtitle: 'Corrective tasks and follow-ups network-wide',
-              cta: 'View Tasks',
-            ),
-            QuickAccessCard(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AuditLogScreen())),
-              icon: LucideIcons.history,
-              color: const Color(0xFF6366F1),
-              title: 'Audit Log',
-              subtitle: 'Every user/school/knowledge-base change, with actor and time',
-              cta: 'View Log',
-            ),
-            QuickAccessCard(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-              icon: LucideIcons.globe,
-              color: const Color(0xFF14B8A6),
-              title: 'Community Hub',
-              subtitle: 'Wakeup Call Board, events, workshops & clubs',
-              cta: 'Explore',
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        SectionCard(
+        // 4-Column Stat Strip
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          decoration: BoxDecoration(
+            color: s.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: s.border.withValues(alpha: 0.6)),
+          ),
           child: Row(
             children: [
-              _StatusChip(label: 'Excellent', count: summary['excellentCount'] as int? ?? 0, color: AppColors.success),
-              _StatusChip(label: 'Needs Support', count: summary['needsSupportCount'] as int? ?? 0, color: AppColors.info),
-              _StatusChip(label: 'Weak', count: summary['weakCount'] as int? ?? 0, color: AppColors.warning),
-              _StatusChip(label: 'Urgent', count: summary['urgentCount'] as int? ?? 0, color: AppColors.danger),
+              Expanded(
+                child: _StatColumn(
+                  icon: HugeIcons.strokeRoundedSchool,
+                  iconBg: const Color(0xFFF3E8FF),
+                  iconColor: const Color(0xFF8B5CF6),
+                  value: '${summary['totalSchools'] ?? 0}',
+                  label: 'Total Schools',
+                ),
+              ),
+              _verticalDivider(s),
+              Expanded(
+                child: _StatColumn(
+                  icon: HugeIcons.strokeRoundedAnalyticsUp,
+                  iconBg: const Color(0xFFDCFCE7),
+                  iconColor: const Color(0xFF10B981),
+                  value: averageMii is num ? averageMii.toStringAsFixed(1) : '—',
+                  label: 'Average MII',
+                ),
+              ),
+              _verticalDivider(s),
+              Expanded(
+                child: _StatColumn(
+                  icon: HugeIcons.strokeRoundedUserGroup,
+                  iconBg: const Color(0xFFE0F2FE),
+                  iconColor: const Color(0xFF0284C7),
+                  value: '${summary['activeTrainers'] ?? 0}',
+                  label: 'Active Trainers',
+                ),
+              ),
+              _verticalDivider(s),
+              Expanded(
+                child: _StatColumn(
+                  icon: HugeIcons.strokeRoundedMortarboard01,
+                  iconBg: const Color(0xFFFFEDD5),
+                  iconColor: const Color(0xFFEA580C),
+                  value: '${summary['totalStudents'] ?? 0}',
+                  label: 'Total Students',
+                ),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 16),
+
+        // Schools by MII Performance
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: s.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: s.border.withValues(alpha: 0.6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Schools by MII Performance',
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w800,
+                  color: s.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _SegmentedProgressBar(
+                excellent: summary['excellentCount'] as int? ?? 0,
+                needsSupport: summary['needsSupportCount'] as int? ?? 0,
+                weak: summary['weakCount'] as int? ?? 0,
+                urgent: summary['urgentCount'] as int? ?? 0,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _StatusLegend(
+                    color: const Color(0xFF10B981),
+                    label: 'Excellent',
+                    count: summary['excellentCount'] as int? ?? 0,
+                  ),
+                  _StatusLegend(
+                    color: const Color(0xFF3B82F6),
+                    label: 'Needs Support',
+                    count: summary['needsSupportCount'] as int? ?? 0,
+                  ),
+                  _StatusLegend(
+                    color: const Color(0xFFF59E0B),
+                    label: 'Weak',
+                    count: summary['weakCount'] as int? ?? 0,
+                  ),
+                  _StatusLegend(
+                    color: const Color(0xFFEF4444),
+                    label: 'Urgent',
+                    count: summary['urgentCount'] as int? ?? 0,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // AI Monitoring Assistant
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                const Icon(LucideIcons.sparkles, size: 17, color: AppColors.saffron500),
+                const HugeIcon(icon: HugeIcons.strokeRoundedAiMagic, size: 17, color: AppColors.saffron500),
                 const SizedBox(width: 8),
                 Text('AI Monitoring Assistant', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: s.textPrimary)),
               ]),
@@ -163,75 +216,133 @@ class _BodyState extends State<_Body> {
             ],
           ),
         ),
+        const SizedBox(height: 20),
+
+        // Quick Access
+        Text('Quick Access', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+        const SizedBox(height: 10),
+        _QuickAccessTile(
+          icon: HugeIcons.strokeRoundedTask01,
+          iconBg: const Color(0xFFE0F2FE),
+          iconColor: const Color(0xFF0284C7),
+          title: 'Action Plan',
+          subtitle: 'Corrective tasks and follow-ups',
+          onTap: () => showMyActionPlansSheet(context),
+        ),
+        const SizedBox(height: 8),
+        _QuickAccessTile(
+          icon: HugeIcons.strokeRoundedClock01,
+          iconBg: const Color(0xFFF3E8FF),
+          iconColor: const Color(0xFF7C3AED),
+          title: 'Audit Log',
+          subtitle: 'Every user/school/knowledge activity',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AuditLogScreen())),
+        ),
+        const SizedBox(height: 8),
+        _QuickAccessTile(
+          icon: HugeIcons.strokeRoundedUserGroup,
+          iconBg: const Color(0xFFDCFCE7),
+          iconColor: const Color(0xFF059669),
+          title: 'Community Hub',
+          subtitle: 'Wakeup Call Board, events, updates',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
+        ),
+        const SizedBox(height: 8),
+        _QuickAccessTile(
+          icon: HugeIcons.strokeRoundedVideo01,
+          iconBg: const Color(0xFFFFE4E6),
+          iconColor: const Color(0xFFE11D48),
+          title: 'Video Gallery',
+          subtitle: 'Upload and browse unlisted YouTube videos',
+          onTap: () => context.push('/management/videos'),
+        ),
+
+        // Alerts
         if (alerts.isNotEmpty) ...[
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           Row(children: [
             Text('Alerts', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
             const Spacer(),
             TextButton(onPressed: () => context.go('/management/alerts'), child: const Text('View all', style: TextStyle(fontSize: 11.5))),
           ]),
+          const SizedBox(height: 8),
           SectionCard(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.zero,
             child: Column(
-              children: alerts.take(4).map((a) {
-                final urgent = a['type'] == 'URGENT';
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  leading: Icon(LucideIcons.triangleAlert, size: 18, color: urgent ? AppColors.danger : AppColors.warning),
-                  title: Text(a['schoolName'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
-                  subtitle: Text(a['message'] as String, style: TextStyle(fontSize: 11, color: s.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
-                );
-              }).toList(),
+              children: [
+                for (int i = 0; i < alerts.take(4).length; i++) ...[
+                  if (i > 0)
+                    Divider(height: 1, indent: 48, endIndent: 16, color: dark ? const Color(0xFF262E3D) : const Color(0xFFE5E7EB)),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    leading: HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlert02,
+                      size: 18,
+                      color: alerts[i]['type'] == 'URGENT' ? AppColors.danger : AppColors.warning,
+                    ),
+                    title: Text(alerts[i]['name'] as String? ?? alerts[i]['schoolName'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary)),
+                    subtitle: Text(alerts[i]['message'] as String? ?? '', style: TextStyle(fontSize: 11, color: s.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
-        const SizedBox(height: 22),
+
+        // Schools List
+        const SizedBox(height: 20),
         Row(children: [
           Text('Schools', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
           const Spacer(),
           TextButton(onPressed: () => context.go('/management/schools'), child: const Text('View all', style: TextStyle(fontSize: 11.5))),
         ]),
-        const SizedBox(height: 10),
-        ...schools.take(5).map((sc) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: SectionCard(
-                onTap: () => context.push('/management/schools/${sc['id']}'),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(sc['name'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
-                          Text('${sc['district']} · ${sc['trainer']}', style: TextStyle(fontSize: 11, color: s.textMuted)),
-                        ],
-                      ),
+        const SizedBox(height: 8),
+        SectionCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (int i = 0; i < schools.take(5).length; i++) ...[
+                if (i > 0)
+                  Divider(height: 1, indent: 52, endIndent: 16, color: dark ? const Color(0xFF262E3D) : const Color(0xFFE5E7EB)),
+                InkWell(
+                  onTap: () => context.push('/management/schools/${schools[i]['id']}'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(color: AppColors.roleManagement.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                          child: const Center(
+                            child: HugeIcon(icon: HugeIcons.strokeRoundedSchool, size: 17, color: AppColors.roleManagement),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(schools[i]['name'] as String? ?? '', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: s.textPrimary)),
+                              Text(schools[i]['location'] as String? ?? '${schools[i]['district'] ?? ''} · ${schools[i]['trainer'] ?? ''}', style: TextStyle(fontSize: 11, color: s.textSecondary)),
+                            ],
+                          ),
+                        ),
+                        if (schools[i]['averageMii'] != null)
+                          Text('${(schools[i]['averageMii'] as num).toStringAsFixed(1)} MII', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: AppColors.roleManagement))
+                        else
+                          SchoolStatusBadge(mii: schools[i]['miiScore'] as int? ?? 0, status: schools[i]['status'] as String?),
+                        const SizedBox(width: 6),
+                        HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 14, color: s.textMuted.withValues(alpha: 0.5)),
+                      ],
                     ),
-                    SchoolStatusBadge(mii: sc['miiScore'] as int? ?? 0, status: sc['status'] as String?),
-                  ],
+                  ),
                 ),
-              ),
-            )),
+              ],
+            ],
+          ),
+        ),
       ],
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-  const _StatusChip({required this.label, required this.count, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text('$count', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: color)),
-          Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w700)),
-        ],
-      ),
     );
   }
 }
@@ -259,7 +370,7 @@ class _InsightsView extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(LucideIcons.circleAlert, size: 13, color: urgent ? AppColors.danger : AppColors.warning),
+                  HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, size: 13, color: urgent ? AppColors.danger : AppColors.warning),
                   const SizedBox(width: 6),
                   Expanded(child: Text('${a['schoolName']}: ${a['action']}', style: TextStyle(fontSize: 12, color: s.textSecondary))),
                 ],
@@ -273,6 +384,245 @@ class _InsightsView extends StatelessWidget {
           const SizedBox(height: 6),
           ...weeklyFocus.map((w) => Padding(padding: const EdgeInsets.only(bottom: 3), child: Text('• $w', style: TextStyle(fontSize: 12, color: s.textSecondary)))),
         ],
+      ],
+    );
+  }
+}
+
+Widget _verticalDivider(MuniSurface s) {
+  return Container(
+    width: 1,
+    height: 44,
+    color: s.border.withValues(alpha: 0.6),
+  );
+}
+
+class _StatColumn extends StatelessWidget {
+  final dynamic icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String value;
+  final String label;
+
+  const _StatColumn({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: iconBg,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: AppIcon(icon, size: 18, color: iconColor),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: s.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            color: s.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickAccessTile extends StatelessWidget {
+  final dynamic icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _QuickAccessTile({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: s.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: s.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: AppIcon(icon, size: 20, color: iconColor),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: s.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: s.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowRight01,
+              size: 16,
+              color: s.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentedProgressBar extends StatelessWidget {
+  final int excellent;
+  final int needsSupport;
+  final int weak;
+  final int urgent;
+
+  const _SegmentedProgressBar({
+    required this.excellent,
+    required this.needsSupport,
+    required this.weak,
+    required this.urgent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    final total = excellent + needsSupport + weak + urgent;
+    if (total == 0) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 10,
+          color: s.border.withValues(alpha: 0.3),
+        ),
+      );
+    }
+
+    final double excRatio = excellent / total;
+    final double supRatio = needsSupport / total;
+    final double weakRatio = weak / total;
+    final double urgRatio = urgent / total;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: SizedBox(
+        height: 10,
+        child: Row(
+          children: [
+            if (excRatio > 0)
+              Expanded(
+                flex: (excRatio * 1000).toInt().clamp(1, 1000),
+                child: Container(color: const Color(0xFF10B981)),
+              ),
+            if (supRatio > 0)
+              Expanded(
+                flex: (supRatio * 1000).toInt().clamp(1, 1000),
+                child: Container(color: const Color(0xFF3B82F6)),
+              ),
+            if (weakRatio > 0)
+              Expanded(
+                flex: (weakRatio * 1000).toInt().clamp(1, 1000),
+                child: Container(color: const Color(0xFFF59E0B)),
+              ),
+            if (urgRatio > 0)
+              Expanded(
+                flex: (urgRatio * 1000).toInt().clamp(1, 1000),
+                child: Container(color: const Color(0xFFEF4444)),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+  final int count;
+
+  const _StatusLegend({required this.color, required this.label, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.surface;
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: s.textSecondary)),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Text('$count', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: s.textPrimary)),
       ],
     );
   }

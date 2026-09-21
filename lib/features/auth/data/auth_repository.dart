@@ -8,13 +8,14 @@ import '../../../models/user.dart';
 class AuthRepository {
   final _dio = ApiClient.instance.dio;
 
-  Future<AuthSession> login(String email, String password) => apiCall(() async {
-        final res = await _dio.post('/auth/login', data: {'email': email, 'password': password});
+  Future<AuthSession> login(String username, String password) => apiCall(() async {
+        final res = await _dio.post('/auth/login', data: {'username': username, 'password': password});
         return AuthSession.fromJson(res.data as Map<String, dynamic>);
       });
 
   Future<AuthSession> register({
     required String fullName,
+    required String username,
     required String email,
     required String password,
     required String phone,
@@ -27,6 +28,7 @@ class AuthRepository {
       apiCall(() async {
         final res = await _dio.post('/auth/register', data: {
           'fullName': fullName,
+          'username': username,
           'email': email,
           'password': password,
           'phone': phone,
@@ -50,24 +52,24 @@ class AuthRepository {
     }
   }
 
-  Future<String> forgotPassword(String email) => apiCall(() async {
-        final res = await _dio.post('/auth/forgot-password', data: {'email': email});
+  Future<String> forgotPassword(String username) => apiCall(() async {
+        final res = await _dio.post('/auth/forgot-password', data: {'username': username});
         return (res.data as Map<String, dynamic>)['message'] as String? ?? 'OTP sent.';
       });
 
-  Future<String> resetPassword({required String email, required String otp, required String newPassword}) =>
+  Future<String> resetPassword({required String username, required String otp, required String newPassword}) =>
       apiCall(() async {
-        final res = await _dio.post('/auth/reset-password', data: {'email': email, 'otp': otp, 'newPassword': newPassword});
+        final res = await _dio.post('/auth/reset-password', data: {'username': username, 'otp': otp, 'newPassword': newPassword});
         return (res.data as Map<String, dynamic>)['message'] as String? ?? 'Password reset.';
       });
 
-  Future<String> sendVerification(String email) => apiCall(() async {
-        final res = await _dio.post('/auth/send-verification', data: {'email': email});
+  Future<String> sendVerification(String username) => apiCall(() async {
+        final res = await _dio.post('/auth/send-verification', data: {'username': username});
         return (res.data as Map<String, dynamic>)['message'] as String? ?? 'OTP sent.';
       });
 
-  Future<String> verifyEmail({required String email, required String otp}) => apiCall(() async {
-        final res = await _dio.post('/auth/verify-email', data: {'email': email, 'otp': otp});
+  Future<String> verifyEmail({required String username, required String otp}) => apiCall(() async {
+        final res = await _dio.post('/auth/verify-email', data: {'username': username, 'otp': otp});
         return (res.data as Map<String, dynamic>)['message'] as String? ?? 'Email verified.';
       });
 

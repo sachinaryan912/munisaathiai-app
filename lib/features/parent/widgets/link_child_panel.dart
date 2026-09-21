@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -119,7 +119,7 @@ class NotLinkedState extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(18)),
-            child: const Icon(LucideIcons.users, color: AppColors.saffron500, size: 26),
+            child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, color: AppColors.saffron500, size: 26)),
           ),
           const SizedBox(height: 14),
           Text(message, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),

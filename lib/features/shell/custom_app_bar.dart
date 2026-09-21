@@ -2,10 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_typography.dart';
@@ -56,7 +57,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 children: [
                   const SizedBox(width: 10),
                   if (canPop)
-                    _ChromeButton(icon: LucideIcons.chevronLeft, onTap: () => Navigator.of(context).maybePop())
+                    _ChromeButton(icon: HugeIcons.strokeRoundedArrowLeft01, onTap: () => Navigator.of(context).maybePop())
                   else
                     const SizedBox(width: 2),
                   const SizedBox(width: 6),
@@ -67,17 +68,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   ...(actions ?? []),
                   _ChromeButton(
-                    icon: themeProvider.isDark ? LucideIcons.sun : LucideIcons.moon,
+                    icon: themeProvider.isDark ? HugeIcons.strokeRoundedSun01 : HugeIcons.strokeRoundedMoon02,
                     onTap: themeProvider.toggle,
                   ),
                   const SizedBox(width: 8),
                   _ChromeButton(
-                    icon: LucideIcons.clipboardList,
+                    icon: HugeIcons.strokeRoundedTask01,
                     onTap: () => showMyActionPlansSheet(context),
                   ),
                   const SizedBox(width: 8),
                   _ChromeButton(
-                    icon: LucideIcons.bell,
+                    icon: HugeIcons.strokeRoundedNotification03,
                     onTap: () => showNotificationPanel(context),
                     badge: notifs.unreadCount > 0,
                   ),
@@ -103,7 +104,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _ChromeButton extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final VoidCallback onTap;
   final bool badge;
   const _ChromeButton({required this.icon, required this.onTap, this.badge = false});
@@ -127,7 +128,7 @@ class _ChromeButton extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(color: s.surfaceVariant, shape: BoxShape.circle),
-                child: Icon(icon, size: 18, color: s.textSecondary),
+                child: Center(child: AppIcon(icon, size: 18, color: s.textSecondary)),
               ),
               if (badge)
                 Positioned(

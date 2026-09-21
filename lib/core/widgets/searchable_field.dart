@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 
 /// A text field with a suggestions dropdown sourced from [options]. By default it still
 /// accepts free text (mirrors the web app's `SearchableSelect` — schools/classes/sections
@@ -17,7 +19,7 @@ class SearchableField extends StatefulWidget {
   final bool enabled;
   final bool allowCreate;
   final String hint;
-  final IconData? prefixIcon;
+  final dynamic prefixIcon;
   final String? error;
 
   const SearchableField({
@@ -103,7 +105,17 @@ class _SearchableFieldState extends State<SearchableField> {
               },
               decoration: InputDecoration(
                 hintText: widget.enabled ? widget.hint : 'Select the previous field first',
-                prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, size: 20) : null,
+                prefixIcon: widget.prefixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 12, right: 8),
+                        child: AppIcon(
+                          widget.prefixIcon,
+                          size: 19,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                        ),
+                      )
+                    : null,
+                prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                 suffixIcon: widget.loading
                     ? const Padding(
                         padding: EdgeInsets.all(14),
@@ -159,7 +171,7 @@ class RoleOption {
   final String value;
   final String label;
   final String desc;
-  final IconData icon;
+  final dynamic icon;
   const RoleOption(this.value, this.label, this.desc, this.icon);
 }
 
@@ -197,7 +209,7 @@ Future<String?> showRolePicker(BuildContext context, List<RoleOption> roles, Str
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(color: active ? AppColors.saffron100 : s.border.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
-                        child: Icon(r.icon, size: 17, color: active ? AppColors.saffron600 : s.textSecondary),
+                        child: Center(child: AppIcon(r.icon, size: 17, color: active ? AppColors.saffron600 : s.textSecondary)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -209,7 +221,7 @@ Future<String?> showRolePicker(BuildContext context, List<RoleOption> roles, Str
                           ],
                         ),
                       ),
-                      if (active) const Icon(Icons.check_circle_rounded, color: AppColors.saffron500, size: 18),
+                      if (active) const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, color: AppColors.saffron500, size: 18),
                     ],
                   ),
                 ),

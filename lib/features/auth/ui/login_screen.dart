@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -17,7 +19,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  final _username = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
   bool _rememberMe = true;
@@ -30,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      await context.read<AuthProvider>().login(_email.text.trim(), _password.text, rememberMe: _rememberMe);
+      await context.read<AuthProvider>().login(_username.text.trim(), _password.text, rememberMe: _rememberMe);
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('ApiException: ', ''));
     } finally {
@@ -44,29 +46,34 @@ class _LoginScreenState extends State<LoginScreen> {
     return AuthScaffold(
       title: 'Welcome back',
       subtitle: 'Sign in to continue tracking the Muni Model',
+      centered: true,
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_error != null) _ErrorBanner(message: _error!),
+            if (_error != null)
+              _ErrorBanner(message: _error!)
+                  .animate()
+                  .fadeIn(duration: 250.ms)
+                  .shake(duration: 400.ms, hz: 4),
             AppTextField(
-              label: 'Email',
-              controller: _email,
-              hint: 'you@example.com',
-              keyboardType: TextInputType.emailAddress,
-              prefixIcon: Icons.mail_outline_rounded,
-              validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
-            ),
+              label: 'Username',
+              controller: _username,
+              hint: 'your_username',
+              prefixIcon: HugeIcons.strokeRoundedUser,
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your username' : null,
+            ).animate(delay: 50.ms).fadeIn(duration: 320.ms),
             const SizedBox(height: 16),
             AppTextField(
               label: 'Password',
               controller: _password,
               hint: 'Enter your password',
               obscure: true,
-              prefixIcon: Icons.lock_outline_rounded,
+              prefixIcon: HugeIcons.strokeRoundedLockPassword,
               validator: (v) => (v == null || v.isEmpty) ? 'Enter your password' : null,
-            ),
+            ).animate(delay: 100.ms).fadeIn(duration: 320.ms),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -74,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => setState(() => _rememberMe = !_rememberMe),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -85,24 +92,51 @@ class _LoginScreenState extends State<LoginScreen> {
                             value: _rememberMe,
                             onChanged: (v) => setState(() => _rememberMe = v ?? true),
                             activeColor: AppColors.saffron500,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text('Remember me', style: TextStyle(color: s.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Text(
+                          'Remember me',
+                          style: TextStyle(
+                            color: s.textSecondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 TextButton(
                   onPressed: () => context.push('/forgot-password'),
-                  child: const Text('Forgot password?', style: TextStyle(fontSize: 12.5)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Forgot password?', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
                 ),
               ],
-            ),
-            const SizedBox(height: 6),
-            GradientButton(label: 'Sign In', loading: _loading, onPressed: _submit),
+            ).animate(delay: 150.ms).fadeIn(duration: 320.ms),
+            const SizedBox(height: 14),
+            GradientButton(
+              label: 'Sign In',
+              loading: _loading,
+              onPressed: _submit,
+            ).animate(delay: 200.ms).fadeIn(duration: 320.ms),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Don't have an account? ", style: TextStyle(color: s.textSecondary, fontSize: 13)),
+                GestureDetector(
+                  onTap: () => context.push('/register'),
+                  child: const Text('Create one', style: TextStyle(color: AppColors.saffron600, fontSize: 13, fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ).animate(delay: 240.ms).fadeIn(duration: 320.ms),
           ],
         ),
       ),
@@ -119,8 +153,36 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFFECACA))),
-      child: Text(message, style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 12.5, fontWeight: FontWeight.w600)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedAlertCircle,
+              size: 17,
+              color: Color(0xFFDC2626),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFB91C1C),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

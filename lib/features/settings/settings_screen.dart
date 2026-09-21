@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/nav/nav_items.dart';
 import '../../core/theme/app_colors.dart';
@@ -8,6 +8,7 @@ import '../../core/theme/app_shadows.dart';
 import '../../core/services/profile_image_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../auth/data/auth_provider.dart';
@@ -69,18 +70,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 12),
             ListTile(
-              leading: const Icon(LucideIcons.camera, size: 20),
+              leading: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 20, color: s.textPrimary),
               title: const Text('Take a photo'),
               onTap: () => Navigator.pop(sheetContext, 'camera'),
             ),
             ListTile(
-              leading: const Icon(LucideIcons.image, size: 20),
+              leading: HugeIcon(icon: HugeIcons.strokeRoundedImage01, size: 20, color: s.textPrimary),
               title: const Text('Choose from gallery'),
               onTap: () => Navigator.pop(sheetContext, 'gallery'),
             ),
             if (hasPhoto)
               ListTile(
-                leading: const Icon(LucideIcons.trash2, size: 20, color: Color(0xFFDC2626)),
+                leading: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 20, color: Color(0xFFDC2626)),
                 title: const Text('Remove photo', style: TextStyle(color: Color(0xFFDC2626))),
                 onTap: () => Navigator.pop(sheetContext, 'remove'),
               ),
@@ -261,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildEditableRow({
-    required IconData icon,
+    required dynamic icon,
     required Color iconBgColor,
     required String label,
     required TextEditingController controller,
@@ -279,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: iconBgColor,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.white, size: 16),
+            child: Center(child: AppIcon(icon, color: Colors.white, size: 16)),
           ),
           const SizedBox(width: 12),
           Text(
@@ -316,7 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildValueRow({
-    required IconData icon,
+    required dynamic icon,
     required Color iconBgColor,
     required String label,
     required String value,
@@ -333,7 +334,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: iconBgColor,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.white, size: 16),
+            child: Center(child: AppIcon(icon, color: Colors.white, size: 16)),
           ),
           const SizedBox(width: 12),
           Text(
@@ -425,7 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(color: s.bg, width: 2),
                           ),
-                          child: const Icon(LucideIcons.camera, color: Colors.white, size: 12),
+                          child: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: Colors.white, size: 12),
                         ),
                       ),
                     ],
@@ -487,13 +488,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Personal Information'),
           _buildGroup([
             _buildEditableRow(
-              icon: LucideIcons.user,
+              icon: HugeIcons.strokeRoundedUser,
               iconBgColor: AppColors.saffron500,
               label: 'Full Name',
               controller: _fullName,
             ),
             _buildEditableRow(
-              icon: LucideIcons.phone,
+              icon: HugeIcons.strokeRoundedCall,
               iconBgColor: const Color(0xFF3B82F6),
               label: 'Phone',
               controller: _phone,
@@ -526,27 +527,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Details'),
           _buildGroup([
             _buildValueRow(
-              icon: LucideIcons.mail,
+              icon: HugeIcons.strokeRoundedMail01,
               iconBgColor: const Color(0xFF6B7280),
               label: 'Email',
               value: user?.email ?? '',
             ),
             _buildValueRow(
-              icon: LucideIcons.shieldAlert,
+              icon: HugeIcons.strokeRoundedShieldAlert,
               iconBgColor: AppColors.roleColor(role),
               label: 'Role',
               value: kRoleLabels[role] ?? role,
             ),
             if (user?.schoolName != null)
               _buildValueRow(
-                icon: LucideIcons.school,
+                icon: HugeIcons.strokeRoundedSchool,
                 iconBgColor: const Color(0xFF8B5CF6),
                 label: 'School',
                 value: user!.schoolName!,
               ),
             if (user?.className != null)
               _buildValueRow(
-                icon: LucideIcons.graduationCap,
+                icon: HugeIcons.strokeRoundedGraduationScroll,
                 iconBgColor: const Color(0xFF10B981),
                 label: 'Class',
                 value: user!.className!,
@@ -565,7 +566,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(color: const Color(0xFF6366F1), borderRadius: BorderRadius.circular(8)),
-                    child: Icon(themeProvider.isDark ? LucideIcons.moon : LucideIcons.sun, color: Colors.white, size: 16),
+                    child: Center(child: HugeIcon(icon: themeProvider.isDark ? HugeIcons.strokeRoundedMoon02 : HugeIcons.strokeRoundedSun03, color: Colors.white, size: 16)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Text('Dark Mode', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: s.textPrimary))),
@@ -584,19 +585,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Security'),
           _buildGroup([
             _PasswordRow(
-              icon: LucideIcons.key,
+              icon: HugeIcons.strokeRoundedKey01,
               iconBgColor: const Color(0xFFF59E0B),
               label: 'Current Password',
               controller: _currentPassword,
             ),
             _PasswordRow(
-              icon: LucideIcons.lock,
+              icon: HugeIcons.strokeRoundedLockPassword,
               iconBgColor: const Color(0xFF10B981),
               label: 'New Password',
               controller: _newPassword,
             ),
             _PasswordRow(
-              icon: LucideIcons.checkSquare,
+              icon: HugeIcons.strokeRoundedCheckList,
               iconBgColor: const Color(0xFFEC4899),
               label: 'Confirm Password',
               controller: _confirmPassword,
@@ -638,11 +639,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         width: 30,
                         height: 30,
                         decoration: BoxDecoration(color: AppColors.saffron500, borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(LucideIcons.slidersHorizontal, color: Colors.white, size: 16),
+                        child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedSlidersHorizontal, color: Colors.white, size: 16)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(child: Text('MII & Alert Thresholds', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: s.textPrimary))),
-                      Icon(LucideIcons.chevronRight, size: 16, color: s.textMuted),
+                      HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 16, color: s.textMuted),
                     ],
                   ),
                 ),
@@ -673,7 +674,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.danger),
                     )
                   else
-                    const Icon(LucideIcons.logOut, color: AppColors.danger, size: 18),
+                    const HugeIcon(icon: HugeIcons.strokeRoundedLogout01, color: AppColors.danger, size: 18),
                   const SizedBox(width: 8),
                   Text(
                     _signingOut ? 'Signing Out…' : 'Sign Out',
@@ -695,7 +696,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class _PasswordRow extends StatefulWidget {
-  final IconData icon;
+  final dynamic icon;
   final Color iconBgColor;
   final String label;
   final TextEditingController controller;
@@ -728,7 +729,7 @@ class _PasswordRowState extends State<_PasswordRow> {
               color: widget.iconBgColor,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(widget.icon, color: Colors.white, size: 16),
+            child: Center(child: AppIcon(widget.icon, color: Colors.white, size: 16)),
           ),
           const SizedBox(width: 12),
           Text(
@@ -764,8 +765,8 @@ class _PasswordRowState extends State<_PasswordRow> {
             onTap: () => setState(() => _obscured = !_obscured),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Icon(
-                _obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+              child: HugeIcon(
+                icon: _obscured ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
                 size: 18,
                 color: s.textMuted,
               ),

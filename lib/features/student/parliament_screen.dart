@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -45,7 +45,7 @@ class _Body extends StatelessWidget {
     if (data['monthStart'] == null) {
       return ListView(children: const [
         SizedBox(height: 100),
-        EmptyView(title: 'No Child Parliament this month', subtitle: 'Your class hasn\'t set up a term yet.', icon: LucideIcons.landmark),
+        EmptyView(title: 'No Child Parliament this month', subtitle: 'Your class hasn\'t set up a term yet.', icon: HugeIcons.strokeRoundedCourtHouse),
       ]);
     }
 
@@ -60,7 +60,7 @@ class _Body extends StatelessWidget {
                 Container(
                   width: 44, height: 44,
                   decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(14)),
-                  child: const Icon(LucideIcons.landmark, size: 20, color: AppColors.saffron600),
+                  child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedCourtHouse, size: 20, color: AppColors.saffron600)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

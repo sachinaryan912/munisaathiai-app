@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -12,12 +12,12 @@ import '../data/auth_repository.dart';
 import 'auth_scaffold.dart';
 
 const _roles = [
-  RoleOption('MANAGEMENT', 'Management', 'Muni Educare leadership', LucideIcons.barChart3),
-  RoleOption('TRAINER', 'Trainer', 'School trainer / mentor', LucideIcons.users),
-  RoleOption('PRINCIPAL', 'Principal', 'School principal', LucideIcons.building2),
-  RoleOption('TEACHER', 'Teacher', 'Class teacher', LucideIcons.bookOpen),
-  RoleOption('STUDENT', 'Student', 'Student / buddy', LucideIcons.user),
-  RoleOption('PARENT', 'Parent', 'Parent / guardian', LucideIcons.heart),
+  RoleOption('MANAGEMENT', 'Management', 'Muni Educare leadership', HugeIcons.strokeRoundedAnalytics01),
+  RoleOption('TRAINER', 'Trainer', 'School trainer / mentor', HugeIcons.strokeRoundedUserGroup),
+  RoleOption('PRINCIPAL', 'Principal', 'School principal', HugeIcons.strokeRoundedBuilding03),
+  RoleOption('TEACHER', 'Teacher', 'Class teacher', HugeIcons.strokeRoundedBookOpen01),
+  RoleOption('STUDENT', 'Student', 'Student / buddy', HugeIcons.strokeRoundedUser),
+  RoleOption('PARENT', 'Parent', 'Parent / guardian', HugeIcons.strokeRoundedFavourite),
 ];
 
 const _needsSchool = {'PRINCIPAL', 'TEACHER', 'STUDENT', 'PARENT'};
@@ -35,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _repo = AuthRepository();
 
   final _fullName = TextEditingController();
+  final _username = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
   final _password = TextEditingController();
@@ -148,6 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await context.read<AuthProvider>().register(
             fullName: _fullName.text.trim(),
+            username: _username.text.trim(),
             email: _email.text.trim(),
             password: _password.text,
             phone: _phone.text.trim(),
@@ -201,14 +203,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Row(
                   children: [
                     if (selectedRole != null) ...[
-                      Icon(selectedRole.icon, size: 17, color: AppColors.saffron600),
+                      HugeIcon(icon: selectedRole.icon, size: 17, color: AppColors.saffron600),
                       const SizedBox(width: 10),
                       Text(selectedRole.label, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: s.textPrimary)),
                       const SizedBox(width: 6),
                       Expanded(child: Text(selectedRole.desc, style: TextStyle(fontSize: 12, color: s.textMuted), overflow: TextOverflow.ellipsis)),
                     ] else
                       Expanded(child: Text('— Choose your role —', style: TextStyle(color: s.textMuted, fontSize: 14))),
-                    Icon(LucideIcons.chevronDown, size: 18, color: s.textMuted),
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, size: 18, color: s.textMuted),
                   ],
                 ),
               ),
@@ -222,11 +224,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Divider(color: s.border),
             const SizedBox(height: 16),
 
-            AppTextField(label: 'Full name', controller: _fullName, hint: 'Your full name', prefixIcon: Icons.person_outline_rounded, validator: (v) => (v == null || v.trim().length < 2) ? 'Enter your full name' : null),
+            AppTextField(label: 'Full name', controller: _fullName, hint: 'Your full name', prefixIcon: HugeIcons.strokeRoundedUser, validator: (v) => (v == null || v.trim().length < 2) ? 'Enter your full name' : null),
             const SizedBox(height: 16),
-            AppTextField(label: 'Email address', controller: _email, hint: 'you@example.com', keyboardType: TextInputType.emailAddress, prefixIcon: Icons.mail_outline_rounded, validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null),
+            AppTextField(
+              label: 'Username',
+              controller: _username,
+              hint: 'Used to sign in',
+              prefixIcon: HugeIcons.strokeRoundedAt,
+              validator: (v) => (v == null || !RegExp(r'^[a-zA-Z0-9_.]{3,30}$').hasMatch(v.trim()))
+                  ? '3-30 characters: letters, numbers, underscore, dot'
+                  : null,
+            ),
             const SizedBox(height: 16),
-            AppTextField(label: 'Phone number', controller: _phone, hint: '10-digit mobile number', keyboardType: TextInputType.phone, prefixIcon: Icons.phone_outlined, validator: (v) => (v == null || v.trim().length < 10) ? 'Enter a valid phone number' : null),
+            AppTextField(label: 'Email address', controller: _email, hint: 'you@example.com', keyboardType: TextInputType.emailAddress, prefixIcon: HugeIcons.strokeRoundedMail01, validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null),
+            const SizedBox(height: 16),
+            AppTextField(label: 'Phone number', controller: _phone, hint: '10-digit mobile number', keyboardType: TextInputType.phone, prefixIcon: HugeIcons.strokeRoundedCall, validator: (v) => (v == null || v.trim().length < 10) ? 'Enter a valid phone number' : null),
 
             if (_needsSchoolField) ...[
               const SizedBox(height: 16),
@@ -236,7 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: _onSchoolChanged,
                 options: _schools,
                 loading: _schoolsLoading,
-                prefixIcon: LucideIcons.school,
+                prefixIcon: HugeIcons.strokeRoundedSchool,
                 hint: 'Search or type your school name',
               ),
             ],
@@ -254,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       loading: _classesLoading,
                       enabled: _schoolName.isNotEmpty,
                       allowCreate: false,
-                      prefixIcon: LucideIcons.bookOpen,
+                      prefixIcon: HugeIcons.strokeRoundedBookOpen01,
                       hint: 'Search class',
                     ),
                   ),
@@ -268,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       loading: _sectionsLoading,
                       enabled: _className.isNotEmpty,
                       allowCreate: false,
-                      prefixIcon: LucideIcons.layers,
+                      prefixIcon: HugeIcons.strokeRoundedLayers01,
                       hint: 'Search section',
                     ),
                   ),
@@ -277,12 +289,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
 
             const SizedBox(height: 16),
-            AppTextField(label: 'Password', controller: _password, hint: 'At least 6 characters', obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null),
+            AppTextField(label: 'Password', controller: _password, hint: 'At least 6 characters', obscure: true, prefixIcon: HugeIcons.strokeRoundedLockPassword, validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null),
             const SizedBox(height: 16),
-            AppTextField(label: 'Confirm password', controller: _confirm, hint: 'Re-enter your password', obscure: true, prefixIcon: Icons.lock_outline_rounded, validator: (v) => (v == null || v.isEmpty) ? 'Re-enter your password' : null),
+            AppTextField(label: 'Confirm password', controller: _confirm, hint: 'Re-enter your password', obscure: true, prefixIcon: HugeIcons.strokeRoundedLockPassword, validator: (v) => (v == null || v.isEmpty) ? 'Re-enter your password' : null),
 
             const SizedBox(height: 22),
-            GradientButton(label: 'Create Account', icon: Icons.arrow_forward_rounded, loading: _loading, onPressed: _submit),
+            GradientButton(label: 'Create Account', icon: HugeIcons.strokeRoundedArrowRight01, loading: _loading, onPressed: _submit),
             const SizedBox(height: 22),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

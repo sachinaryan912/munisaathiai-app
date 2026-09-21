@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -160,7 +160,7 @@ class _Body extends StatelessWidget {
     return Stack(
       children: [
         entries.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No timetable set yet', icon: LucideIcons.calendarClock)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No timetable set yet', icon: HugeIcons.strokeRoundedCalendar03)])
             : ListView(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, editable ? 100 : 24),
                 children: _days.map((day) {
@@ -191,7 +191,7 @@ class _Body extends StatelessWidget {
                                         ],
                                       ),
                                     ),
-                                    if (editable) Icon(LucideIcons.pencil, size: 14, color: s.textMuted),
+                                    if (editable) HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, size: 14, color: s.textMuted),
                                   ],
                                 ),
                               ),
@@ -202,7 +202,7 @@ class _Body extends StatelessWidget {
                 }).toList(),
               ),
         if (editable)
-          Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_period', backgroundColor: AppColors.saffron500, onPressed: () => _openEdit(context), child: const Icon(Icons.add, color: Colors.white))),
+          Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_period', backgroundColor: AppColors.saffron500, onPressed: () => _openEdit(context), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
       ],
     );
   }

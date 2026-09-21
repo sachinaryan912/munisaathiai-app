@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -44,14 +44,15 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     super.didChangeDependencies();
     if (!_sentOnMount) {
       _sentOnMount = true;
-      final email = context.read<AuthProvider>().user?.email;
-      if (email != null && email.isNotEmpty) {
-        _repo.sendVerification(email).catchError((e) {
-          if (mounted)
+      final username = context.read<AuthProvider>().user?.username;
+      if (username != null && username.isNotEmpty) {
+        _repo.sendVerification(username).catchError((e) {
+          if (mounted) {
             setState(
               () =>
                   _sendError = e.toString().replaceFirst('ApiException: ', ''),
             );
+          }
           return '';
         });
       }
@@ -67,9 +68,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _otpError = null;
       _loading = true;
     });
-    final email = context.read<AuthProvider>().user?.email ?? '';
+    final username = context.read<AuthProvider>().user?.username ?? '';
     try {
-      await _repo.verifyEmail(email: email, otp: _otp);
+      await _repo.verifyEmail(username: username, otp: _otp);
       if (!mounted) return;
       setState(() => _success = true);
       await Future.delayed(const Duration(milliseconds: 1200));
@@ -88,9 +89,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   Future<void> _resend() async {
     setState(() => _sendError = null);
-    final email = context.read<AuthProvider>().user?.email ?? '';
+    final username = context.read<AuthProvider>().user?.username ?? '';
     try {
-      await _repo.sendVerification(email);
+      await _repo.sendVerification(username);
     } catch (e) {
       setState(
         () => _sendError = e.toString().replaceFirst('ApiException: ', ''),
@@ -126,10 +127,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   color: Color(0xFFD1FAE5),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  LucideIcons.checkCheck,
-                  color: Color(0xFF059669),
-                  size: 38,
+                child: const Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                    color: Color(0xFF059669),
+                    size: 38,
+                  ),
                 ),
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
               const SizedBox(height: 20),
@@ -166,10 +169,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.saffron200, width: 2),
             ),
-            child: const Icon(
-              LucideIcons.mail,
-              color: AppColors.saffron500,
-              size: 26,
+            child: const Center(
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedMail01,
+                color: AppColors.saffron500,
+                size: 26,
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -220,7 +225,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           const SizedBox(height: 22),
           GradientButton(
             label: 'Verify Email',
-            icon: Icons.arrow_forward_rounded,
+            icon: HugeIcons.strokeRoundedArrowRight01,
             loading: _loading,
             onPressed: _verify,
           ),

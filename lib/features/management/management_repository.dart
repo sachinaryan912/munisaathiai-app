@@ -200,6 +200,15 @@ class ManagementRepository {
         return res.data as Map<String, dynamic>;
       });
 
+  /// One-time blast (see `username-migration.sql`) telling every already-onboarded account
+  /// which username it was backfilled with, now that login requires one instead of email.
+  /// Returns {sent, total} — the backend skips (and logs) individual email failures rather
+  /// than aborting the run, so a successful response doesn't guarantee every email landed.
+  Future<Map<String, dynamic>> notifyUsernameMigration() => apiCall(() async {
+        final res = await _dio.post('/management/users/notify-username-migration');
+        return res.data as Map<String, dynamic>;
+      });
+
   // ── Vidya AI knowledge notes ─────────────────────────────────────────────
   Future<List<Map<String, dynamic>>> getKnowledgeNotes() => apiCall(() async {
         final res = await _dio.get('/management/knowledge-notes');

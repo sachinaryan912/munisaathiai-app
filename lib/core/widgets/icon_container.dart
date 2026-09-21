@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_radius.dart';
+import 'app_icon.dart';
 
 /// The "icon in a tinted rounded box" pattern repeated ad-hoc across stat
 /// tiles, list rows, and headers — one reusable widget instead of a fresh
 /// `Container(decoration: BoxDecoration(...))` at every call site.
 class AppIconContainer extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final Color color;
   final double size;
   final double iconSize;
@@ -26,7 +27,7 @@ class AppIconContainer extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(radius)),
-      child: Icon(icon, size: iconSize, color: color),
+      child: Center(child: AppIcon(icon, size: iconSize, color: color)),
     );
   }
 }

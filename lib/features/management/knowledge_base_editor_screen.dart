@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -152,7 +153,7 @@ class _BodyState extends State<_Body> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(_customized ? LucideIcons.pencilLine : LucideIcons.fileText, size: 18, color: AppColors.saffron500),
+                HugeIcon(icon: _customized ? HugeIcons.strokeRoundedEdit02 : HugeIcons.strokeRoundedNote01, size: 18, color: AppColors.saffron500),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -177,7 +178,7 @@ class _BodyState extends State<_Body> {
                     onPressed: _resetting ? null : _resetToOriginal,
                     icon: _resetting
                         ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(LucideIcons.rotateCcw, size: 14),
+                        : const HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 14, color: AppColors.danger),
                     label: const Text('Reset', style: TextStyle(fontSize: 11.5)),
                     style: TextButton.styleFrom(foregroundColor: AppColors.danger),
                   ),
@@ -189,14 +190,14 @@ class _BodyState extends State<_Body> {
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
           child: Row(
             children: [
-              _ModeChip(label: 'Preview', icon: LucideIcons.eye, selected: !_editing, onTap: () {
+              _ModeChip(label: 'Preview', icon: HugeIcons.strokeRoundedView, selected: !_editing, onTap: () {
                 setState(() {
                   _previewText = _controller.text;
                   _editing = false;
                 });
               }),
               const SizedBox(width: 8),
-              _ModeChip(label: 'Edit', icon: LucideIcons.pencilLine, selected: _editing, onTap: () => setState(() => _editing = true)),
+              _ModeChip(label: 'Edit', icon: HugeIcons.strokeRoundedEdit02, selected: _editing, onTap: () => setState(() => _editing = true)),
             ],
           ),
         ),
@@ -280,9 +281,10 @@ class _BodyState extends State<_Body> {
 
 class _ModeChip extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final dynamic icon;
   final bool selected;
   final VoidCallback onTap;
+
   const _ModeChip({required this.label, required this.icon, required this.selected, required this.onTap});
 
   @override
@@ -301,7 +303,7 @@ class _ModeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: selected ? Colors.white : s.textSecondary),
+            AppIcon(icon, size: 14, color: selected ? Colors.white : s.textSecondary),
             const SizedBox(width: 6),
             Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? Colors.white : s.textSecondary)),
           ],

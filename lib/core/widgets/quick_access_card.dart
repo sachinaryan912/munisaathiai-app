@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 import 'section_card.dart';
 
 class QuickAccessCard extends StatelessWidget {
   final String? route;
   final VoidCallback? onTap;
-  final IconData icon;
+  final dynamic icon;
   final Color color;
   final String title;
   final String subtitle;
@@ -38,7 +39,7 @@ class QuickAccessCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, size: 18, color: color),
+            child: Center(child: AppIcon(icon, size: 18, color: color)),
           ),
           const SizedBox(height: 10),
           Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
@@ -54,7 +55,7 @@ class QuickAccessCard extends StatelessWidget {
             children: [
               Text(cta, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: color)),
               const SizedBox(width: 3),
-              Icon(LucideIcons.chevronRight, size: 12, color: color),
+              HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 12, color: color),
             ],
           ),
         ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -35,7 +35,7 @@ class SessionDetailScreen extends StatelessWidget {
                       children: [
                         Expanded(child: Text(session['topic'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary))),
                         IconButton(
-                          icon: const Icon(LucideIcons.messageCircle, color: AppColors.success),
+                          icon: const HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat, color: AppColors.success, size: 20),
                           tooltip: 'WhatsApp Reminder',
                           onPressed: () => _showWhatsappReminder(context, repo, sessionId),
                         ),
@@ -155,7 +155,7 @@ class _AttendanceRowState extends State<_AttendanceRow> {
             children: [
               Expanded(child: Text(widget.record['teacherName'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary))),
               Switch(value: _attended, activeThumbColor: AppColors.saffron500, onChanged: (v) => setState(() => _attended = v)),
-              Icon(_expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown, size: 16, color: s.textMuted),
+              HugeIcon(icon: _expanded ? HugeIcons.strokeRoundedArrowUp01 : HugeIcons.strokeRoundedArrowDown01, size: 16, color: s.textMuted),
             ],
           ),
           if (_expanded) ...[

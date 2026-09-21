@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -61,13 +61,13 @@ class ChildSwitcher extends StatelessWidget {
                 labelStyle: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: active ? Colors.white : s.textSecondary),
                 backgroundColor: s.card,
                 side: BorderSide(color: active ? AppColors.saffron500 : s.border),
-                avatar: active ? null : const Icon(LucideIcons.user, size: 13),
+                avatar: active ? null : const HugeIcon(icon: HugeIcons.strokeRoundedUser, size: 13, color: AppColors.saffron600),
               ),
             );
           }),
           ActionChip(
             label: const Text('Add child'),
-            avatar: const Icon(LucideIcons.plus, size: 14, color: AppColors.saffron600),
+            avatar: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 14, color: AppColors.saffron600),
             onPressed: () => _openAddSheet(context),
             labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.saffron600),
             backgroundColor: AppColors.saffron50,

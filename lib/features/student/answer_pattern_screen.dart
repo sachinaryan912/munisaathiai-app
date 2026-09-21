@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -129,7 +129,7 @@ class _BodyState extends State<_Body> {
     return Stack(
       children: [
         widget.list.isEmpty
-            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No answer patterns yet', subtitle: 'Write a structured answer after each chapter.', icon: LucideIcons.fileText)])
+            ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No answer patterns yet', subtitle: 'Write a structured answer after each chapter.', icon: HugeIcons.strokeRoundedFile01)])
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: widget.list.length,

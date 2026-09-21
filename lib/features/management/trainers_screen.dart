@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -23,7 +23,7 @@ class ManagementTrainersScreen extends StatelessWidget {
         builder: (context, trainers, refresh) {
           final s = context.surface;
           if (trainers.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No trainers yet', icon: LucideIcons.users)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No trainers yet', icon: HugeIcons.strokeRoundedUserGroup)]);
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),

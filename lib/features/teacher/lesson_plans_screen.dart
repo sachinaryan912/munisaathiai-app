@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -104,7 +104,7 @@ class _BodyState extends State<_Body> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -232,7 +232,7 @@ class _BodyState extends State<_Body> {
                       EmptyView(
                         title: widget.list.isEmpty ? 'No lesson plans yet' : 'No lesson plans match your search',
                         subtitle: widget.list.isEmpty ? 'Tap + to create your first lesson plan.' : null,
-                        icon: LucideIcons.notebookPen,
+                        icon: HugeIcons.strokeRoundedNote01,
                       ),
                     ])
                   : ListView.builder(
@@ -246,7 +246,7 @@ class _BodyState extends State<_Body> {
                   return Dismissible(
                     key: ValueKey(p['id']),
                     direction: DismissDirection.endToStart,
-                    background: Container(alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(20)), child: const Icon(LucideIcons.trash2, color: Colors.white)),
+                    background: Container(alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(20)), child: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: Colors.white)),
                     onDismissed: (_) => _delete(p['id'] as int),
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -293,7 +293,7 @@ class _BodyState extends State<_Body> {
         Positioned(
           right: 16,
           bottom: 16,
-          child: FloatingActionButton(heroTag: 'create_lesson_plan', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const Icon(Icons.add, color: Colors.white)),
+          child: FloatingActionButton(heroTag: 'create_lesson_plan', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white)),
         ),
       ],
     );

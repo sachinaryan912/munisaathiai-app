@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -47,7 +47,7 @@ class _TeacherClassScreenState extends State<TeacherClassScreen> {
       title: 'My Class',
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.calendarClock),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 20, color: AppColors.saffron600),
           tooltip: 'Timetable',
           onPressed: authUser?.className == null
               ? null
@@ -59,7 +59,7 @@ class _TeacherClassScreenState extends State<TeacherClassScreen> {
                   ))),
         ),
         IconButton(
-          icon: const Icon(LucideIcons.graduationCap),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedGraduationScroll, size: 20, color: AppColors.saffron600),
           tooltip: 'Peer Teaching Review',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherPeerTeachingReviewScreen())),
         ),
@@ -76,11 +76,11 @@ class _TeacherClassScreenState extends State<TeacherClassScreen> {
                 decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(14)),
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600),
+                    const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600),
                     const SizedBox(width: 8),
                     Text(DateFormat('EEEE, d MMM yyyy').format(_date), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: s.textPrimary)),
                     const Spacer(),
-                    Icon(LucideIcons.chevronDown, size: 16, color: s.textMuted),
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, size: 16, color: s.textMuted),
                   ],
                 ),
               ),
@@ -149,7 +149,7 @@ class _BodyState extends State<_Body> {
   Widget build(BuildContext context) {
     final s = context.surface;
     if (widget.roster.isEmpty) {
-      return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No students assigned to your class yet', icon: LucideIcons.school)]);
+      return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No students assigned to your class yet', icon: HugeIcons.strokeRoundedSchool)]);
     }
     final q = _query.trim().toLowerCase();
     final roster = q.isEmpty ? widget.roster : widget.roster.where((st) => (st['name'] as String? ?? '').toLowerCase().contains(q)).toList();
@@ -161,7 +161,7 @@ class _BodyState extends State<_Body> {
         ),
         Expanded(
           child: roster.isEmpty
-              ? const EmptyView(title: 'No students match your search', icon: LucideIcons.school)
+              ? const EmptyView(title: 'No students match your search', icon: HugeIcons.strokeRoundedSchool)
               : ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
       itemCount: roster.length,
@@ -476,16 +476,16 @@ class _StudentDetailSheetState extends State<_StudentDetailSheet> {
               ],
               OutlinedButton.icon(
                 onPressed: _savingGroup ? null : _manageGroup,
-                icon: _savingGroup ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.users, size: 15),
+                icon: _savingGroup ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : const HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: 15, color: AppColors.saffron600),
                 label: Text(groupmates.isEmpty ? 'Assign to a Group' : 'Manage Group'),
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: OutlinedButton.icon(onPressed: _logCommunityVisit, icon: const Icon(LucideIcons.house, size: 15), label: const Text('Community Visit', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)))),
+                  Expanded(child: OutlinedButton.icon(onPressed: _logCommunityVisit, icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: 15, color: AppColors.saffron600), label: const Text('Community Visit', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)))),
                   const SizedBox(width: 10),
-                  Expanded(child: OutlinedButton.icon(onPressed: _logPeerExamEval, icon: const Icon(LucideIcons.clipboardCheck, size: 15), label: const Text('Peer Exam Eval', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)))),
+                  Expanded(child: OutlinedButton.icon(onPressed: _logPeerExamEval, icon: const HugeIcon(icon: HugeIcons.strokeRoundedClipboardCheck, size: 15, color: AppColors.saffron600), label: const Text('Peer Exam Eval', style: TextStyle(fontSize: 12)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)))),
                 ],
               ),
               const SizedBox(height: 10),
@@ -498,7 +498,7 @@ class _StudentDetailSheetState extends State<_StudentDetailSheet> {
                             studentLabel: widget.student['name'] as String,
                             editableRoles: const ['BUDDY_1', 'BUDDY_2', 'TEACHER_1', 'TEACHER_2', 'COMMUNITY_1', 'COMMUNITY_2'],
                           ))),
-                      icon: const Icon(LucideIcons.clipboardList, size: 15),
+                      icon: const HugeIcon(icon: HugeIcons.strokeRoundedClipboardCheck, size: 15, color: AppColors.saffron600),
                       label: const Text('Evaluation Sheet', style: TextStyle(fontSize: 12)),
                       style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                     ),
@@ -507,7 +507,7 @@ class _StudentDetailSheetState extends State<_StudentDetailSheet> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PtmFileScreen(studentId: widget.student['id'] as int))),
-                      icon: const Icon(LucideIcons.fileText, size: 15),
+                      icon: const HugeIcon(icon: HugeIcons.strokeRoundedFile01, size: 15, color: AppColors.saffron600),
                       label: const Text('PTM File', style: TextStyle(fontSize: 12)),
                       style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                     ),

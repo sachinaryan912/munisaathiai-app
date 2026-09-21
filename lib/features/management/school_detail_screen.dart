@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -83,8 +83,8 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
           appBar: AppBar(
             title: Text(school['name'] as String),
             actions: [
-              IconButton(icon: const Icon(LucideIcons.pencil, size: 19), onPressed: () => _edit(school, refresh)),
-              IconButton(icon: const Icon(LucideIcons.trash2, size: 19, color: AppColors.danger), onPressed: _delete),
+              IconButton(icon: HugeIcon(icon: HugeIcons.strokeRoundedEdit02, size: 19, color: s.textSecondary), onPressed: () => _edit(school, refresh)),
+              IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 19, color: AppColors.danger), onPressed: _delete),
             ],
           ),
           body: ListView(
@@ -115,7 +115,7 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _recomputing ? null : () => _recompute(refresh),
-                  icon: _recomputing ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.refreshCw, size: 15),
+                  icon: _recomputing ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 15, color: s.textSecondary),
                   label: Text(_recomputing ? 'Recomputing...' : 'Recompute MII from real activity'),
                   style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                 ),
@@ -611,11 +611,11 @@ class _ClassCatalogCardState extends State<_ClassCatalogCard> {
                 ...entries.map((e) => ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                       title: Text(e['section'] != null ? '${e['className']} · Section ${e['section']}' : e['className'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: s.textPrimary)),
-                      trailing: IconButton(icon: const Icon(LucideIcons.trash2, size: 17, color: AppColors.danger), onPressed: () => _deleteEntry(e)),
+                      trailing: IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 17, color: AppColors.danger), onPressed: () => _deleteEntry(e)),
                     )),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                child: TextButton.icon(onPressed: _addEntry, icon: const Icon(LucideIcons.plus, size: 15), label: const Text('Add Class / Section')),
+                child: TextButton.icon(onPressed: _addEntry, icon: const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign, size: 15, color: AppColors.saffron600), label: const Text('Add Class / Section')),
               ),
             ],
           ),
@@ -685,7 +685,7 @@ class _InlineErrorCard extends StatelessWidget {
     return SectionCard(
       child: Row(
         children: [
-          Icon(LucideIcons.triangleAlert, size: 16, color: AppColors.danger),
+          const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 16, color: AppColors.danger),
           const SizedBox(width: 8),
           Expanded(child: Text(message, style: TextStyle(fontSize: 12, color: s.textMuted))),
           TextButton(onPressed: onRetry, child: const Text('Try again', style: TextStyle(fontSize: 12))),

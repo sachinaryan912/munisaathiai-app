@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -95,7 +95,7 @@ class _BodyState extends State<_Body> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(children: [Icon(LucideIcons.heart, color: Colors.white, size: 20), SizedBox(width: 8), Text('Ghar Ek Pathshala', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16))]),
+              const Row(children: [HugeIcon(icon: HugeIcons.strokeRoundedFavourite, color: Colors.white, size: 20), SizedBox(width: 8), Text('Ghar Ek Pathshala', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16))]),
               const SizedBox(height: 8),
               const Text("Your home is your child's second school. Complete home learning activities every week to earn participation points.", style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
               const SizedBox(height: 14),
@@ -123,7 +123,7 @@ class _BodyState extends State<_Body> {
                 return ListTile(
                   onTap: () => _toggle(a['id'] as int),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  leading: Icon(done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: done ? AppColors.success : s.textMuted, size: 22),
+                  leading: HugeIcon(icon: done ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedCircle, color: done ? AppColors.success : s.textMuted, size: 22),
                   title: Text(a['name'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, decoration: done ? TextDecoration.lineThrough : null, color: done ? s.textMuted : s.textPrimary)),
                 );
               }).toList(),

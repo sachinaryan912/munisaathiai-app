@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -156,7 +156,7 @@ class _HeroCard extends StatelessWidget {
                 children: [
                   Text('See My Progress', style: TextStyle(color: AppColors.saffron600, fontSize: 12.5, fontWeight: FontWeight.w800)),
                   const SizedBox(width: 4),
-                  Icon(LucideIcons.chevronRight, size: 14, color: AppColors.saffron600),
+                  const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 14, color: AppColors.saffron600),
                 ],
               ),
             ),
@@ -250,13 +250,13 @@ class _QuickAccessGrid extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 1.05,
           children: [
-            QuickAccessCard(route: '/student/study', icon: LucideIcons.bookOpen, color: const Color(0xFF6366F1), title: 'Self Study', subtitle: selfStudySubtitle, cta: 'Continue Learning'),
-            QuickAccessCard(route: '/student/assignments', icon: LucideIcons.fileCheck, color: const Color(0xFF10B981), title: 'Assignments', subtitle: assignSubtitle, cta: 'Check My Work'),
-            QuickAccessCard(route: '/student/peer-teaching', icon: LucideIcons.graduationCap, color: const Color(0xFFF43F5E), title: 'Peer Teaching', subtitle: peerSubtitle, cta: 'Teach a Friend'),
-            QuickAccessCard(route: '/student/feedback', icon: LucideIcons.heart, color: const Color(0xFFEC4899), title: 'Feedback', subtitle: fbSubtitle, cta: 'Share Feedback'),
+            QuickAccessCard(route: '/student/study', icon: HugeIcons.strokeRoundedBookOpen01, color: const Color(0xFF6366F1), title: 'Self Study', subtitle: selfStudySubtitle, cta: 'Continue Learning'),
+            QuickAccessCard(route: '/student/assignments', icon: HugeIcons.strokeRoundedFileCheck, color: const Color(0xFF10B981), title: 'Assignments', subtitle: assignSubtitle, cta: 'Check My Work'),
+            QuickAccessCard(route: '/student/peer-teaching', icon: HugeIcons.strokeRoundedGraduationScroll, color: const Color(0xFFF43F5E), title: 'Peer Teaching', subtitle: peerSubtitle, cta: 'Teach a Friend'),
+            QuickAccessCard(route: '/student/feedback', icon: HugeIcons.strokeRoundedFavourite, color: const Color(0xFFEC4899), title: 'Feedback', subtitle: fbSubtitle, cta: 'Share Feedback'),
             QuickAccessCard(
               onTap: () => showMyActionPlansSheet(context),
-              icon: LucideIcons.clipboardList,
+              icon: HugeIcons.strokeRoundedClipboardList,
               color: const Color(0xFF0EA5E9),
               title: 'Action Plan',
               subtitle: 'Tasks and follow-ups assigned to you',
@@ -264,7 +264,7 @@ class _QuickAccessGrid extends StatelessWidget {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CommunityHubScreen())),
-              icon: LucideIcons.globe,
+              icon: HugeIcons.strokeRoundedGlobe02,
               color: const Color(0xFF14B8A6),
               title: 'Community Hub',
               subtitle: 'Wakeup Call Board, events, workshops & clubs',
@@ -272,7 +272,7 @@ class _QuickAccessGrid extends StatelessWidget {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimetableScreen(title: 'My Timetable'))),
-              icon: LucideIcons.calendarClock,
+              icon: HugeIcons.strokeRoundedCalendar03,
               color: const Color(0xFFF59E0B),
               title: 'Timetable',
               subtitle: 'Your weekly class timetable',
@@ -280,7 +280,7 @@ class _QuickAccessGrid extends StatelessWidget {
             ),
             QuickAccessCard(
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProgressChartScreen())),
-              icon: LucideIcons.trendingUp,
+              icon: HugeIcons.strokeRoundedTrendingUp,
               color: const Color(0xFF8B5CF6),
               title: 'Progress Chart',
               subtitle: 'Track your self-competition over time',
@@ -289,12 +289,20 @@ class _QuickAccessGrid extends StatelessWidget {
             if (myId != null)
               QuickAccessCard(
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PtmFileScreen(studentId: myId))),
-                icon: LucideIcons.fileText,
+                icon: HugeIcons.strokeRoundedFile01,
                 color: const Color(0xFFEF4444),
                 title: 'PTM File',
                 subtitle: 'Your consolidated parent-teacher meeting report',
                 cta: 'Open File',
               ),
+            QuickAccessCard(
+              route: '/student/videos',
+              icon: HugeIcons.strokeRoundedClapperboard,
+              color: const Color(0xFFDC2626),
+              title: 'Video Gallery',
+              subtitle: 'Browse unlisted YouTube videos from Management',
+              cta: 'Watch Videos',
+            ),
             SectionCard(
               padding: const EdgeInsets.all(16),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SelfGrowthHubScreen())),
@@ -302,7 +310,7 @@ class _QuickAccessGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)), child: const Icon(LucideIcons.sparkles, size: 18, color: Color(0xFF8B5CF6))),
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedSparkles, size: 18, color: Color(0xFF8B5CF6)))),
                   const SizedBox(height: 10),
                   Text('Self-Growth Journal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
                   const SizedBox(height: 3),
@@ -311,7 +319,7 @@ class _QuickAccessGrid extends StatelessWidget {
                   Row(children: [
                     Text('Explore', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF8B5CF6))),
                     const SizedBox(width: 3),
-                    const Icon(LucideIcons.chevronRight, size: 12, color: Color(0xFF8B5CF6)),
+                    const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 12, color: Color(0xFF8B5CF6)),
                   ]),
                 ],
               ),
@@ -338,7 +346,7 @@ class _BuddyCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFFBBF24), AppColors.saffron500]), shape: BoxShape.circle),
-            child: const Icon(LucideIcons.users, color: Colors.white, size: 20),
+            child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, color: Colors.white, size: 20)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -364,7 +372,7 @@ class _BuddyCard extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(onPressed: () => context.go('/student/buddy'), icon: Icon(LucideIcons.chevronRight, color: s.textMuted)),
+          IconButton(onPressed: () => context.go('/student/buddy'), icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: s.textMuted, size: 16)),
         ],
       ),
     );
@@ -498,7 +506,7 @@ class _ActivityCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [Icon(LucideIcons.clock, size: 15, color: AppColors.saffron500), const SizedBox(width: 6), Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary))]),
+        Row(children: [HugeIcon(icon: HugeIcons.strokeRoundedTime02, size: 15, color: AppColors.saffron500), const SizedBox(width: 6), Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary))]),
         const SizedBox(height: 10),
         SectionCard(
           padding: const EdgeInsets.symmetric(vertical: 6),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -35,7 +35,7 @@ class _PrincipalTeachersScreenState extends State<PrincipalTeachersScreen> {
       title: 'Teachers',
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.bookOpen),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedBookOpen01, size: 20, color: AppColors.saffron600),
           tooltip: 'Training',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrincipalTrainingScreen())),
         ),
@@ -45,7 +45,7 @@ class _PrincipalTeachersScreenState extends State<PrincipalTeachersScreen> {
         builder: (context, allTeachers, refresh) {
           final s = context.surface;
           if (allTeachers.isEmpty) {
-            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: LucideIcons.users)]);
+            return ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No teachers found', icon: HugeIcons.strokeRoundedUserGroup)]);
           }
           final q = _query.trim().toLowerCase();
           final teachers = q.isEmpty
@@ -63,7 +63,7 @@ class _PrincipalTeachersScreenState extends State<PrincipalTeachersScreen> {
               ),
               Expanded(
                 child: teachers.isEmpty
-                    ? const EmptyView(title: 'No teachers match your search', icon: LucideIcons.users)
+                    ? const EmptyView(title: 'No teachers match your search', icon: HugeIcons.strokeRoundedUserGroup)
                     : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
             itemCount: teachers.length,

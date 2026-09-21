@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -164,7 +164,7 @@ class _CenterWorkTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No center work logged yet', subtitle: 'Research & Creativity, Construction, Math & Science, Role Play, ABC.', icon: LucideIcons.layoutGrid)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No center work logged yet', subtitle: 'Research & Creativity, Construction, Math & Science, Role Play, ABC.', icon: HugeIcons.strokeRoundedLayout01)])
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                     itemCount: items.length,
@@ -188,7 +188,7 @@ class _CenterWorkTab extends StatelessWidget {
                       );
                     },
                   ),
-            Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_center_work', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+            Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_center_work', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },
@@ -273,7 +273,7 @@ class _ValuesDiscussionTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No discussions logged yet', subtitle: 'The daily first-period values discussion.', icon: LucideIcons.handHeart)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No discussions logged yet', subtitle: 'The daily first-period values discussion.', icon: HugeIcons.strokeRoundedFavourite)])
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                     itemCount: items.length,
@@ -294,7 +294,7 @@ class _ValuesDiscussionTab extends StatelessWidget {
                       );
                     },
                   ),
-            Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_values_discussion', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+            Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_values_discussion', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },
@@ -340,7 +340,7 @@ class _OathTrackerTabState extends State<_OathTrackerTab> {
             SectionCard(
               child: Column(
                 children: [
-                  Icon(recitedToday ? LucideIcons.circleCheck : LucideIcons.circle, size: 32, color: recitedToday ? AppColors.success : s.textMuted),
+                  HugeIcon(icon: recitedToday ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedCircle, size: 32, color: recitedToday ? AppColors.success : s.textMuted),
                   const SizedBox(height: 10),
                   Text(recitedToday ? 'Oath recited today' : 'Oath not marked yet today', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
                   const SizedBox(height: 12),
@@ -360,7 +360,7 @@ class _OathTrackerTabState extends State<_OathTrackerTab> {
                 child: Column(
                   children: items.map((e) => ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-                        leading: const Icon(LucideIcons.circleCheck, size: 16, color: AppColors.success),
+                        leading: const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 16, color: AppColors.success),
                         title: Text(e['date'] as String, style: TextStyle(fontSize: 12.5, color: s.textPrimary)),
                       )).toList(),
                 ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -117,7 +117,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -209,7 +209,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
         ],
       ),
       floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(heroTag: 'create_session', backgroundColor: AppColors.saffron500, onPressed: _openCreateSession, child: const Icon(Icons.add, color: Colors.white))
+          ? FloatingActionButton(heroTag: 'create_session', backgroundColor: AppColors.saffron500, onPressed: _openCreateSession, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))
           : null,
     );
   }
@@ -225,7 +225,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
     if (sessions.isEmpty) {
       return ListView(children: [
         const SizedBox(height: 80),
-        EmptyView(title: _sessions!.isEmpty ? 'No training sessions yet' : 'No sessions match your search', icon: LucideIcons.bookOpen),
+        EmptyView(title: _sessions!.isEmpty ? 'No training sessions yet' : 'No sessions match your search', icon: HugeIcons.strokeRoundedBookOpen01),
       ]);
     }
     return ListView.builder(
@@ -239,7 +239,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: sess['id'] as int))).then((_) => _load()),
                                         child: Row(
                                           children: [
-                                            Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Icon(LucideIcons.bookOpen, size: 18, color: AppColors.saffron600)),
+                                            Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(13)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedBookOpen01, size: 18, color: AppColors.saffron600))),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
@@ -271,7 +271,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
     if (evidence.isEmpty) {
       return ListView(children: [
         const SizedBox(height: 80),
-        EmptyView(title: _evidence!.isEmpty ? 'No evidence pending review' : 'No evidence matches your search', icon: LucideIcons.circleCheck),
+        EmptyView(title: _evidence!.isEmpty ? 'No evidence pending review' : 'No evidence matches your search', icon: HugeIcons.strokeRoundedCheckmarkCircle02),
       ]);
     }
     return ListView.builder(
@@ -301,7 +301,7 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                                               Padding(padding: const EdgeInsets.only(top: 6), child: Text('AI: ${e['aiScore']}/${e['aiMaxScore']} — ${e['aiVerdict'] ?? ''}', style: TextStyle(fontSize: 11, color: s.textSecondary))),
                                             const SizedBox(height: 10),
                                             if (verified)
-                                              const Row(children: [Icon(LucideIcons.circleCheck, size: 15, color: AppColors.success), SizedBox(width: 6), Text('Verified', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success))])
+                                              const Row(children: [HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 15, color: AppColors.success), SizedBox(width: 6), Text('Verified', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success))])
                                             else
                                               Row(children: [
                                                 Expanded(child: OutlinedButton(onPressed: () => _verify(e['id'] as int, true), style: OutlinedButton.styleFrom(foregroundColor: AppColors.success, padding: const EdgeInsets.symmetric(vertical: 9)), child: const Text('Verify', style: TextStyle(fontSize: 12)))),

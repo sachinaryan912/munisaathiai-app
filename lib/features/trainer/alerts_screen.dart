@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -45,7 +45,7 @@ class _TrainerAlertsScreenState extends State<TrainerAlertsScreen> {
         builder: (context, allAlerts, refresh) {
           final s = context.surface;
           if (allAlerts.isEmpty) {
-            return ListView(children: const [SizedBox(height: 140), EmptyView(title: 'All Clear!', subtitle: 'No active alerts across your schools.', icon: LucideIcons.bellOff)]);
+            return ListView(children: const [SizedBox(height: 140), EmptyView(title: 'All Clear!', subtitle: 'No active alerts across your schools.', icon: HugeIcons.strokeRoundedNotificationOff01)]);
           }
           final q = _query.trim().toLowerCase();
           final alerts = q.isEmpty
@@ -79,7 +79,7 @@ class _TrainerAlertsScreenState extends State<TrainerAlertsScreen> {
   List<Widget> _section(String label, List<Map<String, dynamic>> items, Color color, MuniSurface s) {
     return [
       Row(children: [
-        Icon(LucideIcons.triangleAlert, size: 13, color: color),
+        HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 13, color: color),
         const SizedBox(width: 6),
         Text('$label (${items.length})', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: color, letterSpacing: 0.3)),
       ]),
@@ -104,7 +104,7 @@ class _TrainerAlertsScreenState extends State<TrainerAlertsScreen> {
                           alignment: Alignment.centerRight,
                           child: TextButton.icon(
                             onPressed: () => _createActionPlan(context, a['schoolName'] as String),
-                            icon: const Icon(LucideIcons.clipboardList, size: 13),
+                            icon: const HugeIcon(icon: HugeIcons.strokeRoundedTask01, size: 13, color: AppColors.saffron600),
                             label: const Text('Create Action Plan', style: TextStyle(fontSize: 11)),
                             style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
                           ),

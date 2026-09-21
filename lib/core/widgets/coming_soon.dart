@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_theme.dart';
 
 class ComingSoon extends StatelessWidget {
@@ -13,7 +13,7 @@ class ComingSoon extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.hammer, size: 34, color: s.textMuted),
+          HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, size: 34, color: s.textMuted),
           const SizedBox(height: 12),
           Text('$label is being built', style: TextStyle(fontWeight: FontWeight.w800, color: s.textPrimary)),
         ],

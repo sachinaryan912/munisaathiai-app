@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -98,7 +98,7 @@ class _BodyState extends State<_Body> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                const Icon(LucideIcons.notebookPen, size: 17, color: AppColors.saffron500),
+                const HugeIcon(icon: HugeIcons.strokeRoundedNote01, size: 17, color: AppColors.saffron500),
                 const SizedBox(width: 8),
                 Expanded(child: Text('This Week — ${_formatWeek(widget.weekStartStr)}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: s.textPrimary))),
               ]),
@@ -113,7 +113,7 @@ class _BodyState extends State<_Body> {
               if (_savedMsg != null) ...[const SizedBox(height: 8), Text(_savedMsg!, style: const TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w700))],
               if (_saveError != null) ...[const SizedBox(height: 8), Text(_saveError!, style: const TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w700))],
               const SizedBox(height: 14),
-              GradientButton(label: 'Save Reflection', icon: Icons.check_rounded, loading: _saving, onPressed: _save, height: 46),
+              GradientButton(label: 'Save Reflection', icon: HugeIcons.strokeRoundedCheckmarkCircle02, loading: _saving, onPressed: _save, height: 46),
             ],
           ),
         ),
@@ -121,7 +121,7 @@ class _BodyState extends State<_Body> {
         Text('Past Reflections', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
         const SizedBox(height: 10),
         if (widget.history.isEmpty)
-          const EmptyView(title: 'No past reflections yet', icon: LucideIcons.notebookPen)
+          const EmptyView(title: 'No past reflections yet', icon: HugeIcons.strokeRoundedNote01)
         else
           ...widget.history.asMap().entries.map((entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -141,7 +141,7 @@ class _BodyState extends State<_Body> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -221,7 +221,7 @@ class _BodyState extends State<_Body> {
                       EmptyView(
                         title: widget.list.isEmpty ? 'No observations recorded yet' : 'No observations match your search',
                         subtitle: widget.list.isEmpty ? 'Tap + to record a classroom observation.' : null,
-                        icon: LucideIcons.fileCheck,
+                        icon: HugeIcons.strokeRoundedFileCheck,
                       ),
                     ])
                   : ListView.builder(
@@ -257,24 +257,24 @@ class _BodyState extends State<_Body> {
                           if ((o['notes'] as String?)?.isNotEmpty == true) Padding(padding: const EdgeInsets.only(top: 8), child: Text(o['notes'] as String, style: TextStyle(fontSize: 12, color: s.textSecondary))),
                           if (strengths.isNotEmpty) ...[
                             const SizedBox(height: 8),
-                            ...strengths.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(LucideIcons.circleCheck, size: 12, color: AppColors.success), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
+                            ...strengths.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 12, color: AppColors.success), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
                           ],
                           if (improvements.isNotEmpty) ...[
                             const SizedBox(height: 4),
-                            ...improvements.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(LucideIcons.arrowUpRight, size: 12, color: AppColors.warning), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
+                            ...improvements.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const HugeIcon(icon: HugeIcons.strokeRoundedArrowUpRight01, size: 12, color: AppColors.warning), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
                           ],
                           if (actionPoints.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text('Action Points', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: s.textPrimary)),
                             const SizedBox(height: 4),
-                            ...actionPoints.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(LucideIcons.target, size: 12, color: Color(0xFF6366F1)), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
+                            ...actionPoints.map((line) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const HugeIcon(icon: HugeIcons.strokeRoundedTarget01, size: 12, color: Color(0xFF6366F1)), const SizedBox(width: 6), Expanded(child: Text(line, style: TextStyle(fontSize: 11, color: s.textSecondary)))])),
                           ],
                           const SizedBox(height: 6),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton.icon(
                               onPressed: () => _createActionPlanFromObservation(o),
-                              icon: const Icon(LucideIcons.clipboardList, size: 13),
+                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedClipboardCheck, size: 13, color: AppColors.saffron600),
                               label: const Text('Create Action Plan', style: TextStyle(fontSize: 11)),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero),
                             ),
@@ -288,7 +288,7 @@ class _BodyState extends State<_Body> {
             ),
           ],
         ),
-        Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'create_observation', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const Icon(Icons.add, color: Colors.white))),
+        Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'create_observation', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
       ],
     );
   }

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -101,7 +101,7 @@ class _BodyState extends State<_Body> {
                       EmptyView(
                         title: widget.list.isEmpty ? 'No assignments submitted yet' : 'No assignments match your search',
                         subtitle: widget.list.isEmpty ? 'Tap the + button to submit your first one.' : null,
-                        icon: LucideIcons.fileCheck,
+                        icon: HugeIcons.strokeRoundedFileCheck,
                       ),
                     ])
                   : AnimationLimiter(
@@ -145,7 +145,7 @@ class _BodyState extends State<_Body> {
                                   ],
                                 ),
                               ),
-                              if (hasFile) Icon(LucideIcons.fileText, size: 15, color: s.textMuted),
+                              if (hasFile) HugeIcon(icon: HugeIcons.strokeRoundedFile01, size: 15, color: s.textMuted),
                             ],
                           ),
                           if ((a['feedback'] as String? ?? '').isNotEmpty) ...[
@@ -156,14 +156,14 @@ class _BodyState extends State<_Body> {
                             const SizedBox(height: 10),
                             ...strengths.map((line) => Padding(
                                   padding: const EdgeInsets.only(bottom: 3),
-                                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(LucideIcons.circleCheck, size: 13, color: AppColors.success), const SizedBox(width: 6), Expanded(child: Text(line.trim(), style: TextStyle(fontSize: 11.5, color: s.textSecondary)))]),
+                                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 13, color: AppColors.success), const SizedBox(width: 6), Expanded(child: Text(line.trim(), style: TextStyle(fontSize: 11.5, color: s.textSecondary)))]),
                                 )),
                           ],
                           if (improvements.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             ...improvements.map((line) => Padding(
                                   padding: const EdgeInsets.only(bottom: 3),
-                                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(LucideIcons.arrowUpRight, size: 13, color: AppColors.warning), const SizedBox(width: 6), Expanded(child: Text(line.trim(), style: TextStyle(fontSize: 11.5, color: s.textSecondary)))]),
+                                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const HugeIcon(icon: HugeIcons.strokeRoundedArrowUpRight01, size: 13, color: AppColors.warning), const SizedBox(width: 6), Expanded(child: Text(line.trim(), style: TextStyle(fontSize: 11.5, color: s.textSecondary)))]),
                                 )),
                           ],
                         ],

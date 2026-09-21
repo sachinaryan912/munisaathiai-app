@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/system_ui.dart';
@@ -11,7 +11,6 @@ import '../../../core/widgets/otp_input.dart';
 import '../../../core/widgets/resend_timer.dart';
 import '../data/auth_repository.dart';
 import 'auth_scaffold.dart';
-import 'verify_email_screen.dart' show maskEmail;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -23,30 +22,30 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _repo = AuthRepository();
   int _step = 0;
-  String _email = '';
+  String _username = '';
   String _otp = '';
   String? _otpError;
   String? _serverError;
   bool _loading = false;
   bool _success = false;
 
-  final _emailField = TextEditingController();
+  final _usernameField = TextEditingController();
   final _newPassword = TextEditingController();
   final _confirmPassword = TextEditingController();
-  final _emailFormKey = GlobalKey<FormState>();
+  final _usernameFormKey = GlobalKey<FormState>();
   final _passFormKey = GlobalKey<FormState>();
   final _otpKey = GlobalKey<OtpInputState>();
 
   Future<void> _sendOtp() async {
-    if (!_emailFormKey.currentState!.validate()) return;
+    if (!_usernameFormKey.currentState!.validate()) return;
     setState(() {
       _loading = true;
       _serverError = null;
     });
     try {
-      await _repo.forgotPassword(_emailField.text.trim());
+      await _repo.forgotPassword(_usernameField.text.trim());
       setState(() {
-        _email = _emailField.text.trim();
+        _username = _usernameField.text.trim();
         _step = 1;
       });
     } catch (e) {
@@ -72,7 +71,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _resend() async {
     setState(() => _serverError = null);
     try {
-      await _repo.forgotPassword(_email);
+      await _repo.forgotPassword(_username);
     } catch (e) {
       setState(
         () => _serverError = e.toString().replaceFirst('ApiException: ', ''),
@@ -93,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
     try {
       await _repo.resetPassword(
-        email: _email,
+        username: _username,
         otp: _otp,
         newPassword: _newPassword.text,
       );
@@ -134,10 +133,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   color: Color(0xFFD1FAE5),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  LucideIcons.checkCheck,
-                  color: Color(0xFF059669),
-                  size: 38,
+                child: const Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                    color: Color(0xFF059669),
+                    size: 38,
+                  ),
                 ),
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
               const SizedBox(height: 20),
@@ -167,7 +168,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ? 'Enter OTP'
           : 'Set new password',
       subtitle: _step == 0
-          ? "Enter your registered email and we'll send you a 6-digit OTP."
+          ? "Enter your username and we'll send you a 6-digit OTP."
           : _step == 1
           ? ''
           : 'Choose a strong password for your account.',
@@ -195,24 +196,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           if (_step == 0)
             Form(
-              key: _emailFormKey,
+              key: _usernameFormKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppTextField(
-                    label: 'Email address',
-                    controller: _emailField,
-                    hint: 'you@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: Icons.mail_outline_rounded,
-                    validator: (v) => (v == null || !v.contains('@'))
-                        ? 'Enter a valid email'
+                    label: 'Username',
+                    controller: _usernameField,
+                    hint: 'your_username',
+                    prefixIcon: HugeIcons.strokeRoundedUser,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Enter your username'
                         : null,
                   ),
                   const SizedBox(height: 20),
                   GradientButton(
                     label: 'Send OTP',
-                    icon: Icons.arrow_forward_rounded,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     loading: _loading,
                     onPressed: _sendOtp,
                   ),
@@ -224,14 +224,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               text: TextSpan(
                 style: TextStyle(color: s.textSecondary, fontSize: 13.5),
                 children: [
-                  const TextSpan(text: 'A 6-digit code was sent to '),
+                  const TextSpan(text: 'A 6-digit code was sent to the email registered for '),
                   TextSpan(
-                    text: maskEmail(_email),
+                    text: _username,
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: s.textPrimary,
                     ),
                   ),
+                  const TextSpan(text: '.'),
                 ],
               ),
             ),
@@ -244,7 +245,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 20),
             GradientButton(
               label: 'Verify OTP',
-              icon: Icons.arrow_forward_rounded,
+              icon: HugeIcons.strokeRoundedArrowRight01,
               onPressed: _verifyOtpStep,
             ),
             const SizedBox(height: 12),
@@ -252,7 +253,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 6),
             TextButton.icon(
               onPressed: () => setState(() => _step = 0),
-              icon: const Icon(Icons.arrow_back_rounded, size: 16),
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 16, color: AppColors.saffron600),
               label: const Text('Back'),
             ),
           ],
@@ -267,7 +268,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: _newPassword,
                     hint: 'At least 6 characters',
                     obscure: true,
-                    prefixIcon: Icons.lock_outline_rounded,
+                    prefixIcon: HugeIcons.strokeRoundedLockPassword,
                     validator: (v) => (v == null || v.length < 6)
                         ? 'At least 6 characters'
                         : null,
@@ -278,7 +279,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: _confirmPassword,
                     hint: 'Re-enter your password',
                     obscure: true,
-                    prefixIcon: Icons.lock_outline_rounded,
+                    prefixIcon: HugeIcons.strokeRoundedLockPassword,
                     validator: (v) => (v == null || v.isEmpty)
                         ? 'Re-enter your password'
                         : null,
@@ -286,7 +287,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 20),
                   GradientButton(
                     label: 'Reset Password',
-                    icon: Icons.arrow_forward_rounded,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     loading: _loading,
                     onPressed: _resetPassword,
                   ),
@@ -324,7 +325,7 @@ class _StepIndicator extends StatelessWidget {
   final int step;
   const _StepIndicator({required this.step});
 
-  static const _labels = ['Email', 'Verify OTP', 'New Password'];
+  static const _labels = ['Username', 'Verify OTP', 'New Password'];
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +344,7 @@ class _StepIndicator extends StatelessWidget {
                     height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: done || active ? AppColors.saffron500 : s.card,
+                      color: done || active ? AppColors.saffron500 : Colors.transparent,
                       border: Border.all(
                         color: done || active ? AppColors.saffron500 : s.border,
                         width: 2,
@@ -351,8 +352,8 @@ class _StepIndicator extends StatelessWidget {
                     ),
                     child: Center(
                       child: done
-                          ? const Icon(
-                              Icons.check,
+                          ? const HugeIcon(
+                              icon: HugeIcons.strokeRoundedTick01,
                               size: 14,
                               color: Colors.white,
                             )

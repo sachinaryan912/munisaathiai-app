@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/csv_export.dart';
@@ -73,7 +73,7 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
                         children: [
                           Expanded(child: ListSearchField(controller: _searchCtrl, hint: 'Search by name, district or trainer', onChanged: (v) => setState(() => _query = v))),
                           const SizedBox(width: 8),
-                          IconButton(icon: const Icon(LucideIcons.download), tooltip: 'Export CSV', onPressed: () => _export(schools)),
+                          IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedDownload01, size: 20, color: AppColors.saffron500), tooltip: 'Export CSV', onPressed: () => _export(schools)),
                         ],
                       ),
                     ),
@@ -84,7 +84,7 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
                             EmptyView(
                               title: allSchools.isEmpty ? 'No schools yet' : 'No schools match your search',
                               subtitle: allSchools.isEmpty ? 'Tap + to add your first school.' : null,
-                              icon: LucideIcons.school,
+                              icon: HugeIcons.strokeRoundedSchool,
                             ),
                           ])
                         : ListView.builder(

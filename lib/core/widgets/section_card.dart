@@ -1,27 +1,36 @@
 import 'package:flutter/material.dart';
-import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
-import '../theme/app_theme.dart';
 
-/// The one recurring "white rounded card with soft shadow" surface used
-/// everywhere — stat tiles, list rows, panels.
+/// The refined iOS Inset Grouped surface used across the app — clean hairline border,
+/// subtle ambient diffuse elevation, and squircle corner radius.
 class SectionCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
+  final BorderRadiusGeometry? borderRadius;
 
-  const SectionCard({super.key, required this.child, this.padding = const EdgeInsets.all(18), this.onTap});
+  const SectionCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+    this.borderRadius,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final s = context.surface;
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final radius = borderRadius ?? BorderRadius.circular(16);
+
     final card = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: s.card,
-        borderRadius: AppRadius.lgAll,
-        border: dark ? null : Border.all(color: s.border, width: 1),
+        color: dark ? const Color(0xFF161B26) : Colors.white,
+        borderRadius: radius,
+        border: Border.all(
+          color: dark ? const Color(0xFF262E3D) : const Color(0xFFE5E7EB),
+          width: 0.6,
+        ),
         boxShadow: AppShadows.soft(dark),
       ),
       child: child,
@@ -30,8 +39,12 @@ class SectionCard extends StatelessWidget {
     if (onTap == null) return card;
     return Material(
       color: Colors.transparent,
-      borderRadius: AppRadius.lgAll,
-      child: InkWell(borderRadius: AppRadius.lgAll, onTap: onTap, child: card),
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius is BorderRadius ? radius : BorderRadius.circular(16),
+        onTap: onTap,
+        child: card,
+      ),
     );
   }
 }

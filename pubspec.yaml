@@ -1,7 +1,7 @@
 name: munisaathiai
 description: "Muni Saathi AI — AI-powered monitoring and implementation-tracking platform for the Muni Model."
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.1.0+5
 
 environment:
   sdk: ^3.11.5
@@ -30,7 +30,6 @@ dependencies:
   flutter_animate: ^4.5.2
   fl_chart: ^0.69.0
   percent_indicator: ^4.2.3
-  lucide_icons_flutter: ^3.0.4
   flutter_markdown_plus: ^1.0.3
   shimmer: ^3.0.0
   flutter_staggered_animations: ^1.1.1
@@ -51,6 +50,9 @@ dependencies:
   # version exists, so no backend endpoint is needed to drive this.
   in_app_update: ^4.2.2
 
+  # Keeps the screen awake during a long video upload — a locked phone can stall the transfer.
+  wakelock_plus: ^1.2.8
+
   # Push notifications
   firebase_core: ^3.8.0
   firebase_messaging: ^15.1.5
@@ -59,6 +61,7 @@ dependencies:
   speech_to_text: ^7.4.0
   flutter_edge_tts: ^0.0.2
   audioplayers: ^6.7.1
+  hugeicons: ^1.2.0
 
 dev_dependencies:
   flutter_test:

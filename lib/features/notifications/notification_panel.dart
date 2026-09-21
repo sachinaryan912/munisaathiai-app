@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_theme.dart';
@@ -142,7 +142,7 @@ class _NotificationTile extends StatelessWidget {
               const SizedBox(width: 6),
               Container(width: 7, height: 7, margin: const EdgeInsets.only(top: 4), decoration: BoxDecoration(color: primary, shape: BoxShape.circle)),
             ] else
-              Icon(LucideIcons.check, size: 14, color: s.textMuted),
+              HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 14, color: s.textMuted),
           ],
         ),
       ),

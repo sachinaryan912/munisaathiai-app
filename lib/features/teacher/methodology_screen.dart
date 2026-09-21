@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -37,12 +37,12 @@ class _TeacherMethodologyScreenState extends State<TeacherMethodologyScreen> {
       title: 'Methodology',
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.notebookPen),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedNote01, size: 20, color: AppColors.saffron600),
           tooltip: 'Teaching Journal',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherJournalScreen())),
         ),
         IconButton(
-          icon: const Icon(LucideIcons.tv),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedTv01, size: 20, color: AppColors.saffron600),
           tooltip: 'Training Videos',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AppShell(title: 'Training Videos', showAiFab: false, body: VideoResourcesScreen()))),
         ),
@@ -59,11 +59,11 @@ class _TeacherMethodologyScreenState extends State<TeacherMethodologyScreen> {
                 decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(14)),
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600),
+                    const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600),
                     const SizedBox(width: 8),
                     Text(DateFormat('EEEE, d MMM yyyy').format(_date), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: s.textPrimary)),
                     const Spacer(),
-                    Icon(LucideIcons.chevronDown, size: 16, color: s.textMuted),
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, size: 16, color: s.textMuted),
                   ],
                 ),
               ),

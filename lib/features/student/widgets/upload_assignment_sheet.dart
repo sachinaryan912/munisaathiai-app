@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -60,7 +60,7 @@ Future<void> showUploadAssignmentSheet(BuildContext context, StudentRepository r
                       ),
                       child: Row(
                         children: [
-                          Icon(file != null ? LucideIcons.fileCheck : LucideIcons.upload, color: AppColors.saffron600, size: 20),
+                          HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: AppColors.saffron600, size: 20),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(

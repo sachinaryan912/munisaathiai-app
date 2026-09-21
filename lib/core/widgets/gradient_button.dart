@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
+import 'app_icon.dart';
 
 class GradientButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
-  final IconData? icon;
+  final dynamic icon;
   final List<Color>? colors;
   final double height;
 
@@ -71,7 +72,7 @@ class _GradientButtonState extends State<GradientButton> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (widget.icon != null) ...[
-                            Icon(widget.icon, color: Colors.white, size: 19),
+                            AppIcon(widget.icon, color: Colors.white, size: 19),
                             const SizedBox(width: 8),
                           ],
                           Text(

@@ -3,10 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/data/auth_provider.dart';
@@ -22,7 +22,7 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const DashboardAppBar({super.key, this.subtitle});
 
-  static const double _height = 125;
+  static const double _height = 142;
 
   @override
   Size get preferredSize => const Size.fromHeight(_height);
@@ -53,16 +53,14 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           decoration: BoxDecoration(
-            color: s.bg.withValues(alpha: dark ? 0.7 : 0.75),
-            border: Border(bottom: BorderSide(color: s.border.withValues(alpha: 0.7))),
+            color: s.bg.withValues(alpha: dark ? 0.85 : 0.9),
           ),
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   // Top row: Date on the left, action buttons on the right
                   Row(
@@ -80,19 +78,32 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Theme toggle lives on the Profile/Settings screen now, and Action Plan,
-                      // Audit Log and Community Hub all moved to clickable Quick Access cards on
-                      // each dashboard — keeps this bar from accumulating one icon per feature.
                       if (role == 'MANAGEMENT') ...[
-                        const SizedBox(width: 8),
                         _ChromeButton(
-                          icon: LucideIcons.brainCircuit,
+                          icon: HugeIcons.strokeRoundedAiBrain01,
                           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const KnowledgeNotesScreen())),
                         ),
+                        const SizedBox(width: 8),
                       ],
+                      _ChromeButton(
+                        icon: HugeIcons.strokeRoundedSearch01,
+                        onTap: () {
+                          if (role == 'MANAGEMENT') {
+                            context.push('/management/schools');
+                          } else if (role == 'TRAINER') {
+                            context.push('/trainer/schools');
+                          } else if (role == 'PRINCIPAL') {
+                            context.push('/principal/teachers');
+                          } else if (role == 'TEACHER') {
+                            context.push('/teacher/evidence');
+                          } else if (role == 'STUDENT') {
+                            context.push('/student/assignments');
+                          }
+                        },
+                      ),
                       const SizedBox(width: 8),
                       _ChromeButton(
-                        icon: LucideIcons.bell,
+                        icon: HugeIcons.strokeRoundedNotification03,
                         onTap: () => showNotificationPanel(context),
                         badge: notifs.unreadCount > 0,
                       ),
@@ -100,46 +111,68 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                       GestureDetector(
                         onTap: () => context.push('/settings'),
                         child: UserAvatar(
-                          size: 32,
-                          fontSize: 11,
+                          size: 34,
+                          fontSize: 12,
                           border: Border.all(color: s.bg, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.roleColor(role).withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
                       ),
                     ],
                   ),
                   const Spacer(),
-                  // Bottom row: Warm greeting with iOS-style bold typography
-                  Text(
-                    '$_greeting, $firstName 👋',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: s.textPrimary,
-                      letterSpacing: -0.4,
-                      height: 1.15,
-                    ),
-                  ),
-                  if (subtitle != null && subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: s.textMuted,
-                        height: 1.2,
+                  // Bottom row: Greeting with schoolhouse illustration on the right
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$_greeting,',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: s.textPrimary,
+                                height: 1.15,
+                              ),
+                            ),
+                            Text(
+                              '$firstName 👋',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: s.textPrimary,
+                                letterSpacing: -0.5,
+                                height: 1.15,
+                              ),
+                            ),
+                            if (subtitle != null && subtitle!.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                subtitle!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: s.textMuted,
+                                  height: 1.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Image.asset(
+                        'assets/images/school_illustration.png',
+                        height: 72,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -151,7 +184,7 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _ChromeButton extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final VoidCallback onTap;
   final bool badge;
 
@@ -179,19 +212,19 @@ class _ChromeButton extends StatelessWidget {
                   color: s.surfaceVariant,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 16, color: s.textSecondary),
+                child: Center(child: AppIcon(icon, size: 16, color: s.textSecondary)),
               ),
               if (badge)
                 Positioned(
                   top: 3,
                   right: 3,
                   child: Container(
-                    width: 7,
-                    height: 7,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.saffron500,
+                      color: const Color(0xFFEF4444),
                       shape: BoxShape.circle,
-                      border: Border.all(color: s.bg, width: 1.2),
+                      border: Border.all(color: s.bg, width: 1.5),
                     ),
                   ),
                 ),

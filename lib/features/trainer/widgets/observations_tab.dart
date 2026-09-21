@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -144,7 +144,7 @@ class _ObservationsTabState extends State<ObservationsTab> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const Icon(LucideIcons.calendar, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -226,7 +226,7 @@ class _ObservationsTabState extends State<ObservationsTab> {
               child: observations.isEmpty
                   ? ListView(children: [
                       const SizedBox(height: 80),
-                      EmptyView(title: _observations.isEmpty ? 'No observations recorded yet' : 'No observations match your search', icon: LucideIcons.fileCheck),
+                      EmptyView(title: _observations.isEmpty ? 'No observations recorded yet' : 'No observations match your search', icon: HugeIcons.strokeRoundedFileCheck),
                     ])
                   : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
@@ -265,7 +265,7 @@ class _ObservationsTabState extends State<ObservationsTab> {
             ),
           ],
         ),
-        Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'create_trainer_observation', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const Icon(Icons.add, color: Colors.white))),
+        Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'create_trainer_observation', backgroundColor: AppColors.saffron500, onPressed: _openCreate, child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
       ],
     );
   }

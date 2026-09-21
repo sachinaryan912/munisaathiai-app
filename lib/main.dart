@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/notifications/fcm_service.dart';
 import 'core/router/app_router.dart';
@@ -15,6 +16,8 @@ import 'features/parent/selected_child_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Portrait only: the layouts are designed for a tall screen and don't reflow for landscape.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemUi.enableEdgeToEdge();
   SystemUi.applyOnSaffron();
 

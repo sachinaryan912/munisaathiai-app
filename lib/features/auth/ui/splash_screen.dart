@@ -13,19 +13,9 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12))],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Image.asset('assets/images/muni_logo.png', fit: BoxFit.cover),
-              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset('assets/images/muni_logo.png', width: 92, height: 92, fit: BoxFit.cover),
             ).animate().scale(duration: 480.ms, curve: Curves.easeOutBack).fadeIn(),
             const SizedBox(height: 22),
             const Text('Muni Saathi AI', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 0.2))

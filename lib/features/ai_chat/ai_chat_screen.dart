@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../core/nav/nav_items.dart';
@@ -15,6 +15,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/time_ago.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../models/ai_chat_message.dart';
 import '../../models/ai_conversation.dart';
@@ -309,7 +310,7 @@ class _AiChatBodyState extends State<AiChatBody> {
           children: [
             IconButton(
               onPressed: () => setState(() => _historyOpen = true),
-              icon: Icon(LucideIcons.menu, color: s.textSecondary, size: 21),
+              icon: HugeIcon(icon: HugeIcons.strokeRoundedMenu01, color: s.textSecondary, size: 21),
             ),
             Expanded(
               child: Column(
@@ -330,8 +331,8 @@ class _AiChatBodyState extends State<AiChatBody> {
                       ShaderMask(
                         shaderCallback: (bounds) =>
                             AppColors.aiGradient.createShader(bounds),
-                        child: const Icon(
-                          LucideIcons.bot,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedBot,
                           color: Colors.white,
                           size: 13,
                         ),
@@ -362,7 +363,7 @@ class _AiChatBodyState extends State<AiChatBody> {
                         color: s.textSecondary,
                       ),
                     )
-                  : Icon(LucideIcons.plus, color: s.textSecondary, size: 21),
+                  : HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: s.textSecondary, size: 21),
             ),
           ],
         ),
@@ -406,8 +407,8 @@ class _AiChatBodyState extends State<AiChatBody> {
                         ),
                         IconButton(
                           onPressed: () => setState(() => _historyOpen = false),
-                          icon: Icon(
-                            LucideIcons.x,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCancel01,
                             color: s.textMuted,
                             size: 19,
                           ),
@@ -436,7 +437,7 @@ class _AiChatBodyState extends State<AiChatBody> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Icon(LucideIcons.plus, size: 16),
+                                : const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 16, color: Colors.white),
                             label: const Text('New chat'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
@@ -505,14 +506,14 @@ class _AiChatBodyState extends State<AiChatBody> {
                                               shaderCallback: (bounds) =>
                                                   AppColors.aiGradient
                                                       .createShader(bounds),
-                                              child: const Icon(
-                                                LucideIcons.messageSquare,
+                                              child: const HugeIcon(
+                                                icon: HugeIcons.strokeRoundedBubbleChat,
                                                 size: 16,
                                                 color: Colors.white,
                                               ),
                                             )
-                                          : Icon(
-                                              LucideIcons.messageSquare,
+                                          : HugeIcon(
+                                              icon: HugeIcons.strokeRoundedBubbleChat,
                                               size: 16,
                                               color: s.textMuted,
                                             ),
@@ -572,8 +573,8 @@ class _AiChatBodyState extends State<AiChatBody> {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              LucideIcons.arrowLeft,
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowLeft01,
                               size: 16,
                               color: s.textSecondary,
                             ),
@@ -733,7 +734,7 @@ class _AiChatBodyState extends State<AiChatBody> {
 }
 
 class _Suggestion {
-  final IconData icon;
+  final dynamic icon;
   final String title;
   final String prompt;
   const _Suggestion(this.icon, this.title, this.prompt);
@@ -745,132 +746,132 @@ class _Suggestion {
 const Map<String, List<_Suggestion>> _kSuggestionsByRole = {
   'STUDENT': [
     _Suggestion(
-      LucideIcons.bookOpen,
+      HugeIcons.strokeRoundedBookOpen01,
       'UPLC Help',
       'Help me do UPLC self-study for my next chapter — walk me through Understand, Problem, Learning and Communicate.',
     ),
     _Suggestion(
-      LucideIcons.users,
+      HugeIcons.strokeRoundedUserGroup,
       'Buddy Study Tips',
       'Give me 3 tips to make my next Buddy Study session with my study buddy more effective.',
     ),
     _Suggestion(
-      LucideIcons.calculator,
+      HugeIcons.strokeRoundedCalculator,
       'Vedic Math Trick',
       'Teach me a quick Vedic Math trick for multiplication.',
     ),
     _Suggestion(
-      LucideIcons.landmark,
+      HugeIcons.strokeRoundedCourtHouse,
       'Child Parliament',
       'Explain what the Child Parliament is and how I can get more involved.',
     ),
   ],
   'TEACHER': [
     _Suggestion(
-      LucideIcons.presentation,
+      HugeIcons.strokeRoundedPresentation01,
       'Lesson Plan',
       "Help me plan tomorrow's lesson using Guided Discovery for my class.",
     ),
     _Suggestion(
-      LucideIcons.users,
+      HugeIcons.strokeRoundedUserGroup,
       'Buddy System Setup',
       'Give me a step-by-step plan to start the Buddy System in my class this week.',
     ),
     _Suggestion(
-      LucideIcons.camera,
+      HugeIcons.strokeRoundedCamera01,
       'Evidence Tips',
       'What kind of evidence should I upload today to show GRS is being implemented well?',
     ),
     _Suggestion(
-      LucideIcons.notebookPen,
+      HugeIcons.strokeRoundedNotebookPen,
       'Daily Reflection',
       "Help me write today's self-reflection on how UPLC went in my class.",
     ),
   ],
   'PRINCIPAL': [
     _Suggestion(
-      LucideIcons.chartNoAxesCombined,
+      HugeIcons.strokeRoundedChartNoAxesCombined,
       'MII Score Help',
       "What can I do this month to improve my school's MII score?",
     ),
     _Suggestion(
-      LucideIcons.userCheck,
+      HugeIcons.strokeRoundedUserCheck01,
       'Support a Teacher',
       'Suggest how to support a teacher who is weak in implementing UPLC.',
     ),
     _Suggestion(
-      LucideIcons.clipboardCheck,
+      HugeIcons.strokeRoundedClipboardCheck,
       'Plan Observations',
       "Help me plan this week's classroom observations across methodologies.",
     ),
     _Suggestion(
-      LucideIcons.calendarCheck,
+      HugeIcons.strokeRoundedCalendarCheck01,
       'Corrective Meeting',
       "Draft an agenda for a corrective meeting with a teacher who's behind on evidence uploads.",
     ),
   ],
   'TRAINER': [
     _Suggestion(
-      LucideIcons.presentation,
+      HugeIcons.strokeRoundedPresentation01,
       'Training Plan',
       "Help me plan this week's training session on the Buddy System.",
     ),
     _Suggestion(
-      LucideIcons.clipboardList,
+      HugeIcons.strokeRoundedClipboardList,
       'Pre/Post Test',
       'Suggest 5 questions for a pre/post test on GRS for teachers.',
     ),
     _Suggestion(
-      LucideIcons.messageSquare,
+      HugeIcons.strokeRoundedBubbleChat,
       'Teacher Feedback',
       'Help me draft constructive feedback for a teacher who needs re-training in UPLC.',
     ),
     _Suggestion(
-      LucideIcons.school,
+      HugeIcons.strokeRoundedSchool,
       'Follow-up Plan',
       'What follow-up actions should I take for a school with weak Buddy System implementation?',
     ),
   ],
   'MANAGEMENT': [
     _Suggestion(
-      LucideIcons.chartNoAxesCombined,
+      HugeIcons.strokeRoundedChartNoAxesCombined,
       'MII Overview',
       'Give me a summary of which schools need urgent intervention right now.',
     ),
     _Suggestion(
-      LucideIcons.triangleAlert,
+      HugeIcons.strokeRoundedAlert02,
       'Flag Weak Schools',
       'Which schools are showing weak Buddy System or GRS implementation this week?',
     ),
     _Suggestion(
-      LucideIcons.fileText,
+      HugeIcons.strokeRoundedFile01,
       'Report Insight',
       "Summarize the network's overall implementation trend this month.",
     ),
     _Suggestion(
-      LucideIcons.userCog,
+      HugeIcons.strokeRoundedUserSettings01,
       'Trainer Assignment',
       'Suggest how to reassign trainers to better support low-MII schools.',
     ),
   ],
   'PARENT': [
     _Suggestion(
-      LucideIcons.house,
+      HugeIcons.strokeRoundedHome01,
       'Ghar Ek Pathshala',
       'Suggest a fun Ghar Ek Pathshala home activity I can do with my child this week.',
     ),
     _Suggestion(
-      LucideIcons.heart,
+      HugeIcons.strokeRoundedFavourite,
       'Support at Home',
       "How can I support my child's Growth Habits at home?",
     ),
     _Suggestion(
-      LucideIcons.bookOpen,
+      HugeIcons.strokeRoundedBookOpen01,
       'Understand Muni Model',
       'Explain the Muni Model in simple terms so I can understand what my child is learning.',
     ),
     _Suggestion(
-      LucideIcons.trendingUp,
+      HugeIcons.strokeRoundedTrendingUp,
       "My Child's Progress",
       "Help me understand my child's recent progress and what I should focus on.",
     ),
@@ -1048,7 +1049,7 @@ class _WelcomeView extends StatelessWidget {
             ShaderMask(
               shaderCallback: (bounds) =>
                   AppColors.aiGradient.createShader(bounds),
-              child: Icon(suggestion.icon, color: Colors.white, size: 18),
+              child: AppIcon(suggestion.icon, color: Colors.white, size: 18),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1341,7 +1342,7 @@ class _MessageActionsState extends State<_MessageActions> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _ActionIconButton(
-            icon: _copied ? LucideIcons.check : LucideIcons.copy,
+            icon: _copied ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedCopy01,
             active: _copied,
             tooltip: 'Copy',
             onTap: _copy,
@@ -1367,7 +1368,7 @@ class _MessageActionsState extends State<_MessageActions> {
                   ),
                 )
               : _ActionIconButton(
-                  icon: _speaking ? LucideIcons.volumeX : LucideIcons.volume2,
+                  icon: _speaking ? HugeIcons.strokeRoundedVolumeX : HugeIcons.strokeRoundedVolumeHigh,
                   active: _speaking,
                   tooltip: _speaking ? 'Stop' : 'Listen',
                   onTap: _toggleSpeak,
@@ -1379,7 +1380,7 @@ class _MessageActionsState extends State<_MessageActions> {
 }
 
 class _ActionIconButton extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final bool active;
   final String tooltip;
   final VoidCallback onTap;
@@ -1401,7 +1402,7 @@ class _ActionIconButton extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(
+          child: AppIcon(
             icon,
             size: 15,
             color: active ? AppColors.saffron500 : s.textMuted,
@@ -1593,8 +1594,8 @@ class _Composer extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        LucideIcons.paperclip,
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAttachment01,
                         size: 12,
                         color: AppColors.saffron600,
                       ),
@@ -1610,8 +1611,8 @@ class _Composer extends StatelessWidget {
                       const SizedBox(width: 6),
                       GestureDetector(
                         onTap: onClearAttachment,
-                        child: const Icon(
-                          LucideIcons.x,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
                           size: 12,
                           color: AppColors.saffron700,
                         ),
@@ -1660,8 +1661,8 @@ class _Composer extends StatelessWidget {
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: onMicTap,
-                    child: Icon(
-                      listening ? LucideIcons.micOff : LucideIcons.mic,
+                    child: HugeIcon(
+                      icon: listening ? HugeIcons.strokeRoundedMicOff01 : HugeIcons.strokeRoundedMic01,
                       color: listening ? AppColors.danger : s.textSecondary,
                       size: 19,
                     ),
@@ -1669,8 +1670,8 @@ class _Composer extends StatelessWidget {
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: onAttach,
-                    child: Icon(
-                      LucideIcons.paperclip,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedAttachment01,
                       color: s.textSecondary,
                       size: 19,
                     ),
@@ -1703,8 +1704,8 @@ class _Composer extends StatelessWidget {
                                     ),
                                   ),
                                 )
-                              : const Icon(
-                                  LucideIcons.arrowUp,
+                              : const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedArrowUp01,
                                   color: Colors.white,
                                   size: 16,
                                 ),

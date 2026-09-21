@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -96,7 +96,7 @@ class _PlansListState extends State<_PlansList> {
   Widget build(BuildContext context) {
     final s = context.surface;
     if (widget.plans.isEmpty) {
-      return ListView(children: const [SizedBox(height: 20), EmptyView(title: 'No action plans assigned to you', icon: LucideIcons.clipboardList)]);
+      return ListView(children: const [SizedBox(height: 20), EmptyView(title: 'No action plans assigned to you', icon: HugeIcons.strokeRoundedClipboardCheck)]);
     }
     return ListView.separated(
       shrinkWrap: true,
@@ -222,7 +222,7 @@ Future<bool?> showCreateActionPlanSheet(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                       decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
                       child: Row(children: [
-                        const Icon(LucideIcons.calendar, size: 15, color: AppColors.saffron600),
+                        const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 15, color: AppColors.saffron600),
                         const SizedBox(width: 8),
                         Text(dueDate == null ? 'Due date (optional)' : _fmtDate(dueDate!)),
                       ]),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -146,7 +146,7 @@ class _WakeupBoardTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No posts yet', subtitle: 'Current events from society, country and world.', icon: LucideIcons.newspaper)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No posts yet', subtitle: 'Current events from society, country and world.', icon: HugeIcons.strokeRoundedNewspaper)])
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(16, 16, 16, canPublish ? 100 : 24),
                     itemCount: items.length,
@@ -171,7 +171,7 @@ class _WakeupBoardTab extends StatelessWidget {
                     },
                   ),
             if (canPublish)
-              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_wakeup', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_wakeup', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },
@@ -263,7 +263,7 @@ class _RevivalDayTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No events logged yet', subtitle: 'Revival Day, Gyan Mela and Bharat Bodh events show up here.', icon: LucideIcons.calendarDays)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No events logged yet', subtitle: 'Revival Day, Gyan Mela and Bharat Bodh events show up here.', icon: HugeIcons.strokeRoundedCalendar03)])
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(16, 16, 16, canPublish ? 100 : 24),
                     itemCount: items.length,
@@ -292,7 +292,7 @@ class _RevivalDayTab extends StatelessWidget {
                     },
                   ),
             if (canPublish)
-              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_revival_day', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_revival_day', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },
@@ -395,7 +395,7 @@ class _WorkshopsTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No workshops logged yet', subtitle: 'Health, skill and kitchen-garden workshops show up here.', icon: LucideIcons.wrench)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No workshops logged yet', subtitle: 'Health, skill and kitchen-garden workshops show up here.', icon: HugeIcons.strokeRoundedWrench01)])
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(16, 16, 16, canPublish ? 100 : 24),
                     itemCount: items.length,
@@ -416,7 +416,7 @@ class _WorkshopsTab extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              if (certified) const Icon(LucideIcons.award, size: 16, color: AppColors.success),
+                              if (certified) const HugeIcon(icon: HugeIcons.strokeRoundedAward01, size: 16, color: AppColors.success),
                             ],
                           ),
                         ),
@@ -424,7 +424,7 @@ class _WorkshopsTab extends StatelessWidget {
                     },
                   ),
             if (canPublish)
-              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_workshop', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_workshop', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },
@@ -507,7 +507,7 @@ class _ActivityClubsTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No clubs yet', subtitle: 'Drama, art & craft, sports, music, reasoning...', icon: LucideIcons.usersRound)])
+                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No clubs yet', subtitle: 'Drama, art & craft, sports, music, reasoning...', icon: HugeIcons.strokeRoundedUserGroup)])
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(16, 16, 16, canPublish ? 100 : 24),
                     itemCount: items.length,
@@ -517,7 +517,7 @@ class _ActivityClubsTab extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 10),
                         child: SectionCard(
                           child: Row(children: [
-                            Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(12)), child: const Icon(LucideIcons.usersRound, size: 16, color: AppColors.saffron600)),
+                            Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(12)), child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: 16, color: AppColors.saffron600))),
                             const SizedBox(width: 12),
                             Text(item['name'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: s.textPrimary)),
                           ]),
@@ -526,7 +526,7 @@ class _ActivityClubsTab extends StatelessWidget {
                     },
                   ),
             if (canPublish)
-              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_club', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const Icon(Icons.add, color: Colors.white))),
+              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_club', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
           ],
         );
       },

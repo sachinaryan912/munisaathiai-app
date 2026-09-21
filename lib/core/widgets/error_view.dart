@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_typography.dart';
@@ -23,7 +23,7 @@ class ErrorView extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(color: AppColors.danger.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(LucideIcons.triangleAlert, color: AppColors.danger, size: 28),
+              child: const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.danger, size: 28)),
             ),
             const SizedBox(height: 16),
             Text('Oops! This page could not load', style: AppTypography.headline(s.textPrimary), textAlign: TextAlign.center),
@@ -33,7 +33,7 @@ class ErrorView extends StatelessWidget {
               const SizedBox(height: 20),
               TextButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(LucideIcons.refreshCw, size: 16),
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 16, color: AppColors.saffron600),
                 label: const Text('Try again'),
               ),
             ],

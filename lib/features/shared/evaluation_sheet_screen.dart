@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -65,7 +65,7 @@ class _EvaluationSheetScreenState extends State<EvaluationSheetScreen> {
     return AppShell(
       title: 'Evaluation Sheet',
       showAiFab: false,
-      actions: [IconButton(icon: const Icon(LucideIcons.calendar), tooltip: 'Change term', onPressed: _editTerm)],
+      actions: [IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 20, color: AppColors.saffron600), tooltip: 'Change term', onPressed: _editTerm)],
       body: AsyncScreen<Map<String, dynamic>>(
         // Remounts AsyncScreen's internal state (and re-runs `loader`) whenever the term
         // changes — its own `_future` is only fetched once per State lifetime otherwise.

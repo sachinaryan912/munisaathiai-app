@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -157,11 +157,11 @@ class _Body extends StatelessWidget {
           children: [
             Text('Class Terms', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
             const Spacer(),
-            TextButton.icon(onPressed: () => _newTerm(context), icon: const Icon(LucideIcons.plus, size: 15), label: const Text('New Term')),
+            TextButton.icon(onPressed: () => _newTerm(context), icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 15, color: AppColors.saffron600), label: const Text('New Term')),
           ],
         ),
         if (terms.isEmpty)
-          const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No Child Parliament terms yet', icon: LucideIcons.landmark))
+          const Padding(padding: EdgeInsets.only(top: 20), child: EmptyView(title: 'No Child Parliament terms yet', icon: HugeIcons.strokeRoundedCourtHouse))
         else
           ...terms.map((t) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),

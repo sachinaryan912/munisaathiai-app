@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_icon.dart';
 import '../student_repository.dart';
 import 'log_buddy_session_sheet.dart';
 import 'log_peer_teaching_sheet.dart';
@@ -11,17 +12,17 @@ import 'upload_assignment_sheet.dart';
 
 class _SpeedDialAction {
   final String label;
-  final IconData icon;
+  final dynamic icon;
   final Color color;
   final Future<void> Function(BuildContext context, StudentRepository repo, Future<void> Function() onSuccess) show;
   const _SpeedDialAction(this.label, this.icon, this.color, this.show);
 }
 
 const _actions = [
-  _SpeedDialAction('Assignment', LucideIcons.fileCheck, Color(0xFF10B981), showUploadAssignmentSheet),
-  _SpeedDialAction('Buddy Session', LucideIcons.users, AppColors.saffron500, showLogBuddySessionSheet),
-  _SpeedDialAction('Peer Teaching', LucideIcons.graduationCap, Color(0xFFF43F5E), showLogPeerTeachingSheet),
-  _SpeedDialAction('Feedback', LucideIcons.heart, Color(0xFFEC4899), showQuickFeedbackSheet),
+  _SpeedDialAction('Assignment', HugeIcons.strokeRoundedFileCheck, Color(0xFF10B981), showUploadAssignmentSheet),
+  _SpeedDialAction('Buddy Session', HugeIcons.strokeRoundedUserGroup, AppColors.saffron500, showLogBuddySessionSheet),
+  _SpeedDialAction('Peer Teaching', HugeIcons.strokeRoundedGraduationScroll, Color(0xFFF43F5E), showLogPeerTeachingSheet),
+  _SpeedDialAction('Feedback', HugeIcons.strokeRoundedFavourite, Color(0xFFEC4899), showQuickFeedbackSheet),
 ];
 
 /// Quick-create speed dial for the Student Dashboard — the fastest path to
@@ -168,7 +169,7 @@ class _SpeedDialItem extends StatelessWidget {
                       color: action.color,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(action.icon, color: Colors.white, size: 20),
+                    child: AppIcon(action.icon, color: Colors.white, size: 20),
                   ),
                 ),
               ),

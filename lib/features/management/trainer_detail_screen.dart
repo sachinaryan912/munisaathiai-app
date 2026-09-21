@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -86,7 +86,7 @@ class TrainerDetailScreen extends StatelessWidget {
               Text('Certifications Issued (${certifications.length})', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: s.textPrimary)),
               const SizedBox(height: 10),
               certifications.isEmpty
-                  ? const EmptyView(title: 'No certifications issued yet', icon: LucideIcons.award)
+                  ? const EmptyView(title: 'No certifications issued yet', icon: HugeIcons.strokeRoundedAward01)
                   : SectionCard(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(

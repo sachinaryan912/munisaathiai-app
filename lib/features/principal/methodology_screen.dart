@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_screen.dart';
@@ -65,7 +65,7 @@ class PrincipalMethodologyScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text('$score', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: s.textPrimary)),
                       ]),
-                      if (!evidenceUploaded) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [Icon(LucideIcons.circleAlert, size: 12, color: AppColors.warning), const SizedBox(width: 4), const Text('No evidence uploaded', style: TextStyle(fontSize: 10.5, color: AppColors.warning, fontWeight: FontWeight.w700))])),
+                      if (!evidenceUploaded) Padding(padding: const EdgeInsets.only(top: 6), child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, size: 12, color: AppColors.warning), const SizedBox(width: 4), const Text('No evidence uploaded', style: TextStyle(fontSize: 10.5, color: AppColors.warning, fontWeight: FontWeight.w700))])),
                     ],
                   ),
                 ),

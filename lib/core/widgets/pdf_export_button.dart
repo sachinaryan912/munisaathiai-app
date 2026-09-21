@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -48,7 +48,7 @@ class _PdfDownloadButtonState extends State<PdfDownloadButton> {
       onPressed: _busy ? null : _handle,
       icon: _busy
           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-          : const Icon(LucideIcons.download, size: 16),
+          : const HugeIcon(icon: HugeIcons.strokeRoundedDownload01, size: 16, color: AppColors.saffron600),
       label: Text(_busy ? 'Preparing...' : 'Download PDF'),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.saffron600,
