@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/gradient_button.dart';
 import '../../core/widgets/section_card.dart';
@@ -41,13 +42,12 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
   }
 
   Future<void> _edit(Map<String, dynamic> school, Future<void> Function() refresh) async {
-    final payload = await showSchoolFormSheet(context, existing: school);
-    if (payload == null) return;
-    try {
-      await _repo.updateSchool(widget.schoolId, payload);
+    final success = await showSchoolFormSheet(context, existing: school);
+    if (success == true) {
       await refresh();
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('School updated successfully.')));
+      }
     }
   }
 
@@ -110,6 +110,29 @@ class _SchoolDetailScreenState extends State<SchoolDetailScreen> {
                   ],
                 ),
               ),
+              if (school['stale'] == true) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 16, color: AppColors.warning),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Some areas of this score are frozen at their last known value — no fresh activity (evidence, attendance, training, or checklists) has been logged recently enough to recompute them.',
+                          style: TextStyle(fontSize: 11, color: s.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
@@ -505,8 +528,10 @@ class _ClassCatalogCardState extends State<_ClassCatalogCard> {
   void _reload() => setState(() => _future = widget.repo.getClassCatalog(widget.schoolId));
 
   Future<void> _addEntry() async {
+    final formKey = GlobalKey<FormState>();
     final classCtrl = TextEditingController();
     final sectionCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -522,44 +547,60 @@ class _ClassCatalogCardState extends State<_ClassCatalogCard> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Add Class / Section', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text('Class: 1-12 or Nursery/LKG/UKG. Section: a single letter, optional.', style: TextStyle(fontSize: 11, color: s.textMuted)),
-                  const SizedBox(height: 16),
-                  TextField(controller: classCtrl, decoration: const InputDecoration(labelText: 'Class', hintText: 'e.g. 5 or LKG')),
-                  const SizedBox(height: 12),
-                  TextField(controller: sectionCtrl, maxLength: 1, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Section (optional)', hintText: 'e.g. A')),
-                  if (error != null) ...[const SizedBox(height: 8), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 12),
-                  GradientButton(
-                    label: 'Add',
-                    loading: submitting,
-                    onPressed: () async {
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await widget.repo.addClassCatalogEntry(
-                          widget.schoolId,
-                          className: classCtrl.text.trim(),
-                          section: sectionCtrl.text.trim().isEmpty ? null : sectionCtrl.text.trim(),
-                        );
-                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
-                      } catch (e) {
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Add Class / Section', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('Class: 1-12 or Nursery/LKG/UKG. Section: a single letter, optional.', style: TextStyle(fontSize: 11, color: s.textMuted)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Class',
+                      isRequired: true,
+                      controller: classCtrl,
+                      hint: 'e.g. 5 or LKG',
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Class is required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Section (optional)',
+                      controller: sectionCtrl,
+                      hint: 'e.g. A',
+                    ),
+                    if (error != null) ...[const SizedBox(height: 8), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 12),
+                    GradientButton(
+                      label: 'Add',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                    height: 46,
-                  ),
-                ],
+                        try {
+                          await widget.repo.addClassCatalogEntry(
+                            widget.schoolId,
+                            className: classCtrl.text.trim(),
+                            section: sectionCtrl.text.trim().isEmpty ? null : sectionCtrl.text.trim(),
+                          );
+                          if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                      height: 46,
+                    ),
+                  ],
+                ),
               ),
             ),
           );

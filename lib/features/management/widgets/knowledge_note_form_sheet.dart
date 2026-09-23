@@ -31,15 +31,22 @@ class _KnowledgeNoteFormSheet extends StatefulWidget {
 }
 
 class _KnowledgeNoteFormSheetState extends State<_KnowledgeNoteFormSheet> {
+  final _formKey = GlobalKey<FormState>();
   late final _title = TextEditingController(text: widget.existing?['title'] as String? ?? '');
   late final _content = TextEditingController(text: widget.existing?['content'] as String? ?? '');
   String? _error;
+  bool _submitted = false;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _content.dispose();
+    super.dispose();
+  }
 
   void _save() {
-    if (_title.text.trim().isEmpty || _content.text.trim().isEmpty) {
-      setState(() => _error = 'Please fill in both the title and the content.');
-      return;
-    }
+    setState(() => _submitted = true);
+    if (!_formKey.currentState!.validate()) return;
     Navigator.pop(context, {'title': _title.text.trim(), 'content': _content.text.trim()});
   }
 
@@ -53,27 +60,50 @@ class _KnowledgeNoteFormSheetState extends State<_KnowledgeNoteFormSheet> {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
         decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.88),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-              Text(isEdit ? 'Edit Training Note' : 'Add Training Note', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
-              const SizedBox(height: 4),
-              Text(
-                'Vidya reads every active note here on top of the Muni knowledge base — no app '
-                'update needed. Write it the way you would explain it to a new teacher.',
-                style: TextStyle(fontSize: 11.5, color: s.textMuted),
-              ),
-              const SizedBox(height: 16),
-              AppTextField(label: 'Title', hint: 'e.g. Ghar Ek Pathshala — how our schools actually run it', controller: _title),
-              const SizedBox(height: 14),
-              AppTextField(label: 'Content', hint: 'Write in as much detail as you would want Vidya to know...', controller: _content, maxLines: 10),
-              if (_error != null) ...[const SizedBox(height: 10), Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-              const SizedBox(height: 18),
-              GradientButton(label: isEdit ? 'Save Changes' : 'Add to Vidya\'s Knowledge', onPressed: _save, height: 48),
-            ],
+        child: Form(
+          key: _formKey,
+          autovalidateMode: _submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                Text(isEdit ? 'Edit Training Note' : 'Add Training Note', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+                const SizedBox(height: 4),
+                Text(
+                  'Vidya reads every active note here on top of the Muni knowledge base — no app '
+                  'update needed. Write it the way you would explain it to a new teacher.',
+                  style: TextStyle(fontSize: 11.5, color: s.textMuted),
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'Title',
+                  isRequired: true,
+                  hint: 'e.g. Ghar Ek Pathshala — how our schools actually run it',
+                  controller: _title,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Title is required';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                AppTextField(
+                  label: 'Content',
+                  isRequired: true,
+                  hint: 'Write in as much detail as you would want Vidya to know...',
+                  controller: _content,
+                  maxLines: 10,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Content is required';
+                    return null;
+                  },
+                ),
+                if (_error != null) ...[const SizedBox(height: 10), Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                const SizedBox(height: 18),
+                GradientButton(label: isEdit ? 'Save Changes' : 'Add to Vidya\'s Knowledge', onPressed: _save, height: 48),
+              ],
+            ),
           ),
         ),
       ),

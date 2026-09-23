@@ -114,18 +114,34 @@ class _ObservationsTabState extends State<ObservationsTab> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Text('Teacher', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                    RichText(
+                      text: TextSpan(
+                        text: 'Teacher',
+                        style: Theme.of(sheetContext).inputDecorationTheme.labelStyle,
+                        children: const [
+                          TextSpan(text: ' *', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(
+                        color: Theme.of(sheetContext).inputDecorationTheme.fillColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: (teacherId == null && error != null) ? Border.all(color: AppColors.danger) : null,
+                      ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: teacherId,
                           isExpanded: true,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
+                          hint: const Text('Select a teacher'),
                           items: teachers.map((t) => DropdownMenuItem(value: t['id'] as int, child: Text(t['name'] as String))).toList(),
-                          onChanged: (v) => setSheetState(() => teacherId = v),
+                          onChanged: (v) => setSheetState(() {
+                            teacherId = v;
+                            error = null;
+                          }),
                         ),
                       ),
                     ),
@@ -166,7 +182,10 @@ class _ObservationsTabState extends State<ObservationsTab> {
                       label: 'Submit Observation',
                       loading: submitting,
                       onPressed: () async {
-                        if (teacherId == null) return;
+                        if (teacherId == null) {
+                          setSheetState(() => error = 'Please select a teacher to observe.');
+                          return;
+                        }
                         setSheetState(() => submitting = true);
                         try {
                           await _repo.createObservation(

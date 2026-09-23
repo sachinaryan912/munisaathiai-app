@@ -101,7 +101,13 @@ class _Body extends StatelessWidget {
           childAspectRatio: 1.35,
           children: List.generate(stats.length, (i) {
             final st = stats[i];
-            return StatTile(label: st['label'] as String, value: st['value'] as String, icon: lucideByName(st['icon'] as String?), color: _statColors[i % _statColors.length], animateIndex: i);
+            return StatTile(
+              label: (st['label'] ?? '').toString(),
+              value: (st['value'] ?? '').toString(),
+              icon: lucideByName(st['icon'] as String?),
+              color: _statColors[i % _statColors.length],
+              animateIndex: i,
+            );
           }),
         ),
         const SizedBox(height: 22),
@@ -179,7 +185,7 @@ class _Body extends StatelessWidget {
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 6),
                   leading: Icon(done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: done ? AppColors.success : s.textMuted, size: 20),
-                  title: Text(a['name'] as String, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, decoration: done ? TextDecoration.lineThrough : null, color: done ? s.textMuted : s.textPrimary)),
+                  title: Text((a['name'] ?? '').toString(), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, decoration: done ? TextDecoration.lineThrough : null, color: done ? s.textMuted : s.textPrimary)),
                 );
               }).toList(),
             ),

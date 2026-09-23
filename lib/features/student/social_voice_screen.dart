@@ -39,8 +39,10 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openLog() async {
+    final formKey = GlobalKey<FormState>();
     final issueCtrl = TextEditingController();
     final actionCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -56,32 +58,39 @@ class _BodyState extends State<_Body> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Raise Your Voice', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text('An individual can be wrong, but a group can\'t be.', style: TextStyle(fontSize: 11.5, color: s.textMuted, fontStyle: FontStyle.italic)),
-                  const SizedBox(height: 16),
-                  AppTextField(label: 'What social odd did you notice?', controller: issueCtrl, maxLines: 3),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'What action did you take? (optional)', controller: actionCtrl, maxLines: 2),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Save',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (issueCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please describe the issue.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Raise Your Voice', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('An individual can be wrong, but a group can\'t be.', style: TextStyle(fontSize: 11.5, color: s.textMuted, fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'What social odd did you notice?',
+                      isRequired: true,
+                      controller: issueCtrl,
+                      maxLines: 3,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Please describe the issue' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'What action did you take? (optional)', controller: actionCtrl, maxLines: 2),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Save',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
+                        setSheetState(() {
+                          submitting = true;
+                          error = null;
+                        });
                       try {
                         await widget.repo.logSocialVoice(issue: issueCtrl.text.trim(), actionTaken: actionCtrl.text.trim().isEmpty ? null : actionCtrl.text.trim());
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
@@ -97,10 +106,11 @@ class _BodyState extends State<_Body> {
                 ],
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

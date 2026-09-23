@@ -10,7 +10,9 @@ import '../student_repository.dart';
 Future<void> showLogPeerTeachingSheet(BuildContext context, StudentRepository repo, Future<void> Function() onSuccess) {
   final topicCtrl = TextEditingController();
   final reflectionCtrl = TextEditingController();
+  final formKey = GlobalKey<FormState>();
   var count = 2;
+  var submitted = false;
   var submitting = false;
   String? error;
 
@@ -26,50 +28,60 @@ Future<void> showLogPeerTeachingSheet(BuildContext context, StudentRepository re
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
             decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Log Peer Teaching', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
-                  const SizedBox(height: 16),
-                  AppTextField(label: 'Topic taught', controller: topicCtrl),
-                  const SizedBox(height: 14),
-                  Text('How many friends did you teach?', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                  Row(
-                    children: [
-                      IconButton.filledTonal(onPressed: count > 1 ? () => setSheetState(() => count--) : null, icon: const Icon(Icons.remove)),
-                      Expanded(child: Center(child: Text('$count', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: s.textPrimary)))),
-                      IconButton.filledTonal(onPressed: () => setSheetState(() => count++), icon: const Icon(Icons.add)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  AppTextField(label: 'Reflection (optional)', controller: reflectionCtrl, maxLines: 3),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Save',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (topicCtrl.text.trim().isEmpty) return;
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await repo.logPeerTeaching(topic: topicCtrl.text.trim(), studentCount: count, reflection: reflectionCtrl.text.trim().isEmpty ? null : reflectionCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        await onSuccess();
-                      } catch (e) {
+            child: Form(
+              key: formKey,
+              autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Log Peer Teaching', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Topic taught',
+                      isRequired: true,
+                      controller: topicCtrl,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Topic taught is required' : null,
+                    ),
+                    const SizedBox(height: 14),
+                    Text('How many friends did you teach?', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                    Row(
+                      children: [
+                        IconButton.filledTonal(onPressed: count > 1 ? () => setSheetState(() => count--) : null, icon: const Icon(Icons.remove)),
+                        Expanded(child: Center(child: Text('$count', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: s.textPrimary)))),
+                        IconButton.filledTonal(onPressed: () => setSheetState(() => count++), icon: const Icon(Icons.add)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    AppTextField(label: 'Reflection (optional)', controller: reflectionCtrl, maxLines: 3),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Save',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                  ),
-                ],
+                        try {
+                          await repo.logPeerTeaching(topic: topicCtrl.text.trim(), studentCount: count, reflection: reflectionCtrl.text.trim().isEmpty ? null : reflectionCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          await onSuccess();
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

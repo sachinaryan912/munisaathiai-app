@@ -40,9 +40,11 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openLog() async {
+    final formKey = GlobalKey<FormState>();
     final topicCtrl = TextEditingController();
     final prevCtrl = TextEditingController();
     final currCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -58,36 +60,63 @@ class _BodyState extends State<_Body> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Log Self-Competition', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text('Compete with your own previous performance, not others.', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
-                  const SizedBox(height: 16),
-                  AppTextField(label: 'Topic', controller: topicCtrl, hint: 'e.g. Multiplication tables'),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Previous time (minutes)', controller: prevCtrl, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Current time (minutes)', controller: currCtrl, keyboardType: TextInputType.number),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Save',
-                    loading: submitting,
-                    onPressed: () async {
-                      final prev = int.tryParse(prevCtrl.text.trim());
-                      final curr = int.tryParse(currCtrl.text.trim());
-                      if (topicCtrl.text.trim().isEmpty || prev == null || curr == null) {
-                        setSheetState(() => error = 'Please fill all fields with valid numbers.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Log Self-Competition', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('Compete with your own previous performance, not others.', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Topic',
+                      isRequired: true,
+                      controller: topicCtrl,
+                      hint: 'e.g. Multiplication tables',
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Topic is required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Previous time (minutes)',
+                      isRequired: true,
+                      controller: prevCtrl,
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Previous time is required';
+                        if (int.tryParse(v.trim()) == null) return 'Enter a valid number';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Current time (minutes)',
+                      isRequired: true,
+                      controller: currCtrl,
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Current time is required';
+                        if (int.tryParse(v.trim()) == null) return 'Enter a valid number';
+                        return null;
+                      },
+                    ),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Save',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
+                        final prev = int.tryParse(prevCtrl.text.trim())!;
+                        final curr = int.tryParse(currCtrl.text.trim())!;
+                        setSheetState(() {
+                          submitting = true;
+                          error = null;
+                        });
                       try {
                         await widget.repo.logProgressChart(topic: topicCtrl.text.trim(), previousTime: prev, currentTime: curr);
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
@@ -103,10 +132,11 @@ class _BodyState extends State<_Body> {
                 ],
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

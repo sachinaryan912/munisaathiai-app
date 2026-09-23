@@ -162,11 +162,13 @@ Future<bool?> showCreateActionPlanSheet(
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No one to assign this to yet at this school.')));
     return Future.value(null);
   }
+  final formKey = GlobalKey<FormState>();
   final titleCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   Map<String, dynamic> selectedAssignee = assignees.first;
   DateTime? dueDate;
   var submitting = false;
+  var submitted = false;
   String? error;
 
   return showModalBottomSheet<bool>(
@@ -182,66 +184,76 @@ Future<bool?> showCreateActionPlanSheet(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
             decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
             constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.88),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('New Action Plan', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  Text(schoolName, style: TextStyle(fontSize: 11.5, color: s.textMuted)),
-                  const SizedBox(height: 16),
-                  AppTextField(label: 'Title', controller: titleCtrl, hint: 'e.g. Re-train on Buddy System'),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Description (optional)', controller: descCtrl, maxLines: 3),
-                  const SizedBox(height: 12),
-                  Text('Assign to', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<Map<String, dynamic>>(
-                        value: selectedAssignee,
-                        isExpanded: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        items: assignees.map((a) => DropdownMenuItem(value: a, child: Text(a['name'] as String, overflow: TextOverflow.ellipsis))).toList(),
-                        onChanged: (v) {
-                          if (v != null) setSheetState(() => selectedAssignee = v);
-                        },
+            child: Form(
+              key: formKey,
+              autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('New Action Plan', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    Text(schoolName, style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Title',
+                      isRequired: true,
+                      controller: titleCtrl,
+                      hint: 'e.g. Re-train on Buddy System',
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Title is required';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Description (optional)', controller: descCtrl, maxLines: 3),
+                    const SizedBox(height: 12),
+                    Text('Assign to', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<Map<String, dynamic>>(
+                          value: selectedAssignee,
+                          isExpanded: true,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          items: assignees.map((a) => DropdownMenuItem(value: a, child: Text(a['name'] as String, overflow: TextOverflow.ellipsis))).toList(),
+                          onChanged: (v) {
+                            if (v != null) setSheetState(() => selectedAssignee = v);
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(context: sheetContext, initialDate: DateTime.now().add(const Duration(days: 7)), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-                      if (picked != null) setSheetState(() => dueDate = picked);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                      decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                      child: Row(children: [
-                        const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 15, color: AppColors.saffron600),
-                        const SizedBox(width: 8),
-                        Text(dueDate == null ? 'Due date (optional)' : _fmtDate(dueDate!)),
-                      ]),
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(context: sheetContext, initialDate: DateTime.now().add(const Duration(days: 7)), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
+                        if (picked != null) setSheetState(() => dueDate = picked);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                        child: Row(children: [
+                          const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 15, color: AppColors.saffron600),
+                          const SizedBox(width: 8),
+                          Text(dueDate == null ? 'Due date (optional)' : _fmtDate(dueDate!)),
+                        ]),
+                      ),
                     ),
-                  ),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 16),
-                  GradientButton(
-                    label: 'Create',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (titleCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please enter a title.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 16),
+                    GradientButton(
+                      label: 'Create',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
+                        setSheetState(() {
+                          submitting = true;
+                          error = null;
+                        });
                       try {
                         await ActionPlanRepository().create(
                           schoolName: schoolName,
@@ -263,10 +275,11 @@ Future<bool?> showCreateActionPlanSheet(
               ),
             ),
           ),
-        );
-      });
-    },
-  );
+        ),
+      );
+    });
+  },
+);
 }
 
 String _fmtDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

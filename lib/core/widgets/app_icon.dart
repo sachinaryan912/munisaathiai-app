@@ -27,6 +27,12 @@ class AppIcon extends StatelessWidget {
         color: iconColor,
         size: iconSize,
       );
+    } else if (icon is List) {
+      return HugeIcon(
+        icon: (icon as List).map((e) => (e as List).cast<dynamic>()).toList(),
+        color: iconColor,
+        size: iconSize,
+      );
     } else if (icon is IconData) {
       return Icon(icon as IconData, color: iconColor, size: iconSize);
     }

@@ -39,8 +39,10 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openLog() async {
+    final formKey = GlobalKey<FormState>();
     final topicCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -57,31 +59,44 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Create Something New', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 16),
-                    AppTextField(label: 'Chapter / Topic', controller: topicCtrl),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Your creative response', controller: contentCtrl, maxLines: 5, hint: 'What new idea, story, or creation did you make from this chapter?'),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Save',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (topicCtrl.text.trim().isEmpty || contentCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please fill both fields.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Create Something New', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Chapter / Topic',
+                        isRequired: true,
+                        controller: topicCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Chapter / Topic is required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        label: 'Your creative response',
+                        isRequired: true,
+                        controller: contentCtrl,
+                        maxLines: 5,
+                        hint: 'What new idea, story, or creation did you make from this chapter?',
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Creative response is required' : null,
+                      ),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Save',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await widget.repo.submitEklavya(topic: topicCtrl.text.trim(), content: contentCtrl.text.trim());
                           if (sheetContext.mounted) Navigator.pop(sheetContext);
@@ -98,10 +113,11 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

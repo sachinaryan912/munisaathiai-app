@@ -66,6 +66,8 @@ class _BodyState extends State<_Body> {
     var date = DateTime.now();
     var duration = 40;
     final linked = <String>{};
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -82,73 +84,87 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('New Lesson Plan', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
-                    const SizedBox(height: 16),
-                    AppTextField(label: 'Subject', controller: subjectCtrl),
-                    const SizedBox(height: 14),
-                    AppTextField(label: 'Topic', controller: topicCtrl),
-                    const SizedBox(height: 14),
-                    AppTextField(label: 'Objectives (optional)', controller: objectivesCtrl, maxLines: 2),
-                    const SizedBox(height: 14),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(context: sheetContext, initialDate: date, firstDate: DateTime(2024), lastDate: DateTime(2030));
-                        if (picked != null) setSheetState(() => date = picked);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                        decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('New Lesson Plan', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Subject',
+                        isRequired: true,
+                        controller: subjectCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Subject is required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text('Duration: $duration min', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    Slider(value: duration.toDouble(), min: 10, max: 90, divisions: 16, activeColor: AppColors.saffron500, onChanged: (v) => setSheetState(() => duration = v.round())),
-                    const SizedBox(height: 8),
-                    Text('Linked methodologies', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.methodologies.map((m) {
-                        final active = linked.contains(m);
-                        return FilterChip(
-                          label: Text(m, style: const TextStyle(fontSize: 11)),
-                          selected: active,
-                          onSelected: (v) => setSheetState(() => v ? linked.add(m) : linked.remove(m)),
-                          selectedColor: AppColors.saffron500,
-                          labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700),
-                          backgroundColor: s.border.withValues(alpha: 0.4),
-                          side: BorderSide.none,
-                          checkmarkColor: Colors.white,
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 14),
-                    Text('Sambandh, Vyavastha & Sah-Astitva (optional)', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    const SizedBox(height: 8),
-                    AppTextField(label: 'Sambandh (Relation)', controller: sambandhCtrl, maxLines: 2),
-                    const SizedBox(height: 10),
-                    AppTextField(label: 'Vyavastha (System)', controller: vyavasthaCtrl, maxLines: 2),
-                    const SizedBox(height: 10),
-                    AppTextField(label: 'Sah-Astitva (Co-existence)', controller: sahAstitvaCtrl, maxLines: 2),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Save Lesson Plan',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (subjectCtrl.text.trim().isEmpty || topicCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Subject and topic are required.');
-                          return;
-                        }
-                        setSheetState(() => submitting = true);
+                      const SizedBox(height: 14),
+                      AppTextField(
+                        label: 'Topic',
+                        isRequired: true,
+                        controller: topicCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Topic is required' : null,
+                      ),
+                      const SizedBox(height: 14),
+                      AppTextField(label: 'Objectives (optional)', controller: objectivesCtrl, maxLines: 2),
+                      const SizedBox(height: 14),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(context: sheetContext, initialDate: date, firstDate: DateTime(2024), lastDate: DateTime(2030));
+                          if (picked != null) setSheetState(() => date = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                          decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                          child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text('Duration: $duration min', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                      Slider(value: duration.toDouble(), min: 10, max: 90, divisions: 16, activeColor: AppColors.saffron500, onChanged: (v) => setSheetState(() => duration = v.round())),
+                      const SizedBox(height: 8),
+                      Text('Linked methodologies', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: widget.methodologies.map((m) {
+                          final active = linked.contains(m);
+                          return FilterChip(
+                            label: Text(m, style: const TextStyle(fontSize: 11)),
+                            selected: active,
+                            onSelected: (v) => setSheetState(() => v ? linked.add(m) : linked.remove(m)),
+                            selectedColor: AppColors.saffron500,
+                            labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700),
+                            backgroundColor: s.border.withValues(alpha: 0.4),
+                            side: BorderSide.none,
+                            checkmarkColor: Colors.white,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 14),
+                      Text('Sambandh, Vyavastha & Sah-Astitva (optional)', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                      const SizedBox(height: 8),
+                      AppTextField(label: 'Sambandh (Relation)', controller: sambandhCtrl, maxLines: 2),
+                      const SizedBox(height: 10),
+                      AppTextField(label: 'Vyavastha (System)', controller: vyavasthaCtrl, maxLines: 2),
+                      const SizedBox(height: 10),
+                      AppTextField(label: 'Sah-Astitva (Co-existence)', controller: sahAstitvaCtrl, maxLines: 2),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Save Lesson Plan',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await widget.repo.createLessonPlan(
                             subject: subjectCtrl.text.trim(),
@@ -175,10 +191,11 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   Future<void> _cycleStatus(Map<String, dynamic> plan) async {

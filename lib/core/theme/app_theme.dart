@@ -69,6 +69,11 @@ class AppTheme {
           borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.danger, width: 1.4),
         ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppRadius.mdAll,
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.8),
+        ),
+        errorStyle: GoogleFonts.inter(color: AppColors.danger, fontSize: 11.5, fontWeight: FontWeight.w600),
         hintStyle: GoogleFonts.inter(color: const Color(0xFF9CA3AF), fontSize: 14.5),
         labelStyle: GoogleFonts.inter(color: const Color(0xFF6B7280), fontSize: 13.5, fontWeight: FontWeight.w600),
       ),
@@ -183,6 +188,11 @@ class AppTheme {
           borderRadius: AppRadius.mdAll,
           borderSide: const BorderSide(color: AppColors.danger, width: 1.4),
         ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppRadius.mdAll,
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.8),
+        ),
+        errorStyle: GoogleFonts.inter(color: AppColors.danger, fontSize: 11.5, fontWeight: FontWeight.w600),
         hintStyle: GoogleFonts.inter(color: const Color(0xFF6B7280), fontSize: 14.5),
         labelStyle: GoogleFonts.inter(color: const Color(0xFF9CA3AF), fontSize: 13.5, fontWeight: FontWeight.w600),
       ),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/icon_map.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/badge_detail_sheet.dart';
 import '../../core/widgets/section_card.dart';
@@ -52,7 +53,7 @@ class _DashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
+    final stats = (data['stats'] as List? ?? []).cast<Map<String, dynamic>>();
     final overallScore = data['overallScore'] as int? ?? 0;
     final buddySessionsCount = data['buddySessionsCount'] as num? ?? 0;
     final subjects = (data['subjectProgress'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -193,16 +194,16 @@ class _StatsRow extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(st['label'] as String, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: s.textSecondary)),
+                  Text((st['label'] ?? '').toString(), style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: s.textSecondary)),
                   Container(
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(9)),
-                    child: Icon(lucideByName(st['icon'] as String?), size: 13, color: color),
+                    child: Center(child: AppIcon(lucideByName(st['icon'] as String?), size: 13, color: color)),
                   ),
                 ],
               ),
-              Text(st['value'] as String, style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: s.textPrimary)),
+              Text((st['value'] ?? '').toString(), style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: s.textPrimary)),
             ],
           ),
         );
@@ -477,7 +478,7 @@ class _BadgesRow extends StatelessWidget {
                     Opacity(opacity: earned ? 1 : 0.32, child: Text(b['icon'] as String? ?? '🏅', style: const TextStyle(fontSize: 26))),
                     const SizedBox(height: 6),
                     Text(
-                      b['name'] as String,
+                      (b['name'] ?? '').toString(),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -518,11 +519,11 @@ class _ActivityCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(color: AppColors.saffron50, borderRadius: BorderRadius.circular(12)),
-                  child: Icon(lucideByName(a['icon'] as String?), size: 16, color: AppColors.saffron600),
+                  child: Center(child: AppIcon(lucideByName(a['icon'] as String?), size: 16, color: AppColors.saffron600)),
                 ),
-                title: Text(a['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: s.textPrimary)),
-                subtitle: Text(a['subtitle'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: s.textMuted)),
-                trailing: Text(a['date'] as String, style: TextStyle(fontSize: 10, color: s.textMuted)),
+                title: Text((a['title'] ?? '').toString(), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: s.textPrimary)),
+                subtitle: Text((a['subtitle'] ?? '').toString(), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+                trailing: Text((a['date'] ?? '').toString(), style: TextStyle(fontSize: 10, color: s.textMuted)),
               );
             }).toList(),
           ),

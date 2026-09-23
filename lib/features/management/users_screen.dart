@@ -52,6 +52,29 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
 
   Future<void> _bulkSetEnabled(bool enabled, Future<void> Function() refresh) async {
     if (_selectedIds.isEmpty) return;
+    final actionName = enabled ? 'Unblock' : 'Block';
+    final count = _selectedIds.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$actionName $count user${count == 1 ? '' : 's'}?'),
+        content: Text(
+          enabled
+              ? 'Are you sure you want to unblock $count selected user${count == 1 ? '' : 's'}? They will regain access to the platform.'
+              : 'Are you sure you want to block $count selected user${count == 1 ? '' : 's'}? They will be unable to log in.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: enabled ? AppColors.success : AppColors.danger),
+            child: Text(actionName),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     setState(() => _bulkWorking = true);
     try {
       await Future.wait(_selectedIds.map((id) => enabled ? _repo.unblockUser(id) : _repo.blockUser(id)));
@@ -61,6 +84,51 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
           _selectionMode = false;
           _selectedIds.clear();
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$count user${count == 1 ? '' : 's'} ${actionName.toLowerCase()}ed successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    } finally {
+      if (mounted) setState(() => _bulkWorking = false);
+    }
+  }
+
+  Future<void> _bulkDelete(Future<void> Function() refresh) async {
+    if (_selectedIds.isEmpty) return;
+    final count = _selectedIds.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Delete $count user${count == 1 ? '' : 's'}?'),
+        content: Text(
+          'Are you sure you want to permanently delete $count selected user${count == 1 ? '' : 's'}? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _bulkWorking = true);
+    try {
+      await Future.wait(_selectedIds.map((id) => _repo.deleteUser(id)));
+      await refresh();
+      if (mounted) {
+        setState(() {
+          _selectionMode = false;
+          _selectedIds.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$count user${count == 1 ? '' : 's'} deleted successfully.')),
+        );
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
@@ -70,24 +138,26 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
   }
 
   Future<void> _create(Future<void> Function() refresh) async {
-    final payload = await showCreateUserSheet(context);
-    if (payload == null) return;
-    try {
-      await _repo.createUser(payload);
+    final success = await showCreateUserSheet(context);
+    if (success == true) {
       await refresh();
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User created successfully.')),
+        );
+      }
     }
   }
 
   Future<void> _edit(Map<String, dynamic> user, Future<void> Function() refresh) async {
-    final payload = await showEditUserSheet(context, user);
-    if (payload == null) return;
-    try {
-      await _repo.updateUser(user['id'] as int, payload);
+    final success = await showEditUserSheet(context, user);
+    if (success == true) {
       await refresh();
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User updated successfully.')),
+        );
+      }
     }
   }
 
@@ -142,6 +212,36 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
 
   Future<void> _toggleBlock(Map<String, dynamic> user, Future<void> Function() refresh) async {
     final enabled = user['enabled'] as bool? ?? true;
+    final name = (user['fullName'] as String? ?? 'this user').trim();
+    final actionName = enabled ? 'Block' : 'Unblock';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$actionName user?'),
+        content: Text(
+          enabled
+              ? 'Are you sure you want to block "$name"? They will not be able to log in until unblocked.'
+              : 'Are you sure you want to unblock "$name"? They will regain access to the platform.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: enabled ? AppColors.danger : AppColors.success,
+            ),
+            child: Text(actionName),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     try {
       if (enabled) {
         await _repo.blockUser(user['id'] as int);
@@ -149,8 +249,56 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
         await _repo.unblockUser(user['id'] as int);
       }
       await refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User ${actionName.toLowerCase()}ed successfully.')),
+        );
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+    }
+  }
+
+  Future<void> _deleteUser(Map<String, dynamic> user, Future<void> Function() refresh) async {
+    final name = (user['fullName'] as String? ?? 'this user').trim();
+    final email = user['email'] as String? ?? '';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete user?'),
+        content: Text(
+          'Are you sure you want to permanently delete "$name"${email.isNotEmpty ? ' ($email)' : ''}? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _repo.deleteUser(user['id'] as int);
+      await refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User deleted successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))),
+        );
+      }
     }
   }
 
@@ -263,7 +411,18 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
                                         children: [
                                           _ActionBtn(icon: HugeIcons.strokeRoundedEdit02, label: 'Edit', onTap: () => _edit(u, refresh)),
                                           _ActionBtn(icon: HugeIcons.strokeRoundedKey01, label: 'Reset PW', onTap: () => _resetPassword(u)),
-                                          _ActionBtn(icon: enabled ? HugeIcons.strokeRoundedUnavailable : HugeIcons.strokeRoundedCheckmarkCircle02, label: enabled ? 'Block' : 'Unblock', color: enabled ? AppColors.danger : AppColors.success, onTap: () => _toggleBlock(u, refresh)),
+                                          _ActionBtn(
+                                            icon: enabled ? HugeIcons.strokeRoundedUnavailable : HugeIcons.strokeRoundedCheckmarkCircle02,
+                                            label: enabled ? 'Block' : 'Unblock',
+                                            color: enabled ? AppColors.danger : AppColors.success,
+                                            onTap: () => _toggleBlock(u, refresh),
+                                          ),
+                                          _ActionBtn(
+                                            icon: HugeIcons.strokeRoundedDelete02,
+                                            label: 'Delete',
+                                            color: AppColors.danger,
+                                            onTap: () => _deleteUser(u, refresh),
+                                          ),
                                         ],
                                       ),
                                     ],
@@ -297,6 +456,10 @@ class _ManagementUsersScreenState extends State<ManagementUsersScreen> {
                           TextButton(
                             onPressed: _selectedIds.isEmpty ? null : () => _bulkSetEnabled(true, refresh),
                             child: const Text('Unblock', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700)),
+                          ),
+                          TextButton(
+                            onPressed: _selectedIds.isEmpty ? null : () => _bulkDelete(refresh),
+                            child: const Text('Delete', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
                           ),
                         ],
                       ],

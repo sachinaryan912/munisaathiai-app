@@ -40,6 +40,8 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openReview(Map<String, dynamic> log) async {
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     final feedbackCtrl = TextEditingController(text: log['teacherFeedback'] as String? ?? '');
     int stars = (log['stars'] as int?) ?? 5;
     var submitting = false;
@@ -58,7 +60,10 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,17 +88,22 @@ class _BodyState extends State<_Body> {
                       }),
                     ),
                     const SizedBox(height: 8),
-                    AppTextField(label: 'Feedback', controller: feedbackCtrl, maxLines: 3, hint: 'Tell them how the session went...'),
+                    AppTextField(
+                      label: 'Feedback',
+                      isRequired: true,
+                      controller: feedbackCtrl,
+                      maxLines: 3,
+                      hint: 'Tell them how the session went...',
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Feedback is required' : null,
+                    ),
                     if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                     const SizedBox(height: 18),
                     GradientButton(
                       label: 'Submit Review',
                       loading: submitting,
                       onPressed: () async {
-                        if (feedbackCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please add some feedback.');
-                          return;
-                        }
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
                           submitting = true;
                           error = null;
@@ -114,7 +124,7 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
+          ));
         });
       },
     );

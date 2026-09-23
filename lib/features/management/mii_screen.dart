@@ -110,7 +110,16 @@ class _ManagementMiiScreenState extends State<ManagementMiiScreen> {
                       rows: schools.map((sc) {
                         return DataRow(cells: [
                           DataCell(Text(sc['name'] as String, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: s.textPrimary))),
-                          DataCell(Text('${sc['miiScore']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: statusColor(sc['status'] as String?)))),
+                          DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
+                            Text('${sc['miiScore']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: statusColor(sc['status'] as String?))),
+                            if (sc['stale'] == true) ...[
+                              const SizedBox(width: 4),
+                              Tooltip(
+                                message: 'Some areas frozen at last known value — no recent activity logged',
+                                child: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 12, color: AppColors.warning),
+                              ),
+                            ],
+                          ])),
                           DataCell(Text('${sc['trainingScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
                           DataCell(Text('${sc['classroomScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),
                           DataCell(Text('${sc['evidenceScore']}', style: TextStyle(fontSize: 11.5, color: s.textSecondary))),

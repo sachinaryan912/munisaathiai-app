@@ -42,9 +42,11 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openForm() async {
+    final formKey = GlobalKey<FormState>();
     final examCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
     final selected = <String>{};
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -55,54 +57,70 @@ class _BodyState extends State<_Body> {
       builder: (sheetContext) {
         return StatefulBuilder(builder: (sheetContext, setSheetState) {
           final s = sheetContext.surface;
+          final showReasonError = submitted && selected.isEmpty;
           return Padding(
             padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Why did I get it wrong?', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 16),
-                    AppTextField(label: 'Exam name', controller: examCtrl),
-                    const SizedBox(height: 12),
-                    Text('Select all reasons that applied', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _reasons.map((r) {
-                        final active = selected.contains(r);
-                        return ChoiceChip(
-                          label: Text(r, style: const TextStyle(fontSize: 11.5)),
-                          selected: active,
-                          onSelected: (_) => setSheetState(() => active ? selected.remove(r) : selected.add(r)),
-                          selectedColor: AppColors.saffron500,
-                          labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Details (optional)', controller: noteCtrl, maxLines: 3),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Save',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (examCtrl.text.trim().isEmpty || selected.isEmpty) {
-                          setSheetState(() => error = 'Please enter the exam name and select at least one reason.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Why did I get it wrong?', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Exam name',
+                        isRequired: true,
+                        controller: examCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Exam name is required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(text: 'Select all reasons that applied', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                            const TextSpan(text: ' *', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _reasons.map((r) {
+                          final active = selected.contains(r);
+                          return ChoiceChip(
+                            label: Text(r, style: const TextStyle(fontSize: 11.5)),
+                            selected: active,
+                            onSelected: (_) => setSheetState(() => active ? selected.remove(r) : selected.add(r)),
+                            selectedColor: AppColors.saffron500,
+                            labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700),
+                          );
+                        }).toList(),
+                      ),
+                      if (showReasonError) ...[const SizedBox(height: 6), const Text('Please select at least one reason.', style: TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 12),
+                      AppTextField(label: 'Details (optional)', controller: noteCtrl, maxLines: 3),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Save',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          final valid = formKey.currentState!.validate();
+                          if (!valid || selected.isEmpty) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await widget.repo.submitExamSelfDiagnostic(examName: examCtrl.text.trim(), diagnosis: {'reasons': selected.toList(), 'notes': noteCtrl.text.trim()});
                           if (sheetContext.mounted) Navigator.pop(sheetContext);
@@ -119,10 +137,11 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

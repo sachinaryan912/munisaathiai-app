@@ -200,6 +200,10 @@ class ManagementRepository {
         return res.data as Map<String, dynamic>;
       });
 
+  Future<void> deleteUser(int id) => apiCall(() async {
+        await _dio.delete('/management/users/$id');
+      });
+
   /// One-time blast (see `username-migration.sql`) telling every already-onboarded account
   /// which username it was backfilled with, now that login requires one instead of email.
   /// Returns {sent, total} — the backend skips (and logs) individual email failures rather

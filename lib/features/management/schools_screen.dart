@@ -27,13 +27,12 @@ class _ManagementSchoolsScreenState extends State<ManagementSchoolsScreen> {
   String _query = '';
 
   Future<void> _openAdd(Future<void> Function() refresh) async {
-    final payload = await showSchoolFormSheet(context);
-    if (payload == null) return;
-    try {
-      await _repo.addSchool(payload);
+    final success = await showSchoolFormSheet(context);
+    if (success == true) {
       await refresh();
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('ApiException: ', ''))));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('School added successfully.')));
+      }
     }
   }
 

@@ -39,10 +39,12 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openForm() async {
+    final formKey = GlobalKey<FormState>();
     final interestsCtrl = TextEditingController();
     final strengthsCtrl = TextEditingController();
     final wishlistCtrl = TextEditingController();
     final familyCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -59,38 +61,52 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Discover Your Path', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 4),
-                    Text('Vidya will suggest a few directions based on what you share.', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
-                    const SizedBox(height: 16),
-                    AppTextField(label: 'What are you interested in?', controller: interestsCtrl, maxLines: 3, hint: 'Subjects, hobbies, things you enjoy...'),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'What are you good at?', controller: strengthsCtrl, maxLines: 3),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Dream career (optional)', controller: wishlistCtrl, maxLines: 2),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Family background (optional)', controller: familyCtrl, maxLines: 2),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Get Suggestions',
-                      icon: Icons.auto_awesome,
-                      loading: submitting,
-                      onPressed: () async {
-                        if (interestsCtrl.text.trim().isEmpty || strengthsCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please share your interests and strengths.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Discover Your Path', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 4),
+                      Text('Vidya will suggest a few directions based on what you share.', style: TextStyle(fontSize: 11.5, color: s.textMuted)),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'What are you interested in?',
+                        isRequired: true,
+                        controller: interestsCtrl,
+                        maxLines: 3,
+                        hint: 'Subjects, hobbies, things you enjoy...',
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Please share your interests' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        label: 'What are you good at?',
+                        isRequired: true,
+                        controller: strengthsCtrl,
+                        maxLines: 3,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Please share your strengths' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(label: 'Dream career (optional)', controller: wishlistCtrl, maxLines: 2),
+                      const SizedBox(height: 12),
+                      AppTextField(label: 'Family background (optional)', controller: familyCtrl, maxLines: 2),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Get Suggestions',
+                        icon: Icons.auto_awesome,
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await widget.repo.submitCareerAssessment(
                             interests: interestsCtrl.text.trim(),
@@ -112,10 +128,11 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

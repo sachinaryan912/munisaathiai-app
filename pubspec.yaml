@@ -1,7 +1,7 @@
 name: munisaathiai
 description: "Muni Saathi AI — AI-powered monitoring and implementation-tracking platform for the Muni Model."
 publish_to: 'none'
-version: 1.1.0+5
+version: 2.0.0+6
 
 environment:
   sdk: ^3.11.5

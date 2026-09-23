@@ -13,7 +13,9 @@ import '../student_repository.dart';
 Future<void> showUploadAssignmentSheet(BuildContext context, StudentRepository repo, Future<void> Function() onSuccess) {
   final subjectCtrl = TextEditingController();
   final titleCtrl = TextEditingController();
+  final formKey = GlobalKey<FormState>();
   File? file;
+  var submitted = false;
   var submitting = false;
   String? error;
 
@@ -24,82 +26,103 @@ Future<void> showUploadAssignmentSheet(BuildContext context, StudentRepository r
     builder: (sheetContext) {
       return StatefulBuilder(builder: (sheetContext, setSheetState) {
         final s = sheetContext.surface;
+        final showFileError = submitted && file == null;
         return Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
             decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Submit Assignment', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text('Vidya will grade it instantly with AI feedback.', style: TextStyle(fontSize: 12, color: s.textSecondary)),
-                  const SizedBox(height: 16),
-                  AppTextField(label: 'Subject', controller: subjectCtrl, hint: 'e.g. Mathematics'),
-                  const SizedBox(height: 14),
-                  AppTextField(label: 'Title', controller: titleCtrl, hint: 'e.g. Fractions Worksheet'),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () async {
-                      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
-                      if (result?.files.single.path != null) {
-                        setSheetState(() => file = File(result!.files.single.path!));
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(sheetContext).inputDecorationTheme.fillColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: file != null ? AppColors.saffron400 : Colors.transparent, width: 1.4),
-                      ),
-                      child: Row(
-                        children: [
-                          HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: AppColors.saffron600, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo or PDF of your work',
-                              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Submit Assignment', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('Vidya will grade it instantly with AI feedback.', style: TextStyle(fontSize: 12, color: s.textSecondary)),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Subject',
+                      isRequired: true,
+                      controller: subjectCtrl,
+                      hint: 'e.g. Mathematics',
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Subject is required' : null,
+                    ),
+                    const SizedBox(height: 14),
+                    AppTextField(label: 'Title', controller: titleCtrl, hint: 'e.g. Fractions Worksheet'),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () async {
+                        final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                        if (result?.files.single.path != null) {
+                          setSheetState(() {
+                            file = File(result!.files.single.path!);
+                            error = null;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(sheetContext).inputDecorationTheme.fillColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: showFileError ? AppColors.danger : (file != null ? AppColors.saffron400 : Colors.transparent),
+                            width: 1.4,
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          children: [
+                            HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: showFileError ? AppColors.danger : AppColors.saffron600, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo or PDF of your work *',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: showFileError ? AppColors.danger : s.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Submit',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (subjectCtrl.text.trim().isEmpty || file == null) {
-                        setSheetState(() => error = 'Please add a subject and a file.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await repo.submitAssignment(file: file!, subject: subjectCtrl.text.trim(), title: titleCtrl.text.trim().isEmpty ? 'Untitled Assignment' : titleCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        await onSuccess();
-                      } catch (e) {
+                    if (showFileError) ...[const SizedBox(height: 6), const Text('Please choose a photo or PDF to submit.', style: TextStyle(color: AppColors.danger, fontSize: 12))],
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Submit',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        final valid = formKey.currentState!.validate();
+                        if (!valid || file == null) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                  ),
-                ],
+                        try {
+                          await repo.submitAssignment(file: file!, subject: subjectCtrl.text.trim(), title: titleCtrl.text.trim().isEmpty ? 'Untitled Assignment' : titleCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          await onSuccess();
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

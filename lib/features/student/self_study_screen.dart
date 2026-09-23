@@ -3,6 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/async_screen.dart';
 import '../../core/widgets/empty_view.dart';
 import '../../core/widgets/generic_skeleton.dart';
@@ -39,6 +40,7 @@ Future<void> _showAddChapterSheet(BuildContext context, StudentRepository repo, 
   final topicController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   bool saving = false;
+  bool submitted = false;
 
   await showModalBottomSheet(
     context: context,
@@ -50,22 +52,26 @@ Future<void> _showAddChapterSheet(BuildContext context, StudentRepository repo, 
           padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
           child: Form(
             key: formKey,
+            autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Add a chapter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: s.textPrimary)),
                 const SizedBox(height: 16),
-                TextFormField(
+                AppTextField(
+                  label: 'Subject',
+                  isRequired: true,
                   controller: subjectController,
-                  decoration: const InputDecoration(labelText: 'Subject', hintText: 'e.g. Mathematics'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  hint: 'e.g. Mathematics',
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Subject is required' : null,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                AppTextField(
+                  label: 'Chapter title',
+                  isRequired: true,
                   controller: topicController,
-                  decoration: const InputDecoration(labelText: 'Chapter title'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Chapter title is required' : null,
                 ),
                 const SizedBox(height: 18),
                 SizedBox(
@@ -74,6 +80,7 @@ Future<void> _showAddChapterSheet(BuildContext context, StudentRepository repo, 
                     onPressed: saving
                         ? null
                         : () async {
+                            setSheetState(() => submitted = true);
                             if (!(formKey.currentState?.validate() ?? false)) return;
                             setSheetState(() => saving = true);
                             try {

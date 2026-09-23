@@ -44,9 +44,11 @@ const _fields = [
 
 class _BodyState extends State<_Body> {
   Future<void> _openForm() async {
+    final formKey = GlobalKey<FormState>();
     final chapterCtrl = TextEditingController();
     final questionCtrl = TextEditingController();
     final controllers = {for (final f in _fields) f.$1: TextEditingController()};
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -63,39 +65,47 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Answer Pattern', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 16),
-                    AppTextField(label: 'Chapter', controller: chapterCtrl),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Question', controller: questionCtrl, maxLines: 2),
-                    const SizedBox(height: 12),
-                    for (final f in _fields) ...[
-                      AppTextField(label: f.$2, controller: controllers[f.$1]!, maxLines: 3),
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Answer Pattern', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Chapter',
+                        isRequired: true,
+                        controller: chapterCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Chapter is required' : null,
+                      ),
                       const SizedBox(height: 12),
-                    ],
-                    if (error != null) ...[Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)), const SizedBox(height: 10)],
-                    GradientButton(
-                      label: 'Save',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (chapterCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please enter the chapter.');
-                          return;
-                        }
-                        if (questionCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please enter the question.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+                      AppTextField(
+                        label: 'Question',
+                        isRequired: true,
+                        controller: questionCtrl,
+                        maxLines: 2,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Question is required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      for (final f in _fields) ...[
+                        AppTextField(label: f.$2, controller: controllers[f.$1]!, maxLines: 3),
+                        const SizedBox(height: 12),
+                      ],
+                      if (error != null) ...[Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)), const SizedBox(height: 10)],
+                      GradientButton(
+                        label: 'Save',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await widget.repo.submitAnswerPattern(
                             chapter: chapterCtrl.text.trim(),
@@ -117,10 +127,11 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

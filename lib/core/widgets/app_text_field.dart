@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../theme/app_colors.dart';
 import 'app_icon.dart';
 
 class AppTextField extends StatefulWidget {
@@ -14,6 +15,7 @@ class AppTextField extends StatefulWidget {
   final bool enabled;
   final ValueChanged<String>? onChanged;
   final Widget? suffix;
+  final bool isRequired;
 
   const AppTextField({
     super.key,
@@ -28,6 +30,7 @@ class AppTextField extends StatefulWidget {
     this.enabled = true,
     this.onChanged,
     this.suffix,
+    this.isRequired = false,
   });
 
   @override
@@ -44,7 +47,23 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 6),
-          child: Text(widget.label, style: Theme.of(context).inputDecorationTheme.labelStyle),
+          child: RichText(
+            text: TextSpan(
+              text: widget.label,
+              style: Theme.of(context).inputDecorationTheme.labelStyle,
+              children: [
+                if (widget.isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
         TextFormField(
           controller: widget.controller,

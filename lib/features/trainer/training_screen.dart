@@ -68,6 +68,8 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
     final venueCtrl = TextEditingController();
     var mode = 'On-site';
     var date = DateTime.now();
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -83,65 +85,74 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('New Training Session', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
-                    const SizedBox(height: 16),
-                    Text('School', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: schoolId,
-                          isExpanded: true,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          items: _schools.map((sc) => DropdownMenuItem(value: sc['id'] as int, child: Text(sc['name'] as String))).toList(),
-                          onChanged: (v) => setSheetState(() => schoolId = v!),
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('New Training Session', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: s.textPrimary)),
+                      const SizedBox(height: 16),
+                      Text('School', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: schoolId,
+                            isExpanded: true,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            items: _schools.map((sc) => DropdownMenuItem(value: sc['id'] as int, child: Text(sc['name'] as String))).toList(),
+                            onChanged: (v) => setSheetState(() => schoolId = v!),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    AppTextField(label: 'Topic', controller: topicCtrl),
-                    const SizedBox(height: 14),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(context: sheetContext, initialDate: date, firstDate: DateTime(2024), lastDate: DateTime(2030));
-                        if (picked != null) setSheetState(() => date = picked);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                        decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                      const SizedBox(height: 14),
+                      AppTextField(
+                        label: 'Topic',
+                        isRequired: true,
+                        controller: topicCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Topic is required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    AppTextField(label: 'Venue (optional)', controller: venueCtrl),
-                    const SizedBox(height: 14),
-                    Wrap(spacing: 8, children: ['On-site', 'Online'].map((m) {
-                      final active = m == mode;
-                      return ChoiceChip(label: Text(m), selected: active, onSelected: (_) => setSheetState(() => mode = m), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700), backgroundColor: s.border.withValues(alpha: 0.4), side: BorderSide.none);
-                    }).toList()),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Create Session',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (topicCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Topic is required.');
-                          return;
-                        }
-                        setSheetState(() => submitting = true);
-                        try {
-                          await _repo.createSession(schoolId: schoolId, topic: topicCtrl.text.trim(), date: DateFormat('yyyy-MM-dd').format(date), venue: venueCtrl.text.trim().isEmpty ? null : venueCtrl.text.trim(), mode: mode);
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                          await _load();
+                      const SizedBox(height: 14),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(context: sheetContext, initialDate: date, firstDate: DateTime(2024), lastDate: DateTime(2030));
+                          if (picked != null) setSheetState(() => date = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                          decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                          child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      AppTextField(label: 'Venue (optional)', controller: venueCtrl),
+                      const SizedBox(height: 14),
+                      Wrap(spacing: 8, children: ['On-site', 'Online'].map((m) {
+                        final active = m == mode;
+                        return ChoiceChip(label: Text(m), selected: active, onSelected: (_) => setSheetState(() => mode = m), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700), backgroundColor: s.border.withValues(alpha: 0.4), side: BorderSide.none);
+                      }).toList()),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Create Session',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
+                          try {
+                            await _repo.createSession(schoolId: schoolId, topic: topicCtrl.text.trim(), date: DateFormat('yyyy-MM-dd').format(date), venue: venueCtrl.text.trim().isEmpty ? null : venueCtrl.text.trim(), mode: mode);
+                            if (sheetContext.mounted) Navigator.pop(sheetContext);
+                            await _load();
                         } catch (e) {
                           setSheetState(() {
                             submitting = false;
@@ -154,10 +165,11 @@ class _TrainerTrainingScreenState extends State<TrainerTrainingScreen> with Sing
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   Future<void> _verify(int id, bool verified) async {

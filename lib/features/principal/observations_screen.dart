@@ -106,19 +106,33 @@ class _BodyState extends State<_Body> {
                     Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
                     Text('New Classroom Observation', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
                     const SizedBox(height: 16),
-                    Text('Teacher', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
+                    RichText(
+                      text: TextSpan(
+                        text: 'Teacher',
+                        style: Theme.of(sheetContext).inputDecorationTheme.labelStyle,
+                        children: const [
+                          TextSpan(text: ' *', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(
+                        color: Theme.of(sheetContext).inputDecorationTheme.fillColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: (teacherId == null && error != null) ? Border.all(color: AppColors.danger) : null,
+                      ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int>(
                           value: teacherId,
                           isExpanded: true,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
+                          hint: const Text('Select a teacher'),
                           items: _teachers.map((t) => DropdownMenuItem(value: t['id'] as int, child: Text(t['name'] as String))).toList(),
                           onChanged: (v) => setSheetState(() {
                             teacherId = v;
+                            error = null;
                             final selected = _teachers.firstWhere((t) => t['id'] == v, orElse: () => const {});
                             classCtrl.text = selected['className'] as String? ?? '';
                             sectionCtrl.text = selected['section'] as String? ?? '';
@@ -139,7 +153,7 @@ class _BodyState extends State<_Body> {
                         if (picked != null) setSheetState(() => date = picked);
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
                         child: Row(children: [const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, size: 16, color: AppColors.saffron600), const SizedBox(width: 8), Text(DateFormat('d MMM yyyy').format(date), style: TextStyle(fontWeight: FontWeight.w700, color: s.textPrimary))]),
                       ),
@@ -163,7 +177,10 @@ class _BodyState extends State<_Body> {
                       label: 'Submit Observation',
                       loading: submitting,
                       onPressed: () async {
-                        if (teacherId == null) return;
+                        if (teacherId == null) {
+                          setSheetState(() => error = 'Please select a teacher to observe.');
+                          return;
+                        }
                         setSheetState(() => submitting = true);
                         try {
                           await widget.repo.createObservation(

@@ -49,70 +49,10 @@ class _BodyState extends State<_Body> {
   String _tab = 'meetings';
 
   Future<void> _logMeeting() async {
+    final formKey = GlobalKey<FormState>();
     final agendaCtrl = TextEditingController();
     final minutesCtrl = TextEditingController();
-    var submitting = false;
-    String? error;
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(builder: (sheetContext, setSheetState) {
-          final s = sheetContext.surface;
-          return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-              decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Log a Parliament Meeting', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 14),
-                  AppTextField(label: 'Agenda', controller: agendaCtrl, maxLines: 2),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Minutes (optional)', controller: minutesCtrl, maxLines: 3),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 16),
-                  GradientButton(
-                    label: 'Save Meeting',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (agendaCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Please enter an agenda.')));
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await widget.repo.logParliamentMeeting(agenda: agendaCtrl.text.trim(), minutes: minutesCtrl.text.trim().isEmpty ? null : minutesCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
-                      } catch (e) {
-                        setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
-                        });
-                      }
-                    },
-                    height: 46,
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-      },
-    );
-    if (saved == true) await widget.refresh();
-  }
-
-  Future<void> _logActivity() async {
-    Map<String, dynamic>? selectedStudent;
-    final descCtrl = TextEditingController();
+    var submitted = false;
     var submitting = false;
     String? error;
     final saved = await showModalBottomSheet<bool>(
@@ -127,51 +67,131 @@ class _BodyState extends State<_Body> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Log a Parliament Activity', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 14),
-                  DropdownButtonFormField<Map<String, dynamic>?>(
-                    initialValue: selectedStudent,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Student (optional — leave blank for the whole class)', border: OutlineInputBorder(), isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Whole class')),
-                      ...widget.roster.map((st) => DropdownMenuItem(value: st, child: Text(st['name'] as String, overflow: TextOverflow.ellipsis))),
-                    ],
-                    onChanged: (v) => setSheetState(() => selectedStudent = v),
-                  ),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Description', controller: descCtrl, maxLines: 2),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 16),
-                  GradientButton(
-                    label: 'Save Activity',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (descCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Please enter a description.')));
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await widget.repo.logParliamentActivity(studentId: selectedStudent?['id'] as int?, description: descCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext, true);
-                      } catch (e) {
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Log a Parliament Meeting', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 14),
+                    AppTextField(
+                      label: 'Agenda',
+                      isRequired: true,
+                      controller: agendaCtrl,
+                      maxLines: 2,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Agenda is required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Minutes (optional)', controller: minutesCtrl, maxLines: 3),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 16),
+                    GradientButton(
+                      label: 'Save Meeting',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                    height: 46,
-                  ),
-                ],
+                        try {
+                          await widget.repo.logParliamentMeeting(agenda: agendaCtrl.text.trim(), minutes: minutesCtrl.text.trim().isEmpty ? null : minutesCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                      height: 46,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (saved == true) await widget.refresh();
+  }
+
+  Future<void> _logActivity() async {
+    final formKey = GlobalKey<FormState>();
+    Map<String, dynamic>? selectedStudent;
+    final descCtrl = TextEditingController();
+    var submitted = false;
+    var submitting = false;
+    String? error;
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final s = sheetContext.surface;
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+              decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Log a Parliament Activity', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<Map<String, dynamic>?>(
+                      initialValue: selectedStudent,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Student (optional — leave blank for the whole class)', border: OutlineInputBorder(), isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Whole class')),
+                        ...widget.roster.map((st) => DropdownMenuItem(value: st, child: Text(st['name'] as String, overflow: TextOverflow.ellipsis))),
+                      ],
+                      onChanged: (v) => setSheetState(() => selectedStudent = v),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Description',
+                      isRequired: true,
+                      controller: descCtrl,
+                      maxLines: 2,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Description is required' : null,
+                    ),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 16),
+                    GradientButton(
+                      label: 'Save Activity',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
+                        setSheetState(() {
+                          submitting = true;
+                          error = null;
+                        });
+                        try {
+                          await widget.repo.logParliamentActivity(studentId: selectedStudent?['id'] as int?, description: descCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                      height: 46,
+                    ),
+                  ],
+                ),
               ),
             ),
           );

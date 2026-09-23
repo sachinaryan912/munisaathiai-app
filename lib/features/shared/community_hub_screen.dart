@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -72,6 +73,8 @@ class _WakeupBoardTab extends StatelessWidget {
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
     var category = 'Society';
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -87,48 +90,55 @@ class _WakeupBoardTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Post to Wakeup Board', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 14),
-                  Wrap(spacing: 8, children: ['Society', 'Country', 'World'].map((c) {
-                    final active = c == category;
-                    return ChoiceChip(label: Text(c, style: const TextStyle(fontSize: 11.5)), selected: active, onSelected: (_) => setSheetState(() => category = c), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
-                  }).toList()),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Title', controller: titleCtrl),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Content', controller: contentCtrl, maxLines: 3),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Post',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (titleCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please enter a title.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await repo.postWakeupCallItem(title: titleCtrl.text.trim(), content: contentCtrl.text.trim(), category: category);
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        await refresh();
-                      } catch (e) {
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Post to Wakeup Board', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 14),
+                    Wrap(spacing: 8, children: ['Society', 'Country', 'World'].map((c) {
+                      final active = c == category;
+                      return ChoiceChip(label: Text(c, style: const TextStyle(fontSize: 11.5)), selected: active, onSelected: (_) => setSheetState(() => category = c), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
+                    }).toList()),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Title',
+                      isRequired: true,
+                      controller: titleCtrl,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Content', controller: contentCtrl, maxLines: 3),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Post',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                  ),
-                ],
+                        try {
+                          await repo.postWakeupCallItem(title: titleCtrl.text.trim(), content: contentCtrl.text.trim(), category: category);
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          await refresh();
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -189,6 +199,8 @@ class _RevivalDayTab extends StatelessWidget {
     final descCtrl = TextEditingController();
     final classCtrl = TextEditingController();
     var type = 'REVIVAL_DAY';
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -204,48 +216,56 @@ class _RevivalDayTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Log Thursday Event', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 12),
-                  Wrap(spacing: 8, children: _revivalTypeLabels.entries.map((entry) {
-                    final active = type == entry.key;
-                    return ChoiceChip(label: Text(entry.value, style: const TextStyle(fontSize: 11.5)), selected: active, onSelected: (_) => setSheetState(() => type = entry.key), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
-                  }).toList()),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Description', controller: descCtrl, maxLines: 3),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Class (optional — leave blank for school-wide)', controller: classCtrl),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Save',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (descCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please describe the event.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await repo.logRevivalDayEvent(type: type, description: descCtrl.text.trim(), className: classCtrl.text.trim().isEmpty ? null : classCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        await refresh();
-                      } catch (e) {
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Log Thursday Event', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 8, children: _revivalTypeLabels.entries.map((entry) {
+                      final active = type == entry.key;
+                      return ChoiceChip(label: Text(entry.value, style: const TextStyle(fontSize: 11.5)), selected: active, onSelected: (_) => setSheetState(() => type = entry.key), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
+                    }).toList()),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      label: 'Description',
+                      isRequired: true,
+                      controller: descCtrl,
+                      maxLines: 3,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Description is required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Class (optional — leave blank for school-wide)', controller: classCtrl),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Save',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                  ),
-                ],
+                        try {
+                          await repo.logRevivalDayEvent(type: type, description: descCtrl.text.trim(), className: classCtrl.text.trim().isEmpty ? null : classCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          await refresh();
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -307,6 +327,8 @@ class _WorkshopsTab extends StatelessWidget {
   const _WorkshopsTab({required this.repo, required this.canPublish});
 
   Future<void> _openAdd(BuildContext context, Future<void> Function() refresh) async {
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     final nameCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     final attendeeCtrl = TextEditingController();
@@ -327,7 +349,10 @@ class _WorkshopsTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -339,7 +364,13 @@ class _WorkshopsTab extends StatelessWidget {
                     return ChoiceChip(label: Text(entry.value, style: const TextStyle(fontSize: 11.5)), selected: active, onSelected: (_) => setSheetState(() => category = entry.key), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
                   }).toList()),
                   const SizedBox(height: 12),
-                  AppTextField(label: 'Workshop name', controller: nameCtrl, hint: 'e.g. CPR Training, Robotics, Kitchen Garden'),
+                  AppTextField(
+                    label: 'Workshop name',
+                    isRequired: true,
+                    controller: nameCtrl,
+                    hint: 'e.g. CPR Training, Robotics, Kitchen Garden',
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Workshop name is required' : null,
+                  ),
                   const SizedBox(height: 12),
                   AppTextField(label: 'Attendee count (optional)', controller: attendeeCtrl, keyboardType: TextInputType.number),
                   const SizedBox(height: 12),
@@ -351,10 +382,8 @@ class _WorkshopsTab extends StatelessWidget {
                     label: 'Save',
                     loading: submitting,
                     onPressed: () async {
-                      if (nameCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please enter the workshop name.');
-                        return;
-                      }
+                      setSheetState(() => submitted = true);
+                      if (!formKey.currentState!.validate()) return;
                       setSheetState(() {
                         submitting = true;
                         error = null;
@@ -380,10 +409,11 @@ class _WorkshopsTab extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override
@@ -395,28 +425,40 @@ class _WorkshopsTab extends StatelessWidget {
         return Stack(
           children: [
             items.isEmpty
-                ? ListView(children: const [SizedBox(height: 120), EmptyView(title: 'No workshops logged yet', subtitle: 'Health, skill and kitchen-garden workshops show up here.', icon: HugeIcons.strokeRoundedWrench01)])
+                ? const EmptyView(title: 'No skill workshops logged yet', icon: HugeIcons.strokeRoundedPaintBoard)
                 : ListView.builder(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, canPublish ? 100 : 24),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: items.length,
                     itemBuilder: (context, i) {
                       final item = items[i];
-                      final certified = item['certified'] as bool? ?? false;
+                      final cat = item['category'] as String?;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: SectionCard(
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(item['workshopName'] as String, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: s.textPrimary)),
-                                    Text('${_workshopCategoryLabels[item['category']] ?? item['category']} · ${item['date']}${item['attendeeCount'] != null ? ' · ${item['attendeeCount']} attendees' : ''}', style: TextStyle(fontSize: 10.5, color: s.textMuted)),
-                                  ],
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: AppColors.saffron500.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
+                                    child: Text(_workshopCategoryLabels[cat] ?? (cat ?? 'Workshop'), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.saffron600)),
+                                  ),
+                                  const Spacer(),
+                                  Text(DateFormat('d MMM yyyy').format(DateTime.parse(item['date'] as String)), style: TextStyle(fontSize: 11, color: s.textMuted)),
+                                ],
                               ),
-                              if (certified) const HugeIcon(icon: HugeIcons.strokeRoundedAward01, size: 16, color: AppColors.success),
+                              const SizedBox(height: 8),
+                              Text(item['workshopName'] as String, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: s.textPrimary)),
+                              if (item['attendeeCount'] != null) ...[
+                                const SizedBox(height: 4),
+                                Text('${item['attendeeCount']} attendees${(item['certified'] as bool? ?? false) ? ' · Certificates issued' : ''}', style: TextStyle(fontSize: 11.5, color: s.textSecondary)),
+                              ],
+                              if ((item['notes'] as String?)?.isNotEmpty ?? false) ...[
+                                const SizedBox(height: 6),
+                                Text(item['notes'] as String, style: TextStyle(fontSize: 12, color: s.textMuted)),
+                              ],
                             ],
                           ),
                         ),
@@ -424,7 +466,18 @@ class _WorkshopsTab extends StatelessWidget {
                     },
                   ),
             if (canPublish)
-              Positioned(right: 16, bottom: 16, child: FloatingActionButton(heroTag: 'add_workshop', backgroundColor: AppColors.saffron500, onPressed: () => _openAdd(context, refresh), child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white))),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton.extended(
+                  heroTag: 'fab_workshop',
+                  onPressed: () => _openAdd(context, refresh),
+                  backgroundColor: AppColors.saffron500,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Log Workshop', style: TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ),
           ],
         );
       },
@@ -439,6 +492,8 @@ class _ActivityClubsTab extends StatelessWidget {
   const _ActivityClubsTab({required this.repo, required this.canPublish});
 
   Future<void> _openAdd(BuildContext context, Future<void> Function() refresh) async {
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     final nameCtrl = TextEditingController();
     var submitting = false;
     String? error;
@@ -455,24 +510,31 @@ class _ActivityClubsTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
                   Text('New Activity Club', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
                   const SizedBox(height: 14),
-                  AppTextField(label: 'Club name', controller: nameCtrl, hint: 'e.g. Drama, Art & Craft, Sports, Music'),
+                  AppTextField(
+                    label: 'Club name',
+                    isRequired: true,
+                    controller: nameCtrl,
+                    hint: 'e.g. Drama, Art & Craft, Sports, Music',
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Club name is required' : null,
+                  ),
                   if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                   const SizedBox(height: 18),
                   GradientButton(
                     label: 'Create',
                     loading: submitting,
                     onPressed: () async {
-                      if (nameCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please enter a name.');
-                        return;
-                      }
+                      setSheetState(() => submitted = true);
+                      if (!formKey.currentState!.validate()) return;
                       setSheetState(() {
                         submitting = true;
                         error = null;
@@ -492,8 +554,9 @@ class _ActivityClubsTab extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        });
+          ),
+        );
+      });
       },
     );
   }

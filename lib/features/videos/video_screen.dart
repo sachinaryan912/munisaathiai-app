@@ -46,6 +46,8 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openAdd() async {
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     final titleCtrl = TextEditingController();
     final urlCtrl = TextEditingController();
     String? methodology;
@@ -65,7 +67,10 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,9 +78,24 @@ class _BodyState extends State<_Body> {
                     Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
                     Text('Add Training Video', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
                     const SizedBox(height: 16),
-                    AppTextField(label: 'Title', controller: titleCtrl),
+                    AppTextField(
+                      label: 'Title',
+                      isRequired: true,
+                      controller: titleCtrl,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                    ),
                     const SizedBox(height: 12),
-                    AppTextField(label: 'YouTube URL', controller: urlCtrl, hint: 'https://youtu.be/...'),
+                    AppTextField(
+                      label: 'YouTube URL',
+                      isRequired: true,
+                      controller: urlCtrl,
+                      hint: 'https://youtu.be/...',
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'YouTube URL is required';
+                        if (YoutubePlayer.convertUrlToId(v.trim()) == null) return 'Please enter a valid YouTube URL';
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 12),
                     Text('Methodology (optional)', style: Theme.of(sheetContext).inputDecorationTheme.labelStyle),
                     const SizedBox(height: 8),
@@ -101,10 +121,8 @@ class _BodyState extends State<_Body> {
                       label: 'Add Video',
                       loading: submitting,
                       onPressed: () async {
-                        if (titleCtrl.text.trim().isEmpty || YoutubePlayer.convertUrlToId(urlCtrl.text.trim()) == null) {
-                          setSheetState(() => error = 'Please enter a title and a valid YouTube URL.');
-                          return;
-                        }
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
                           submitting = true;
                           error = null;
@@ -125,7 +143,8 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
+          ),
+        );
         });
       },
     );

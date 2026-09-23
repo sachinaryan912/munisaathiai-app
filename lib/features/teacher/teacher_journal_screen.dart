@@ -83,6 +83,8 @@ class _CenterWorkTab extends StatelessWidget {
   Future<void> _openAdd(BuildContext context, Future<void> Function() refresh) async {
     final topicCtrl = TextEditingController();
     final controllers = {for (final f in _centerFields) f.$1: TextEditingController()};
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -99,33 +101,39 @@ class _CenterWorkTab extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Log Center Work', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 14),
-                    AppTextField(label: 'Topic', controller: topicCtrl),
-                    const SizedBox(height: 12),
-                    for (final f in _centerFields) ...[
-                      AppTextField(label: f.$2, controller: controllers[f.$1]!, maxLines: 2),
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Log Center Work', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 14),
+                      AppTextField(
+                        label: 'Topic',
+                        isRequired: true,
+                        controller: topicCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Topic is required' : null,
+                      ),
                       const SizedBox(height: 12),
-                    ],
-                    if (error != null) ...[Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)), const SizedBox(height: 10)],
-                    GradientButton(
-                      label: 'Save',
-                      loading: submitting,
-                      onPressed: () async {
-                        if (topicCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please enter the topic.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+                      for (final f in _centerFields) ...[
+                        AppTextField(label: f.$2, controller: controllers[f.$1]!, maxLines: 2),
+                        const SizedBox(height: 12),
+                      ],
+                      if (error != null) ...[Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)), const SizedBox(height: 10)],
+                      GradientButton(
+                        label: 'Save',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await repo.logCenterWork(
                             topic: topicCtrl.text.trim(),
@@ -149,10 +157,11 @@ class _CenterWorkTab extends StatelessWidget {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override
@@ -204,6 +213,8 @@ class _ValuesDiscussionTab extends StatelessWidget {
   Future<void> _openAdd(BuildContext context, Future<void> Function() refresh) async {
     final topicCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -219,43 +230,51 @@ class _ValuesDiscussionTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                  Text('Log Values Discussion', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                  const SizedBox(height: 14),
-                  AppTextField(label: 'Value discussed', controller: topicCtrl, hint: 'e.g. Gratitude, Responsibility'),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Notes (optional)', controller: notesCtrl, maxLines: 3),
-                  if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                  const SizedBox(height: 18),
-                  GradientButton(
-                    label: 'Save',
-                    loading: submitting,
-                    onPressed: () async {
-                      if (topicCtrl.text.trim().isEmpty) {
-                        setSheetState(() => error = 'Please enter the value discussed.');
-                        return;
-                      }
-                      setSheetState(() {
-                        submitting = true;
-                        error = null;
-                      });
-                      try {
-                        await repo.logValuesDiscussion(valueTopic: topicCtrl.text.trim(), notes: notesCtrl.text.trim().isEmpty ? null : notesCtrl.text.trim());
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        await refresh();
-                      } catch (e) {
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                    Text('Log Values Discussion', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                    const SizedBox(height: 14),
+                    AppTextField(
+                      label: 'Value discussed',
+                      isRequired: true,
+                      controller: topicCtrl,
+                      hint: 'e.g. Gratitude, Responsibility',
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter the value discussed' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Notes (optional)', controller: notesCtrl, maxLines: 3),
+                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Save',
+                      loading: submitting,
+                      onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
-                          submitting = false;
-                          error = e.toString().replaceFirst('ApiException: ', '');
+                          submitting = true;
+                          error = null;
                         });
-                      }
-                    },
-                  ),
-                ],
+                        try {
+                          await repo.logValuesDiscussion(valueTopic: topicCtrl.text.trim(), notes: notesCtrl.text.trim().isEmpty ? null : notesCtrl.text.trim());
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          await refresh();
+                        } catch (e) {
+                          setSheetState(() {
+                            submitting = false;
+                            error = e.toString().replaceFirst('ApiException: ', '');
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );

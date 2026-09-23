@@ -239,8 +239,9 @@ class _AiChatBodyState extends State<AiChatBody> {
     final conversationId = _activeConversationId;
     if ((text.isEmpty && _attachedFile == null) ||
         _sending ||
-        conversationId == null)
+        conversationId == null) {
       return;
+    }
 
     final userMsg = AiChatMessage(
       id: -DateTime.now().millisecondsSinceEpoch,
@@ -1303,11 +1304,12 @@ class _MessageActionsState extends State<_MessageActions> {
   Future<void> _toggleSpeak() async {
     if (_speaking) {
       await TtsService.instance.stop();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _speaking = false;
           _loadingSpeech = false;
         });
+      }
       return;
     }
     setState(() {
@@ -1321,11 +1323,12 @@ class _MessageActionsState extends State<_MessageActions> {
         if (mounted) setState(() => _loadingSpeech = false);
       },
     );
-    if (mounted)
+    if (mounted) {
       setState(() {
         _speaking = false;
         _loadingSpeech = false;
       });
+    }
   }
 
   @override

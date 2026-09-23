@@ -53,6 +53,8 @@ class _Body extends StatefulWidget {
 
 class _BodyState extends State<_Body> {
   Future<void> _openForm() async {
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     final controllers = List.generate(_questions.length, (_) => TextEditingController());
     var submitting = false;
     String? error;
@@ -70,7 +72,10 @@ class _BodyState extends State<_Body> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,7 +86,13 @@ class _BodyState extends State<_Body> {
                     for (int i = 0; i < _questions.length; i++) ...[
                       Text('${i + 1}. ${_questions[i]}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: s.textSecondary)),
                       const SizedBox(height: 6),
-                      AppTextField(label: 'Your answer', controller: controllers[i], maxLines: 2),
+                      AppTextField(
+                        label: 'Your answer',
+                        isRequired: true,
+                        controller: controllers[i],
+                        maxLines: 2,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Please answer question ${i + 1}' : null,
+                      ),
                       const SizedBox(height: 12),
                     ],
                     if (error != null) ...[Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)), const SizedBox(height: 10)],
@@ -89,6 +100,8 @@ class _BodyState extends State<_Body> {
                       label: 'Submit',
                       loading: submitting,
                       onPressed: () async {
+                        setSheetState(() => submitted = true);
+                        if (!formKey.currentState!.validate()) return;
                         setSheetState(() {
                           submitting = true;
                           error = null;
@@ -109,7 +122,7 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
-          );
+          ));
         });
       },
     );

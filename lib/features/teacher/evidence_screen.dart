@@ -77,6 +77,7 @@ class _BodyState extends State<_Body> {
   Future<void> _openUpload() async {
     String methodology = widget.methodologies.first;
     File? file;
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -87,6 +88,7 @@ class _BodyState extends State<_Body> {
       builder: (sheetContext) {
         return StatefulBuilder(builder: (sheetContext, setSheetState) {
           final s = sheetContext.surface;
+          final showFileError = submitted && file == null;
           return Padding(
             padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
             child: Container(
@@ -137,24 +139,32 @@ class _BodyState extends State<_Body> {
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Theme.of(sheetContext).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(16)),
+                        decoration: BoxDecoration(
+                          color: Theme.of(sheetContext).inputDecorationTheme.fillColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: showFileError ? AppColors.danger : (file != null ? AppColors.saffron400 : Colors.transparent),
+                            width: 1.4,
+                          ),
+                        ),
                         child: Row(
                           children: [
-                            HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: AppColors.saffron600, size: 20),
+                            HugeIcon(icon: file != null ? HugeIcons.strokeRoundedFileCheck : HugeIcons.strokeRoundedUpload01, color: showFileError ? AppColors.danger : AppColors.saffron600, size: 20),
                             const SizedBox(width: 10),
-                            Expanded(child: Text(file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo, video or PDF', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: s.textPrimary), overflow: TextOverflow.ellipsis)),
+                            Expanded(child: Text(file != null ? file!.path.split(Platform.pathSeparator).last : 'Choose a photo, video or PDF *', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: showFileError ? AppColors.danger : s.textPrimary), overflow: TextOverflow.ellipsis)),
                           ],
                         ),
                       ),
                     ),
+                    if (showFileError) ...[const SizedBox(height: 6), const Text('Please choose a file to upload.', style: TextStyle(color: AppColors.danger, fontSize: 12))],
                     if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
                     const SizedBox(height: 18),
                     GradientButton(
                       label: 'Upload',
                       loading: submitting,
                       onPressed: () async {
+                        setSheetState(() => submitted = true);
                         if (file == null) {
-                          setSheetState(() => error = 'Please choose a file.');
                           return;
                         }
                         setSheetState(() {

@@ -68,6 +68,8 @@ class _Body extends StatelessWidget {
     final startCtrl = TextEditingController(text: existing?['startTime'] as String? ?? '');
     final endCtrl = TextEditingController(text: existing?['endTime'] as String? ?? '');
     final teacherCtrl = TextEditingController(text: existing?['teacherName'] as String? ?? '');
+    final formKey = GlobalKey<FormState>();
+    var submitted = false;
     var submitting = false;
     String? error;
 
@@ -84,45 +86,77 @@ class _Body extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               decoration: BoxDecoration(color: s.card, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
               constraints: BoxConstraints(maxHeight: MediaQuery.of(sheetContext).size.height * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
-                    Text('Edit Period', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
-                    const SizedBox(height: 14),
-                    Wrap(spacing: 8, children: _days.map((d) {
-                      final active = selectedDay == d;
-                      return ChoiceChip(label: Text(d), selected: active, onSelected: (_) => setSheetState(() => selectedDay = d), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
-                    }).toList()),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Period number', controller: periodCtrl, keyboardType: TextInputType.number),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Subject', controller: subjectCtrl),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      Expanded(child: AppTextField(label: 'Start (HH:mm)', controller: startCtrl, hint: '09:00')),
-                      const SizedBox(width: 10),
-                      Expanded(child: AppTextField(label: 'End (HH:mm)', controller: endCtrl, hint: '09:40')),
-                    ]),
-                    const SizedBox(height: 12),
-                    AppTextField(label: 'Teacher (optional)', controller: teacherCtrl),
-                    if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
-                    const SizedBox(height: 18),
-                    GradientButton(
-                      label: 'Save',
-                      loading: submitting,
-                      onPressed: () async {
-                        final periodNum = int.tryParse(periodCtrl.text.trim());
-                        if (periodNum == null || subjectCtrl.text.trim().isEmpty || startCtrl.text.trim().isEmpty || endCtrl.text.trim().isEmpty) {
-                          setSheetState(() => error = 'Please fill period, subject, start and end time.');
-                          return;
-                        }
-                        setSheetState(() {
-                          submitting = true;
-                          error = null;
-                        });
+              child: Form(
+                key: formKey,
+                autovalidateMode: submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 14), alignment: Alignment.center, decoration: BoxDecoration(color: s.border, borderRadius: BorderRadius.circular(99))),
+                      Text('Edit Period', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: s.textPrimary)),
+                      const SizedBox(height: 14),
+                      Wrap(spacing: 8, children: _days.map((d) {
+                        final active = selectedDay == d;
+                        return ChoiceChip(label: Text(d), selected: active, onSelected: (_) => setSheetState(() => selectedDay = d), selectedColor: AppColors.saffron500, labelStyle: TextStyle(color: active ? Colors.white : s.textSecondary, fontWeight: FontWeight.w700));
+                      }).toList()),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        label: 'Period number',
+                        isRequired: true,
+                        controller: periodCtrl,
+                        keyboardType: TextInputType.number,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Period number is required';
+                          if (int.tryParse(v.trim()) == null) return 'Enter a valid number';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        label: 'Subject',
+                        isRequired: true,
+                        controller: subjectCtrl,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Subject is required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(
+                          child: AppTextField(
+                            label: 'Start (HH:mm)',
+                            isRequired: true,
+                            controller: startCtrl,
+                            hint: '09:00',
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Start time required' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: AppTextField(
+                            label: 'End (HH:mm)',
+                            isRequired: true,
+                            controller: endCtrl,
+                            hint: '09:40',
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'End time required' : null,
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 12),
+                      AppTextField(label: 'Teacher (optional)', controller: teacherCtrl),
+                      if (error != null) ...[const SizedBox(height: 10), Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12))],
+                      const SizedBox(height: 18),
+                      GradientButton(
+                        label: 'Save',
+                        loading: submitting,
+                        onPressed: () async {
+                          setSheetState(() => submitted = true);
+                          if (!formKey.currentState!.validate()) return;
+                          final periodNum = int.tryParse(periodCtrl.text.trim())!;
+                          setSheetState(() {
+                            submitting = true;
+                            error = null;
+                          });
                         try {
                           await repo.setPeriod(
                             className: className!,
@@ -148,10 +182,11 @@ class _Body extends StatelessWidget {
                 ),
               ),
             ),
-          );
-        });
-      },
-    );
+          ),
+        );
+      });
+    },
+  );
   }
 
   @override

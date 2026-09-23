@@ -182,13 +182,72 @@ class ApiClient {
       final status = err.response?.statusCode;
       final data = err.response?.data;
       String? serverMessage;
-      if (data is Map && data['message'] is String) serverMessage = data['message'] as String;
+      if (data is Map) {
+        if (data['message'] is String) {
+          serverMessage = data['message'] as String;
+        } else if (data['error'] is String) {
+          serverMessage = data['error'] as String;
+        } else if (data['errors'] is List && (data['errors'] as List).isNotEmpty) {
+          final first = (data['errors'] as List).first;
+          if (first is String) {
+            serverMessage = first;
+          } else if (first is Map && first['defaultMessage'] is String) {
+            serverMessage = first['defaultMessage'] as String;
+          }
+        }
+      } else if (data is String && data.isNotEmpty) {
+        serverMessage = data;
+      }
+
+      final resolved = serverMessage != null
+          ? _cleanErrorMessage(serverMessage)
+          : (_statusMessages[status] ?? 'Something went wrong.');
+
       return ApiException(
-        serverMessage ?? _statusMessages[status] ?? 'Something went wrong.',
+        resolved,
         statusCode: status,
       );
     }
     return ApiException('Something went wrong. Please try again.');
+  }
+
+  static String _cleanErrorMessage(String raw) {
+    final msg = raw.trim();
+    if (msg.contains('duplicate key value violates unique constraint') || msg.contains('already exists')) {
+      final emailMatch = RegExp(r'Key \(email\)=\(([^)]+)\)', caseSensitive: false).firstMatch(msg);
+      if (emailMatch != null) {
+        return 'A user with email "${emailMatch.group(1)}" already exists.';
+      }
+      final userMatch = RegExp(r'Key \(username\)=\(([^)]+)\)', caseSensitive: false).firstMatch(msg);
+      if (userMatch != null) {
+        return 'A user with username "${userMatch.group(1)}" already exists.';
+      }
+      final phoneMatch = RegExp(r'Key \(phone\)=\(([^)]+)\)', caseSensitive: false).firstMatch(msg);
+      if (phoneMatch != null) {
+        return 'A user with phone "${phoneMatch.group(1)}" already exists.';
+      }
+      final genericKeyMatch = RegExp(r'Key \(([^)]+)\)=\(([^)]+)\)', caseSensitive: false).firstMatch(msg);
+      if (genericKeyMatch != null) {
+        return 'A record with ${genericKeyMatch.group(1)} "${genericKeyMatch.group(2)}" already exists.';
+      }
+      if (msg.toLowerCase().contains('email')) {
+        return 'A user with this email address already exists.';
+      }
+      if (msg.toLowerCase().contains('username')) {
+        return 'A user with this username already exists.';
+      }
+      return 'An account with these details already exists.';
+    }
+
+    if (msg.contains('could not execute statement') || msg.contains('SQL [') || msg.contains('HibernateException')) {
+      final detailMatch = RegExp(r'Detail:\s*([^\]\r\n]+)', caseSensitive: false).firstMatch(msg);
+      if (detailMatch != null) {
+        return detailMatch.group(1)!.trim();
+      }
+      return 'Database error occurred. Please verify your input and try again.';
+    }
+
+    return msg;
   }
 }
 
